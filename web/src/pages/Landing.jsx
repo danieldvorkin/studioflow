@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom'
 export default function Landing() {
   return (
     <div className="min-h-screen bg-canvas">
-      <div className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0">
+      <div className="relative">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -top-32 left-1/2 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-sky-500/15 blur-3xl" />
           <div className="absolute -bottom-24 left-10 h-[28rem] w-[28rem] rounded-full bg-fuchsia-500/15 blur-3xl" />
           <div className="absolute -bottom-24 right-10 h-[28rem] w-[28rem] rounded-full bg-emerald-500/10 blur-3xl" />

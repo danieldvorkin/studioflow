@@ -1,5 +1,6 @@
 # Root gitignore for the monorepo.
 # Keep rules scoped to subprojects to avoid surprising global ignores.
+.idea/
 
 ## API (Rails)
 /api/.bundle
