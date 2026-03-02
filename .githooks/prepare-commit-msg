@@ -20,7 +20,7 @@ if [[ -z "$user_name" ]]; then
 fi
 
 # Local timestamp (minute precision keeps subject lines shorter).
-now="$(date '+%Y-%m-%d %H:%M %z')"
+now="$(date '+%Y-%m-%d %H:%M')"
 prefix="[${now} ${user_name}]"
 
 # Read current message (strip only trailing newlines for predictable formatting)
@@ -45,7 +45,7 @@ fi
   fi
 
   # Idempotency: skip if already prefixed.
-  if printf '%s' "$subject" | grep -Eq '^\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2} [+-][0-9]{4} .+\] '; then
+  if printf '%s' "$subject" | grep -Eq '^\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2} .+\] '; then
     printf '%s\n' "$msg"
     exit 0
   fi
