@@ -3,7 +3,7 @@ module Mutations
     argument :id, ID, required: true
 
     field :success, Boolean, null: false
-    field :errors, [String], null: false
+    field :errors, [ String ], null: false
 
     def resolve(id:)
       user = context[:current_user]
@@ -13,7 +13,7 @@ module Mutations
       client.destroy!
       { success: true, errors: [] }
     rescue StandardError => e
-      { success: false, errors: [e.message] }
+      { success: false, errors: [ e.message ] }
     end
   end
 end

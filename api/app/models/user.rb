@@ -5,7 +5,7 @@ class User < ApplicationRecord
          :recoverable, :rememberable, :validatable,
          :jwt_authenticatable, jwt_revocation_strategy: JwtDenylist
 
-	ROLES = { owner: 0, staff: 1, instructor: 2, client: 3 }.freeze
+  ROLES = { owner: 0, staff: 1, instructor: 2, client: 3 }.freeze
 
   belongs_to :studio
 

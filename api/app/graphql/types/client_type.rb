@@ -12,7 +12,7 @@ module Types
     field :stripe_default_payment_method_exp_month, Integer, null: true
     field :stripe_default_payment_method_exp_year, Integer, null: true
 
-    field :client_payment_methods, [Types::ClientPaymentMethodType], null: false,
+    field :client_payment_methods, [ Types::ClientPaymentMethodType ], null: false,
       description: "Saved payment methods on file for this client"
 
     def client_payment_methods
@@ -23,13 +23,13 @@ module Types
       description: "Associated user account (if the client can sign in)"
 
     field :blocked_by_current_instructor, Boolean, null: false,
-	  description: "Whether the current instructor has blocked this client from booking"
+    description: "Whether the current instructor has blocked this client from booking"
 
     def blocked_by_current_instructor
-	  user = context[:current_user]
-	  return false unless user&.instructor?
+    user = context[:current_user]
+    return false unless user&.instructor?
 
-	  InstructorClientBlock.exists?(instructor_id: user.id, client_id: object.id)
+    InstructorClientBlock.exists?(instructor_id: user.id, client_id: object.id)
     end
   end
 end

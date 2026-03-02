@@ -49,7 +49,7 @@ class ApplicationPolicy
     def resolve
       return scope.none unless user
 
-      if scope.respond_to?(:column_names) && scope.column_names.include?('studio_id')
+      if scope.respond_to?(:column_names) && scope.column_names.include?("studio_id")
         scope.where(studio_id: user.studio_id)
       else
         scope.all

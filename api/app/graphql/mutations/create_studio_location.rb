@@ -7,7 +7,7 @@ module Mutations
     argument :zip, String, required: false
 
     field :studio_location, Types::StudioLocationType, null: true
-    field :errors, [String], null: false
+    field :errors, [ String ], null: false
 
     def resolve(name:, address: nil, city: nil, state: nil, zip: nil)
       user = context[:current_user]

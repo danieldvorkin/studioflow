@@ -49,13 +49,13 @@ class GraphqlController < ApplicationController
   # from the Authorization header. This ensures GraphQL has a user even when the
   # Warden JWT strategy does not populate request.env['warden'].
   def resolve_current_user
-    user = request.env['warden']&.user(:user)
+    user = request.env["warden"]&.user(:user)
     return user if user
 
-    auth_header = request.headers['Authorization']
-    return nil unless auth_header&.start_with?('Bearer ')
+    auth_header = request.headers["Authorization"]
+    return nil unless auth_header&.start_with?("Bearer ")
 
-    token = auth_header.split(' ', 2).last
+    token = auth_header.split(" ", 2).last
     return nil if token.blank?
 
     begin
@@ -63,11 +63,11 @@ class GraphqlController < ApplicationController
       if defined?(Warden::JWTAuth::TokenDecoder)
         payload = Warden::JWTAuth::TokenDecoder.new.call(token)
       else
-        require 'jwt'
-        payload, = JWT.decode(token, Rails.application.secret_key_base, true, { algorithm: 'HS256' })
+        require "jwt"
+        payload, = JWT.decode(token, Rails.application.secret_key_base, true, { algorithm: "HS256" })
       end
-      user_id = payload['sub'] || payload['user_id']
-      return User.find_by(id: user_id)
+      user_id = payload["sub"] || payload["user_id"]
+      User.find_by(id: user_id)
     rescue => e
       Rails.logger.warn("GraphqlController.resolve_current_user JWT decode failed: #{e.class}: #{e.message}")
       nil
@@ -78,6 +78,6 @@ class GraphqlController < ApplicationController
     logger.error e.message
     logger.error e.backtrace.join("\n")
 
-    render json: { errors: [{ message: e.message, backtrace: e.backtrace }], data: {} }, status: 500
+    render json: { errors: [ { message: e.message, backtrace: e.backtrace } ], data: {} }, status: 500
   end
 end

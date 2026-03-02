@@ -1,7 +1,7 @@
 class ClassSession < ApplicationRecord
   belongs_to :studio
   belongs_to :class_template
-  belongs_to :instructor, class_name: 'User', optional: true
+  belongs_to :instructor, class_name: "User", optional: true
 
   has_many :favorite_class_sessions, dependent: :destroy
   has_many :favorited_by_users, through: :favorite_class_sessions, source: :user
@@ -11,10 +11,13 @@ class ClassSession < ApplicationRecord
 
   validates :start_time, presence: true
   validates :capacity, numericality: { greater_than: 0 }, allow_nil: true
+  validates :bundle_spots, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validate :end_time_after_start_time
   validate :no_duplicate_template_start_time
   validate :no_overlapping_instructor_session
   validate :no_overlapping_room_session
+  validate :bundle_spots_required_when_enabled
+  validate :bundle_spots_cannot_exceed_capacity
   validate :associations_belong_to_studio
 
   before_validation :infer_studio
@@ -30,7 +33,22 @@ class ClassSession < ApplicationRecord
   end
 
   def seats_available
-    (capacity || class_template.capacity) - bookings.where(status: 'booked', archived: false).count
+    (capacity || class_template.capacity) - bookings.where(status: "booked", archived: false).count
+  end
+
+  def bundle_spots_taken
+    bookings
+      .where(archived: false)
+      .where.not(status: "cancelled")
+      .where.not(bundle_purchase_id: nil)
+      .count
+  end
+
+  def bundle_spots_available
+    return 0 unless bundle_enabled?
+    return 0 unless bundle_spots.to_i.positive?
+
+    [ bundle_spots.to_i - bundle_spots_taken.to_i, 0 ].max
   end
 
   private
@@ -43,11 +61,11 @@ class ClassSession < ApplicationRecord
     return if studio_id.blank?
 
     if class_template && class_template.studio_id != studio_id
-      errors.add(:class_template, 'must belong to the same studio')
+      errors.add(:class_template, "must belong to the same studio")
     end
 
     if instructor && instructor.studio_id != studio_id
-      errors.add(:instructor, 'must belong to the same studio')
+      errors.add(:instructor, "must belong to the same studio")
     end
   end
 
@@ -55,7 +73,7 @@ class ClassSession < ApplicationRecord
     return if start_time.blank? || end_time.blank?
     return if end_time > start_time
 
-    errors.add(:end_time, 'must be after start time')
+    errors.add(:end_time, "must be after start time")
   end
 
   def no_duplicate_template_start_time
@@ -63,7 +81,27 @@ class ClassSession < ApplicationRecord
 
     # Commonly created by repeated clicks/duplicate flows; enforce uniqueness at the same scheduled start.
     if ClassSession.active.where(class_template_id: class_template_id, start_time: start_time).where.not(id: id).exists?
-      errors.add(:start_time, 'already has this class scheduled at the same time')
+      errors.add(:start_time, "already has this class scheduled at the same time")
+    end
+  end
+
+  def bundle_spots_required_when_enabled
+    return unless bundle_enabled?
+
+    if bundle_spots.to_i <= 0
+      errors.add(:bundle_spots, "must be set when bundle is enabled")
+    end
+  end
+
+  def bundle_spots_cannot_exceed_capacity
+    return unless bundle_enabled?
+    return unless bundle_spots.to_i.positive?
+
+    cap = (capacity || class_template&.capacity).to_i
+    return if cap <= 0
+
+    if bundle_spots.to_i > cap
+      errors.add(:bundle_spots, "cannot exceed session capacity")
     end
   end
 
@@ -91,7 +129,7 @@ class ClassSession < ApplicationRecord
       other.start_time < this_end && other_end > start_time
     end
 
-    errors.add(:base, 'Instructor already has another session that overlaps this time') if overlapping
+    errors.add(:base, "Instructor already has another session that overlaps this time") if overlapping
   end
 
   def no_overlapping_room_session

@@ -5,7 +5,7 @@ module Mutations
 
     field :client, Types::ClientType, null: true
     field :blocked, Boolean, null: false
-    field :errors, [String], null: false
+    field :errors, [ String ], null: false
 
     def resolve(client_id:, blocked:)
       user = context[:current_user]
@@ -17,9 +17,9 @@ module Mutations
 
       instructor_id = if user.instructor?
                          user.id
-                       else
+      else
                          user.id
-                       end
+      end
 
       if blocked
         InstructorClientBlock.find_or_create_by!(studio_id: user.studio_id, instructor_id:, client_id: client.id)
@@ -29,9 +29,9 @@ module Mutations
 
       { client:, blocked:, errors: [] }
     rescue ActiveRecord::RecordNotFound
-      { client: nil, blocked:, errors: ["Client not found"] }
+      { client: nil, blocked:, errors: [ "Client not found" ] }
     rescue StandardError => e
-      { client: nil, blocked:, errors: [e.message] }
+      { client: nil, blocked:, errors: [ e.message ] }
     end
   end
 end

@@ -15,7 +15,6 @@ class AddUniqueIndexToClassSessions < ActiveRecord::Migration[8.1]
         .pluck(:class_template_id, :start_time)
 
       duplicate_keys.each do |(template_id, start_time)|
-
         session_ids = MigrationClassSession
           .where(class_template_id: template_id, start_time: start_time)
           .order(:id)
@@ -27,9 +26,9 @@ class AddUniqueIndexToClassSessions < ActiveRecord::Migration[8.1]
           .count
 
         keep_id = session_ids
-          .max_by { |sid| [bookings_count_by_session_id[sid].to_i, -sid] }
+          .max_by { |sid| [ bookings_count_by_session_id[sid].to_i, -sid ] }
 
-        to_fix_ids = session_ids - [keep_id]
+        to_fix_ids = session_ids - [ keep_id ]
 
         to_fix_ids.each do |sid|
           bookings_count = bookings_count_by_session_id[sid].to_i
@@ -62,10 +61,10 @@ class AddUniqueIndexToClassSessions < ActiveRecord::Migration[8.1]
       end
     end
 
-    add_index :class_sessions, [:class_template_id, :start_time], unique: true
+    add_index :class_sessions, [ :class_template_id, :start_time ], unique: true
   end
 
   def down
-    remove_index :class_sessions, column: [:class_template_id, :start_time]
+    remove_index :class_sessions, column: [ :class_template_id, :start_time ]
   end
 end

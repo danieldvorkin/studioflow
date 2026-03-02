@@ -5,16 +5,16 @@ module Mutations
 
     field :booking, Types::BookingType, null: true
     field :payment, Types::PaymentType, null: true
-    field :errors, [String], null: false
+    field :errors, [ String ], null: false
 
     def resolve(id:, payment_method_id: nil)
       user = context[:current_user]
-      return { booking: nil, payment: nil, errors: ['Not authenticated'] } unless user
+      return { booking: nil, payment: nil, errors: [ "Not authenticated" ] } unless user
 
       booking = Booking.where(studio_id: user.studio_id).find(id)
       raise Pundit::NotAuthorizedError unless Pundit.policy!(user, booking).rebook?
 
-      return { booking: nil, payment: nil, errors: ['Only cancelled bookings can be re-booked'] } unless booking.cancelled?
+      return { booking: nil, payment: nil, errors: [ "Only cancelled bookings can be re-booked" ] } unless booking.cancelled?
 
       class_session = booking.class_session
       class_template = class_session.class_template
@@ -22,19 +22,19 @@ module Mutations
 
       payment_method_id ||= client.stripe_default_payment_method_id
       if payment_method_id.blank?
-        return { booking: nil, payment: nil, errors: ['No payment method provided'] }
+        return { booking: nil, payment: nil, errors: [ "No payment method provided" ] }
       end
 
       if class_session.instructor_id && InstructorClientBlock.exists?(instructor_id: class_session.instructor_id, client_id: client.id)
-    	return { booking: nil, payment: nil, errors: ['This client is blocked from booking with the instructor for this class'] }
+      return { booking: nil, payment: nil, errors: [ "This client is blocked from booking with the instructor for this class" ] }
       end
 
       if class_template.price_cents <= 0
-        return { booking: nil, payment: nil, errors: ['Class has no price configured'] }
+        return { booking: nil, payment: nil, errors: [ "Class has no price configured" ] }
       end
 
-      currency = class_template.currency.presence || 'cad'
-      status = class_session.seats_available > 0 ? 'booked' : 'waitlisted'
+      currency = class_template.currency.presence || "cad"
+      status = class_session.seats_available > 0 ? "booked" : "waitlisted"
 
       # Validate updated booking state before touching Stripe
       booking.assign_attributes(
@@ -51,7 +51,7 @@ module Mutations
 
       settings = PaymentSetting.instance_for(user.studio)
       unless settings.configured?
-        return { booking: nil, payment: nil, errors: ['Stripe is not configured'] }
+        return { booking: nil, payment: nil, errors: [ "Stripe is not configured" ] }
       end
 
       Stripe.api_key = settings.stripe_secret_key
@@ -64,7 +64,7 @@ module Mutations
           confirm: true,
           automatic_payment_methods: {
             enabled: true,
-            allow_redirects: 'never'
+            allow_redirects: "never"
           },
           metadata: {
             class_session_id: class_session.id,
@@ -80,11 +80,11 @@ module Mutations
           intent_params
         )
       rescue Stripe::StripeError => e
-        return { booking: nil, payment: nil, errors: [e.message] }
+        return { booking: nil, payment: nil, errors: [ e.message ] }
       end
 
-      unless intent.status == 'succeeded'
-        return { booking: nil, payment: nil, errors: ["Payment did not succeed (status: #{intent.status})"] }
+      unless intent.status == "succeeded"
+        return { booking: nil, payment: nil, errors: [ "Payment did not succeed (status: #{intent.status})" ] }
       end
 
       payment = nil
@@ -104,7 +104,7 @@ module Mutations
           class_session: class_session,
           amount_cents: class_template.price_cents,
           currency: currency,
-          status: 'succeeded',
+          status: "succeeded",
           stripe_payment_intent_id: intent.id,
           raw_response: intent.to_hash
         )
@@ -115,7 +115,7 @@ module Mutations
 
       { booking: booking, payment: payment, errors: [] }
     rescue ActiveRecord::RecordNotFound
-      { booking: nil, payment: nil, errors: ['Booking not found'] }
+      { booking: nil, payment: nil, errors: [ "Booking not found" ] }
     end
   end
 end

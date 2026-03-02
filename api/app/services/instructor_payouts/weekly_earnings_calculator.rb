@@ -41,7 +41,7 @@ module InstructorPayouts
     def calculate_for_instructor(instructor)
       sessions_in_week = ClassSession
         .where(instructor_id: instructor.id)
-        .where('start_time >= ? AND start_time < ?', @week_start.beginning_of_day, (@week_end + 1.day).beginning_of_day)
+        .where("start_time >= ? AND start_time < ?", @week_start.beginning_of_day, (@week_end + 1.day).beginning_of_day)
         .includes(:class_template)
 
       sessions_in_week = sessions_in_week.where(studio_id: @studio_id) if @studio_id.present?
@@ -50,14 +50,14 @@ module InstructorPayouts
         .succeeded
         .joins(class_session: :class_template)
         .where(class_sessions: { instructor_id: instructor.id })
-        .where('class_sessions.start_time >= ? AND class_sessions.start_time < ?', @week_start.beginning_of_day, (@week_end + 1.day).beginning_of_day)
+        .where("class_sessions.start_time >= ? AND class_sessions.start_time < ?", @week_start.beginning_of_day, (@week_end + 1.day).beginning_of_day)
 
       payments_in_week = payments_in_week.where(studio_id: @studio_id) if @studio_id.present?
 
       payments_in_week = payments_in_week.where(currency: @currency) if @currency.present?
 
       currencies = payments_in_week.distinct.pluck(:currency)
-      currencies = [@currency] if @currency.present? && currencies.empty?
+      currencies = [ @currency ] if @currency.present? && currencies.empty?
 
       # If there are no payments in the week, still surface a result if there are flat-rate sessions
       if currencies.empty?
@@ -66,8 +66,8 @@ module InstructorPayouts
         else
           PaymentSetting.instance.default_currency.presence
         end
-        currency ||= 'cad'
-        return [build_result(instructor, currency, sessions_in_week, Payment.none, include_flat_sessions: true)]
+        currency ||= "cad"
+        return [ build_result(instructor, currency, sessions_in_week, Payment.none, include_flat_sessions: true) ]
       end
 
       currencies.map do |currency|
@@ -90,7 +90,7 @@ module InstructorPayouts
         next unless template
 
         comp_type = compensation_type_for(template, instructor)
-        next unless comp_type == 'revenue_share'
+        next unless comp_type == "revenue_share"
 
         percent = instructor_split_percent_for(template, instructor)
         share = (payment.amount_cents.to_i * percent.to_i) / 100
@@ -113,7 +113,7 @@ module InstructorPayouts
           next unless template
 
           comp_type = compensation_type_for(template, instructor)
-          next unless comp_type == 'flat_rate'
+          next unless comp_type == "flat_rate"
 
           rate_cents = instructor_flat_rate_for(template, instructor)
           next if rate_cents.to_i <= 0
@@ -156,7 +156,7 @@ module InstructorPayouts
     end
 
     def compensation_type_for(template, instructor)
-      (template.compensation_type.presence || instructor.instructor_compensation_type.presence || 'revenue_share').to_s
+      (template.compensation_type.presence || instructor.instructor_compensation_type.presence || "revenue_share").to_s
     end
 
     def instructor_split_percent_for(template, instructor)

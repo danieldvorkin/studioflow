@@ -46,6 +46,11 @@ module Types
     field :create_booking_checkout_session, mutation: Mutations::CreateBookingCheckoutSession, null: true
     field :confirm_booking_checkout_payment, mutation: Mutations::ConfirmBookingCheckoutPayment, null: true
     field :send_booking_payment_reminder, mutation: Mutations::SendBookingPaymentReminder, null: true
+
+    field :create_bundle_product, mutation: Mutations::CreateBundleProduct, null: true
+    field :update_bundle_product, mutation: Mutations::UpdateBundleProduct, null: true
+    field :delete_bundle_product, mutation: Mutations::DeleteBundleProduct, null: true
+    field :purchase_bundle_product, mutation: Mutations::PurchaseBundleProduct, null: true
+    field :create_booking_with_bundle, mutation: Mutations::CreateBookingWithBundle, null: true
   end
 end
-

@@ -5,7 +5,7 @@ module Mutations
 
     field :token, String, null: true
     field :user, Types::UserType, null: true
-    field :errors, [String], null: false
+    field :errors, [ String ], null: false
 
     def resolve(email:, password:)
       user = ::User.find_for_authentication(email: email)
@@ -13,7 +13,7 @@ module Mutations
         token = Warden::JWTAuth::UserEncoder.new.call(user, :user, nil).first
         { token: token, user: user, errors: [] }
       else
-        { token: nil, user: nil, errors: ["Invalid credentials"] }
+        { token: nil, user: nil, errors: [ "Invalid credentials" ] }
       end
     end
   end

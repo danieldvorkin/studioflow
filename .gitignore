@@ -46,3 +46,4 @@
 /web/*.njsproj
 /web/*.sln
 /web/*.sw?
+/api/coverage/*

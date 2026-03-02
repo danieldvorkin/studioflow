@@ -9,7 +9,7 @@ module Mutations
     argument :current_password, String, required: false
 
     field :user, Types::UserType, null: true
-    field :errors, [String], null: false
+    field :errors, [ String ], null: false
 
     def resolve(**attrs)
       user = context[:current_user]
@@ -23,11 +23,11 @@ module Mutations
 
       if requires_password
         if current_password.blank?
-          return { user: nil, errors: ["Current password is required"] }
+          return { user: nil, errors: [ "Current password is required" ] }
         end
 
         unless user.valid_password?(current_password)
-          return { user: nil, errors: ["Current password is incorrect"] }
+          return { user: nil, errors: [ "Current password is incorrect" ] }
         end
       end
 

@@ -4,14 +4,14 @@ module Mutations
     argument :class_session_id, ID, required: true
 
     field :booking, Types::BookingType, null: true
-    field :errors, [String], null: false
+    field :errors, [ String ], null: false
 
     def resolve(client_id: nil, class_session_id:)
       user = context[:current_user]
-      return { booking: nil, errors: ['Not authenticated'] } unless user
+      return { booking: nil, errors: [ "Not authenticated" ] } unless user
 
       policy = Pundit.policy(user, Booking)
-      return { booking: nil, errors: ['Not authorized'] } unless policy&.create?
+      return { booking: nil, errors: [ "Not authorized" ] } unless policy&.create?
 
       cs =
         if user.client?
@@ -34,19 +34,19 @@ module Mutations
             end
           end
         else
-          raise GraphQL::ExecutionError, 'Client is required' if client_id.blank?
+          raise GraphQL::ExecutionError, "Client is required" if client_id.blank?
           Client.where(studio_id: user.studio_id).find(client_id)
         end
 
       if user.client? && client.user_id != user.id
-        return { booking: nil, errors: ['Not authorized'] }
+        return { booking: nil, errors: [ "Not authorized" ] }
       end
 
       if cs.instructor_id && InstructorClientBlock.exists?(instructor_id: cs.instructor_id, client_id: client.id)
-    	return { booking: nil, errors: ['This client is blocked from booking with the instructor for this class'] }
+      return { booking: nil, errors: [ "This client is blocked from booking with the instructor for this class" ] }
       end
 
-      status = cs.seats_available > 0 ? 'booked' : 'waitlisted'
+      status = cs.seats_available > 0 ? "booked" : "waitlisted"
       booking = Booking.new(studio_id: studio_id, client: client, class_session: cs, status: Booking.statuses[status])
 
       if booking.save

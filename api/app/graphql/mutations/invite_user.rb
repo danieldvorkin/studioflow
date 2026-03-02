@@ -7,22 +7,22 @@ module Mutations
     argument :role, Integer, required: true
 
     field :user, Types::UserType, null: true
-    field :errors, [String], null: false
+    field :errors, [ String ], null: false
 
     def resolve(email:, role:, name: nil)
       current_user = context[:current_user]
-      raise GraphQL::ExecutionError, 'Not authorized' unless current_user&.owner?
+      raise GraphQL::ExecutionError, "Not authorized" unless current_user&.owner?
 
       normalized_email = email.to_s.strip.downcase
-      return { user: nil, errors: ['Email is required'] } if normalized_email.blank?
+      return { user: nil, errors: [ "Email is required" ] } if normalized_email.blank?
 
-      allowed_roles = [User::ROLES[:owner], User::ROLES[:staff], User::ROLES[:instructor]]
-      return { user: nil, errors: ['Invalid role'] } unless allowed_roles.include?(role)
+      allowed_roles = [ User::ROLES[:owner], User::ROLES[:staff], User::ROLES[:instructor] ]
+      return { user: nil, errors: [ "Invalid role" ] } unless allowed_roles.include?(role)
 
       user = User.find_or_initialize_by(email: normalized_email)
 
       if user.persisted? && user.studio_id != current_user.studio_id
-        return { user: nil, errors: ['This email already belongs to another studio'] }
+        return { user: nil, errors: [ "This email already belongs to another studio" ] }
       end
 
       if user.new_record?

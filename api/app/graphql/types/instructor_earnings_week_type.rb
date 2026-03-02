@@ -12,7 +12,7 @@ module Types
     field :sessions_taught_count, Integer, null: false
     field :payments_count, Integer, null: false
 
-    field :template_breakdown, [Types::InstructorEarningsTemplateBreakdownType], null: false
+    field :template_breakdown, [ Types::InstructorEarningsTemplateBreakdownType ], null: false
 
     field :existing_payout, Types::InstructorPayoutType, null: true
   end

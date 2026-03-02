@@ -24,4 +24,3 @@ class BookingPolicy < ApplicationPolicy
     cancel?
   end
 end
-

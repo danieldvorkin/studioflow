@@ -2,7 +2,7 @@ class PaymentSetting < ApplicationRecord
   belongs_to :studio
 
   def self.instance
-    instance_for(Studio.first || Studio.create!(name: 'Demo Studio', slug: 'demo'))
+    instance_for(Studio.first || Studio.create!(name: "Demo Studio", slug: "demo"))
   end
 
   def self.instance_for(studio)

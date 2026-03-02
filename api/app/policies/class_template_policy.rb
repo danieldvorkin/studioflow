@@ -1,13 +1,13 @@
 class ClassTemplatePolicy < ApplicationPolicy
   def create?
-	user && (user.owner? || user.staff? || user.instructor?)
+  user && (user.owner? || user.staff? || user.instructor?)
   end
 
   def update?
-	user && (user.owner? || user.staff? || (user.instructor? && record.instructor_id == user.id))
+  user && (user.owner? || user.staff? || (user.instructor? && record.instructor_id == user.id))
   end
 
   def destroy?
-	user && (user.owner? || user.staff?)
+  user && (user.owner? || user.staff?)
   end
 end

@@ -6,14 +6,14 @@ module Mutations
     argument :currency, String, required: true
 
     field :payout, Types::InstructorPayoutType, null: true
-    field :errors, [String], null: false
+    field :errors, [ String ], null: false
 
     def resolve(instructor_id:, week_start:, week_end: nil, currency:)
       user = context[:current_user]
       raise Pundit::NotAuthorizedError unless user&.owner?
 
       instructor = User.where(studio_id: user.studio_id).find_by(id: instructor_id)
-      return { payout: nil, errors: ['Instructor not found'] } unless instructor&.instructor?
+      return { payout: nil, errors: [ "Instructor not found" ] } unless instructor&.instructor?
 
       calculator = InstructorPayouts::WeeklyEarningsCalculator.new(
         week_start: week_start,
@@ -24,10 +24,10 @@ module Mutations
       )
 
       result = calculator.call.first
-      return { payout: nil, errors: ['No earnings found for this week'] } unless result
+      return { payout: nil, errors: [ "No earnings found for this week" ] } unless result
 
       if result.gross_cents.to_i <= 0 && result.instructor_earnings_cents.to_i <= 0
-        return { payout: nil, errors: ['No earnings found for this week'] }
+        return { payout: nil, errors: [ "No earnings found for this week" ] }
       end
 
       payout = InstructorPayout.new(
@@ -40,7 +40,7 @@ module Mutations
         gross_cents: result.gross_cents,
         instructor_earnings_cents: result.instructor_earnings_cents,
         studio_cut_cents: result.studio_cut_cents,
-        status: 'draft',
+        status: "draft",
         calculation_snapshot: {
           weekStart: result.week_start,
           weekEnd: result.week_end,

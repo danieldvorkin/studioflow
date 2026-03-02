@@ -15,31 +15,31 @@ module Mutations
     argument :stripe_connect_account_id, String, required: false
 
     field :user, Types::UserType, null: true
-    field :errors, [String], null: false
+    field :errors, [ String ], null: false
 
     def resolve(id:, **attrs)
       current_user = context[:current_user]
       raise GraphQL::ExecutionError, "Not authorized" unless current_user&.owner?
 
       user = User.where(studio_id: current_user.studio_id).find_by(id: id)
-      return { user: nil, errors: ["User not found"] } unless user
+      return { user: nil, errors: [ "User not found" ] } unless user
 
       if attrs.key?(:role) && !User::ROLES.value?(attrs[:role])
-        return { user: nil, errors: ["Invalid role value"] }
+        return { user: nil, errors: [ "Invalid role value" ] }
       end
 
       if attrs.key?(:instructor_compensation_type) && !%w[revenue_share flat_rate].include?(attrs[:instructor_compensation_type].to_s)
-        return { user: nil, errors: ["Invalid instructor compensation type"] }
+        return { user: nil, errors: [ "Invalid instructor compensation type" ] }
       end
 
       if attrs.key?(:instructor_default_split_percent)
         v = attrs[:instructor_default_split_percent]
-        return { user: nil, errors: ["Invalid instructor split percent"] } unless v.is_a?(Integer) && v.between?(0, 100)
+        return { user: nil, errors: [ "Invalid instructor split percent" ] } unless v.is_a?(Integer) && v.between?(0, 100)
       end
 
       if attrs.key?(:instructor_default_flat_rate_cents)
         v = attrs[:instructor_default_flat_rate_cents]
-        return { user: nil, errors: ["Invalid instructor flat rate"] } unless v.is_a?(Integer) && v >= 0
+        return { user: nil, errors: [ "Invalid instructor flat rate" ] } unless v.is_a?(Integer) && v >= 0
       end
 
       if user.update(attrs.compact)

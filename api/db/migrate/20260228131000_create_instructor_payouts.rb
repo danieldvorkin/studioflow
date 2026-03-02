@@ -23,6 +23,6 @@ class CreateInstructorPayouts < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :instructor_payouts, [:instructor_id, :week_start, :currency], unique: true, name: 'index_instructor_payouts_unique_week_currency'
+    add_index :instructor_payouts, [ :instructor_id, :week_start, :currency ], unique: true, name: 'index_instructor_payouts_unique_week_currency'
   end
 end

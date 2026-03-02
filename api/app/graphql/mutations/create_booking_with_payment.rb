@@ -6,14 +6,14 @@ module Mutations
 
     field :booking, Types::BookingType, null: true
     field :payment, Types::PaymentType, null: true
-    field :errors, [String], null: false
+    field :errors, [ String ], null: false
 
     def resolve(client_id: nil, class_session_id:, payment_method_id: nil)
       user = context[:current_user]
-      return { booking: nil, payment: nil, errors: ['Not authenticated'] } unless user
+      return { booking: nil, payment: nil, errors: [ "Not authenticated" ] } unless user
 
       policy = Pundit.policy(user, Booking)
-      return { booking: nil, payment: nil, errors: ['Not authorized'] } unless policy&.create?
+      return { booking: nil, payment: nil, errors: [ "Not authorized" ] } unless policy&.create?
 
       class_session =
         if user.client?
@@ -27,7 +27,7 @@ module Mutations
 
       settings = PaymentSetting.instance_for(studio)
       unless settings.configured?
-        return { booking: nil, payment: nil, errors: ['Stripe is not configured'] }
+        return { booking: nil, payment: nil, errors: [ "Stripe is not configured" ] }
       end
 
       client =
@@ -42,30 +42,30 @@ module Mutations
             end
           end
         else
-          return { booking: nil, payment: nil, errors: ['Client is required'] } if client_id.blank?
+          return { booking: nil, payment: nil, errors: [ "Client is required" ] } if client_id.blank?
           Client.where(studio_id: user.studio_id).find(client_id)
         end
 
       if user.client? && client.user_id != user.id
-        return { booking: nil, payment: nil, errors: ['Not authorized'] }
+        return { booking: nil, payment: nil, errors: [ "Not authorized" ] }
       end
 
       payment_method_id ||= client.stripe_default_payment_method_id
       if payment_method_id.blank?
-        return { booking: nil, payment: nil, errors: ['No payment method provided'] }
+        return { booking: nil, payment: nil, errors: [ "No payment method provided" ] }
       end
 
       if class_session.instructor_id && InstructorClientBlock.exists?(instructor_id: class_session.instructor_id, client_id: client.id)
-    	return { booking: nil, payment: nil, errors: ['This client is blocked from booking with the instructor for this class'] }
+      return { booking: nil, payment: nil, errors: [ "This client is blocked from booking with the instructor for this class" ] }
       end
       class_template = class_session.class_template
-      currency = class_template.currency.presence || 'cad'
+      currency = class_template.currency.presence || "cad"
 
       if class_template.price_cents <= 0
-        return { booking: nil, payment: nil, errors: ['Class has no price configured'] }
+        return { booking: nil, payment: nil, errors: [ "Class has no price configured" ] }
       end
 
-      status = class_session.seats_available > 0 ? 'booked' : 'waitlisted'
+      status = class_session.seats_available > 0 ? "booked" : "waitlisted"
 
       # Validate booking before touching Stripe so we don't charge if it can't be created
       preview_booking = Booking.new(
@@ -91,7 +91,7 @@ module Mutations
           confirm: true,
           automatic_payment_methods: {
             enabled: true,
-            allow_redirects: 'never'
+            allow_redirects: "never"
           },
           metadata: {
             class_session_id: class_session.id,
@@ -106,11 +106,11 @@ module Mutations
           intent_params
         )
       rescue Stripe::StripeError => e
-        return { booking: nil, payment: nil, errors: [e.message] }
+        return { booking: nil, payment: nil, errors: [ e.message ] }
       end
 
-      unless intent.status == 'succeeded'
-        return { booking: nil, payment: nil, errors: ["Payment did not succeed (status: #{intent.status})"] }
+      unless intent.status == "succeeded"
+        return { booking: nil, payment: nil, errors: [ "Payment did not succeed (status: #{intent.status})" ] }
       end
 
       booking = nil
@@ -137,7 +137,7 @@ module Mutations
           class_session: class_session,
           amount_cents: class_template.price_cents,
           currency: currency,
-          status: 'succeeded',
+          status: "succeeded",
           stripe_payment_intent_id: intent.id,
           raw_response: intent.to_hash
         )

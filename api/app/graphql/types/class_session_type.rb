@@ -10,12 +10,25 @@ module Types
     field :room, String, null: true
     field :seats_available, Integer, null: false
 
+    field :bundle_enabled, Boolean, null: false
+    field :bundle_spots, Integer, null: true
+    field :bundle_spots_taken, Integer, null: false
+    field :bundle_spots_available, Integer, null: false
+
     def studio_id
       object&.class_template&.studio_location&.studio_id
     end
 
     def seats_available
       object.seats_available
+    end
+
+    def bundle_spots_taken
+      object.bundle_spots_taken
+    end
+
+    def bundle_spots_available
+      object.bundle_spots_available
     end
   end
 end

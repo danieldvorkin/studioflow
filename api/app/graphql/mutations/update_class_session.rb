@@ -5,9 +5,11 @@ module Mutations
     argument :end_time, GraphQL::Types::ISO8601DateTime, required: false
     argument :capacity, Integer, required: false
     argument :room, String, required: false
+    argument :bundle_enabled, Boolean, required: false
+    argument :bundle_spots, Integer, required: false
 
     field :class_session, Types::ClassSessionType, null: true
-    field :errors, [String], null: false
+    field :errors, [ String ], null: false
 
     def resolve(id:, **attrs)
       user = context[:current_user]

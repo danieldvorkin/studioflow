@@ -2,6 +2,7 @@ class Booking < ApplicationRecord
   belongs_to :studio
   belongs_to :client
   belongs_to :class_session
+  belongs_to :bundle_purchase, optional: true
   has_one :payment, dependent: :nullify
 
   enum :status, { booked: 0, waitlisted: 1, cancelled: 2, no_show: 3 }
@@ -9,7 +10,7 @@ class Booking < ApplicationRecord
   validates :client_id,
             uniqueness: {
               scope: :class_session_id,
-              message: 'already booked for this session',
+              message: "already booked for this session",
               conditions: -> { where.not(status: Booking.statuses[:cancelled]) }
             }
   validates :slug, uniqueness: true, allow_nil: true
@@ -27,7 +28,7 @@ class Booking < ApplicationRecord
   def ensure_slug
     return if slug.present?
 
-    require 'securerandom'
+    require "securerandom"
 
     self.slug = loop do
       candidate = SecureRandom.hex(4)

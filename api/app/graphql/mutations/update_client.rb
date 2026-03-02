@@ -6,11 +6,11 @@ module Mutations
     argument :phone, String, required: false
 
     field :client, Types::ClientType, null: true
-    field :errors, [String], null: false
+    field :errors, [ String ], null: false
 
     def resolve(id:, **attrs)
       user = context[:current_user]
-	  raise GraphQL::ExecutionError, "Not authorized" unless user&.owner? || user&.staff? || user&.instructor?
+    raise GraphQL::ExecutionError, "Not authorized" unless user&.owner? || user&.staff? || user&.instructor?
 
       client = Client.where(studio_id: user.studio_id).find(id)
       if client.update(attrs.compact)

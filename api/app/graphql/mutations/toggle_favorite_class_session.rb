@@ -4,11 +4,11 @@ module Mutations
 
     field :class_session, Types::ClassSessionType, null: true
     field :favorited, Boolean, null: false
-    field :errors, [String], null: false
+    field :errors, [ String ], null: false
 
     def resolve(class_session_id:)
       user = context[:current_user]
-      return { class_session: nil, favorited: false, errors: ['Not authenticated'] } unless user
+      return { class_session: nil, favorited: false, errors: [ "Not authenticated" ] } unless user
 
       class_session =
         if user.client?
@@ -27,7 +27,7 @@ module Mutations
         { class_session: class_session, favorited: true, errors: [] }
       end
     rescue ActiveRecord::RecordNotFound
-      { class_session: nil, favorited: false, errors: ['Class session not found'] }
+      { class_session: nil, favorited: false, errors: [ "Class session not found" ] }
     rescue ActiveRecord::RecordInvalid => e
       { class_session: class_session, favorited: false, errors: e.record.errors.full_messages }
     end

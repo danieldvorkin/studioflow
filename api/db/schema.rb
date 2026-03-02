@@ -10,12 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_01_070000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_02_000100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "bookings", force: :cascade do |t|
     t.boolean "archived", default: false, null: false
+    t.bigint "bundle_purchase_id"
     t.bigint "class_session_id", null: false
     t.bigint "client_id", null: false
     t.datetime "created_at", null: false
@@ -25,14 +26,54 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_01_070000) do
     t.integer "status", default: 0
     t.bigint "studio_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["bundle_purchase_id"], name: "index_bookings_on_bundle_purchase_id"
     t.index ["class_session_id"], name: "index_bookings_on_class_session_id"
     t.index ["client_id"], name: "index_bookings_on_client_id"
     t.index ["slug"], name: "index_bookings_on_slug", unique: true
     t.index ["studio_id"], name: "index_bookings_on_studio_id"
   end
 
+  create_table "bundle_products", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.bigint "class_template_id"
+    t.datetime "created_at", null: false
+    t.integer "credits_count", null: false
+    t.string "currency", default: "cad", null: false
+    t.text "description"
+    t.bigint "instructor_id"
+    t.integer "price_cents", null: false
+    t.bigint "studio_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["class_template_id"], name: "index_bundle_products_on_class_template_id"
+    t.index ["instructor_id"], name: "index_bundle_products_on_instructor_id"
+    t.index ["studio_id"], name: "index_bundle_products_on_studio_id"
+  end
+
+  create_table "bundle_purchases", force: :cascade do |t|
+    t.bigint "bundle_product_id", null: false
+    t.bigint "client_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "credits_remaining", null: false
+    t.integer "credits_total", null: false
+    t.string "currency", default: "cad", null: false
+    t.integer "price_cents", null: false
+    t.jsonb "raw_response"
+    t.integer "remainder_cents", default: 0, null: false
+    t.string "status", default: "succeeded", null: false
+    t.string "stripe_payment_intent_id"
+    t.bigint "studio_id", null: false
+    t.integer "unit_price_cents", null: false
+    t.datetime "updated_at", null: false
+    t.index ["bundle_product_id"], name: "index_bundle_purchases_on_bundle_product_id"
+    t.index ["client_id"], name: "index_bundle_purchases_on_client_id"
+    t.index ["studio_id"], name: "index_bundle_purchases_on_studio_id"
+  end
+
   create_table "class_sessions", force: :cascade do |t|
     t.boolean "archived", default: false, null: false
+    t.boolean "bundle_enabled", default: false, null: false
+    t.integer "bundle_spots"
     t.integer "capacity"
     t.bigint "class_template_id", null: false
     t.datetime "created_at", null: false
@@ -241,9 +282,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_01_070000) do
     t.index ["studio_id"], name: "index_users_on_studio_id"
   end
 
+  add_foreign_key "bookings", "bundle_purchases"
   add_foreign_key "bookings", "class_sessions"
   add_foreign_key "bookings", "clients"
   add_foreign_key "bookings", "studios"
+  add_foreign_key "bundle_products", "class_templates"
+  add_foreign_key "bundle_products", "studios"
+  add_foreign_key "bundle_products", "users", column: "instructor_id"
+  add_foreign_key "bundle_purchases", "bundle_products"
+  add_foreign_key "bundle_purchases", "clients"
+  add_foreign_key "bundle_purchases", "studios"
   add_foreign_key "class_sessions", "class_templates"
   add_foreign_key "class_sessions", "studios"
   add_foreign_key "class_sessions", "users", column: "instructor_id"

@@ -3,11 +3,11 @@ module Mutations
     argument :id, ID, required: true
 
     field :success, Boolean, null: false
-    field :errors, [String], null: false
+    field :errors, [ String ], null: false
 
     def resolve(id:)
       user = context[:current_user]
-      return { success: false, errors: ["Not authenticated"] } unless user
+      return { success: false, errors: [ "Not authenticated" ] } unless user
 
       booking =
         if user.client?
@@ -54,7 +54,7 @@ module Mutations
 
       { success: errors.empty?, errors: errors }
     rescue ActiveRecord::RecordInvalid => e
-      { success: false, errors: [e.message] }
+      { success: false, errors: [ e.message ] }
     end
   end
 end

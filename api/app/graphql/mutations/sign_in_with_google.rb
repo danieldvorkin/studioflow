@@ -5,19 +5,19 @@ module Mutations
 
     field :token, String, null: true
     field :user, Types::UserType, null: true
-    field :errors, [String], null: false
+    field :errors, [ String ], null: false
 
     def resolve(code: nil, access_token: nil)
-      client_id = ENV['GOOGLE_CLIENT_ID'] || ENV['VITE_GOOGLE_CLIENT_ID']
-      client_secret = ENV['GOOGLE_CLIENT_SECRET']
-      redirect_uri = ENV['GOOGLE_REDIRECT_URI'] || 'postmessage'
+      client_id = ENV["GOOGLE_CLIENT_ID"] || ENV["VITE_GOOGLE_CLIENT_ID"]
+      client_secret = ENV["GOOGLE_CLIENT_SECRET"]
+      redirect_uri = ENV["GOOGLE_REDIRECT_URI"] || "postmessage"
 
       if client_id.blank?
-        return { token: nil, user: nil, errors: ['GOOGLE_CLIENT_ID is not configured'] }
+        return { token: nil, user: nil, errors: [ "GOOGLE_CLIENT_ID is not configured" ] }
       end
 
       if code.blank? && access_token.blank?
-        return { token: nil, user: nil, errors: ['Provide code or accessToken'] }
+        return { token: nil, user: nil, errors: [ "Provide code or accessToken" ] }
       end
 
       payload = nil
@@ -26,7 +26,7 @@ module Mutations
         payload = fetch_google_userinfo!(access_token: access_token)
       else
         if client_secret.blank?
-          return { token: nil, user: nil, errors: ['GOOGLE_CLIENT_SECRET is not configured'] }
+          return { token: nil, user: nil, errors: [ "GOOGLE_CLIENT_SECRET is not configured" ] }
         end
 
         id_token = exchange_google_code_for_id_token!(
@@ -41,17 +41,17 @@ module Mutations
           payload = validator.check(id_token, client_id)
         rescue GoogleIDToken::ValidationError => e
           Rails.logger.warn("Google id_token validation failed: #{e.message}")
-          return { token: nil, user: nil, errors: ["Invalid Google token: #{e.message}"] }
+          return { token: nil, user: nil, errors: [ "Invalid Google token: #{e.message}" ] }
         end
       end
 
-      email = payload['email']
-      name = payload['name'] || payload['given_name']
-      picture = payload['picture']
+      email = payload["email"]
+      name = payload["name"] || payload["given_name"]
+      picture = payload["picture"]
 
       user = User.find_or_initialize_by(email: email)
       if user.new_record?
-        demo_studio = Studio.find_by(slug: 'demo') || Studio.first
+        demo_studio = Studio.find_by(slug: "demo") || Studio.first
         user.studio ||= demo_studio if demo_studio.present?
 
         user.name = name
@@ -74,18 +74,18 @@ module Mutations
     private
 
     def exchange_google_code_for_id_token!(code:, client_id:, client_secret:, redirect_uri:)
-      require 'net/http'
-      require 'json'
+      require "net/http"
+      require "json"
 
-      uri = URI('https://oauth2.googleapis.com/token')
+      uri = URI("https://oauth2.googleapis.com/token")
       req = Net::HTTP::Post.new(uri)
-      req['Content-Type'] = 'application/x-www-form-urlencoded'
+      req["Content-Type"] = "application/x-www-form-urlencoded"
       req.body = URI.encode_www_form(
         code: code,
         client_id: client_id,
         client_secret: client_secret,
         redirect_uri: redirect_uri,
-        grant_type: 'authorization_code'
+        grant_type: "authorization_code"
       )
 
       http = Net::HTTP.new(uri.host, uri.port)
@@ -99,14 +99,14 @@ module Mutations
       end
 
       unless res.is_a?(Net::HTTPSuccess)
-        error = parsed['error'] || 'token_exchange_failed'
-        description = parsed['error_description']
+        error = parsed["error"] || "token_exchange_failed"
+        description = parsed["error_description"]
         Rails.logger.warn("Google token exchange failed: status=#{res.code} error=#{error} description=#{description}")
-        raise StandardError, 'Google token exchange failed'
+        raise StandardError, "Google token exchange failed"
       end
 
-      id_token = parsed['id_token']
-      raise StandardError, 'No id_token returned by Google' if id_token.blank?
+      id_token = parsed["id_token"]
+      raise StandardError, "No id_token returned by Google" if id_token.blank?
       id_token
     rescue => e
       Rails.logger.warn("Google token exchange exception: #{e.class}: #{e.message}")
@@ -114,12 +114,12 @@ module Mutations
     end
 
     def fetch_google_userinfo!(access_token:)
-      require 'net/http'
-      require 'json'
+      require "net/http"
+      require "json"
 
-      uri = URI('https://www.googleapis.com/oauth2/v3/userinfo')
+      uri = URI("https://www.googleapis.com/oauth2/v3/userinfo")
       req = Net::HTTP::Get.new(uri)
-      req['Authorization'] = "Bearer #{access_token}"
+      req["Authorization"] = "Bearer #{access_token}"
 
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
@@ -132,13 +132,13 @@ module Mutations
       end
 
       unless res.is_a?(Net::HTTPSuccess)
-        error = parsed['error'] || 'userinfo_failed'
+        error = parsed["error"] || "userinfo_failed"
         Rails.logger.warn("Google userinfo failed: status=#{res.code} error=#{error}")
-        raise StandardError, 'Google userinfo failed'
+        raise StandardError, "Google userinfo failed"
       end
 
-      if parsed['email'].blank?
-        raise StandardError, 'Google userinfo did not return email'
+      if parsed["email"].blank?
+        raise StandardError, "Google userinfo did not return email"
       end
 
       parsed

@@ -11,7 +11,7 @@ module Mutations
     argument :clients_page_enabled, Boolean, required: false
 
     field :payment_settings, Types::PaymentSettingType, null: true
-    field :errors, [String], null: false
+    field :errors, [ String ], null: false
 
     def resolve(**attrs)
       user = context[:current_user]

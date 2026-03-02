@@ -12,7 +12,7 @@ class CreateClientPaymentMethods < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :client_payment_methods, [:client_id, :stripe_payment_method_id], unique: true, name: 'index_client_payment_methods_on_client_and_stripe_pm'
-    add_index :client_payment_methods, [:client_id, :default]
+    add_index :client_payment_methods, [ :client_id, :stripe_payment_method_id ], unique: true, name: 'index_client_payment_methods_on_client_and_stripe_pm'
+    add_index :client_payment_methods, [ :client_id, :default ]
   end
 end

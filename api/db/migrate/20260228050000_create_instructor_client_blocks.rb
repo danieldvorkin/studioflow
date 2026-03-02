@@ -7,6 +7,6 @@ class CreateInstructorClientBlocks < ActiveRecord::Migration[7.1]
       t.timestamps
     end
 
-    add_index :instructor_client_blocks, [:instructor_id, :client_id], unique: true, name: 'index_instructor_client_blocks_on_instructor_and_client'
+    add_index :instructor_client_blocks, [ :instructor_id, :client_id ], unique: true, name: 'index_instructor_client_blocks_on_instructor_and_client'
   end
 end

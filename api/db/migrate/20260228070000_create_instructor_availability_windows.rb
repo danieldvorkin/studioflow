@@ -10,7 +10,7 @@ class CreateInstructorAvailabilityWindows < ActiveRecord::Migration[8.1]
     end
 
     add_index :instructor_availability_windows, :instructor_id
-    add_index :instructor_availability_windows, [:instructor_id, :start_time]
+    add_index :instructor_availability_windows, [ :instructor_id, :start_time ]
     add_index :instructor_availability_windows, :studio_location_id
   end
 end

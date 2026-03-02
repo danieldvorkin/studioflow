@@ -7,7 +7,7 @@ module Mutations
     argument :room, String, required: false
 
     field :class_session, Types::ClassSessionType, null: true
-    field :errors, [String], null: false
+    field :errors, [ String ], null: false
 
     def resolve(class_template_id:, start_time:, end_time: nil, capacity: nil, room: nil)
       user = context[:current_user]
@@ -22,7 +22,7 @@ module Mutations
       if instructor_id
         instructor = User.find_by(id: instructor_id)
         if instructor.nil? || !instructor.active? || !instructor.available_for_sessions?
-          return { class_session: nil, errors: ['Instructor is not available for sessions'] }
+          return { class_session: nil, errors: [ "Instructor is not available for sessions" ] }
         end
       end
 

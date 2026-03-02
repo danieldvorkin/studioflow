@@ -14,7 +14,7 @@ module Mutations
     argument :instructor_flat_rate_cents, Integer, required: false
 
     field :class_template, Types::ClassTemplateType, null: true
-    field :errors, [String], null: false
+    field :errors, [ String ], null: false
 
     def resolve(**attrs)
       user = context[:current_user]

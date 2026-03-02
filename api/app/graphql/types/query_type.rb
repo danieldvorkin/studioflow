@@ -10,8 +10,8 @@ module Types
       context.schema.object_from_id(id, context)
     end
 
-    field :nodes, [Types::NodeType, null: true], null: true, description: "Fetches a list of objects given a list of IDs." do
-      argument :ids, [ID], required: true, description: "IDs of the objects."
+    field :nodes, [ Types::NodeType, null: true ], null: true, description: "Fetches a list of objects given a list of IDs." do
+      argument :ids, [ ID ], required: true, description: "IDs of the objects."
     end
 
     def nodes(ids:)
@@ -27,7 +27,7 @@ module Types
       context[:current_user]
     end
 
-    field :studios, [Types::StudioType], null: false,
+    field :studios, [ Types::StudioType ], null: false,
       description: "List all studios (for client marketplace browsing)"
     def studios
       user = context[:current_user]
@@ -37,7 +37,7 @@ module Types
     end
 
     # List available class templates
-    field :class_templates, [Types::ClassTemplateType], null: false do
+    field :class_templates, [ Types::ClassTemplateType ], null: false do
     argument :instructor_id, ID, required: false
     argument :studio_location_id, ID, required: false
     argument :studio_id, ID, required: false
@@ -56,12 +56,12 @@ module Types
     end
 
     # Treat templates with NULL location as "global" and include them when filtering by location.
-    scope = scope.where(studio_location_id: [studio_location_id, nil]) if studio_location_id
+    scope = scope.where(studio_location_id: [ studio_location_id, nil ]) if studio_location_id
     scope
   end
 
     # List upcoming class sessions
-    field :class_sessions, [Types::ClassSessionType], null: false do
+    field :class_sessions, [ Types::ClassSessionType ], null: false do
     argument :from, GraphQL::Types::ISO8601DateTime, required: false
     argument :to, GraphQL::Types::ISO8601DateTime, required: false
     argument :studio_location_id, ID, required: false
@@ -74,11 +74,11 @@ module Types
     effective_studio_id = user.client? ? (studio_id.presence || user.studio_id) : user.studio_id
 
     scope = ClassSession.where(studio_id: effective_studio_id, archived: false)
-    scope = scope.where('start_time >= ?', from) if from
-    scope = scope.where('start_time <= ?', to) if to
+    scope = scope.where("start_time >= ?", from) if from
+    scope = scope.where("start_time <= ?", to) if to
     if studio_location_id
       # Include sessions whose template is "global" (NULL location) or matches selected location.
-      scope = scope.joins(:class_template).where(class_templates: { studio_location_id: [studio_location_id, nil] })
+      scope = scope.joins(:class_template).where(class_templates: { studio_location_id: [ studio_location_id, nil ] })
     end
     if user&.instructor?
       scope = scope.where(instructor_id: user.id)
@@ -87,14 +87,14 @@ module Types
     scope.order(:start_time)
   end
 
-    field :my_favorite_class_sessions, [Types::ClassSessionType], null: false,
-      description: 'Favorite class sessions for the current user' do
+    field :my_favorite_class_sessions, [ Types::ClassSessionType ], null: false,
+      description: "Favorite class sessions for the current user" do
       argument :studio_id, ID, required: false
       argument :studio_location_id, ID, required: false
     end
     def my_favorite_class_sessions(studio_id: nil, studio_location_id: nil)
       user = context[:current_user]
-      raise GraphQL::ExecutionError, 'Not authorized' unless user
+      raise GraphQL::ExecutionError, "Not authorized" unless user
 
       scope =
         ClassSession
@@ -108,7 +108,7 @@ module Types
       end
 
       if studio_location_id
-        scope = scope.joins(:class_template).where(class_templates: { studio_location_id: [studio_location_id, nil] })
+        scope = scope.joins(:class_template).where(class_templates: { studio_location_id: [ studio_location_id, nil ] })
       end
 
       scope
@@ -117,15 +117,15 @@ module Types
     end
 
     field :upcoming_bookable_class_sessions_count, Integer, null: false,
-      description: 'Count of upcoming bookable class sessions (clients: across all studios unless a studio_id is provided)' do
+      description: "Count of upcoming bookable class sessions (clients: across all studios unless a studio_id is provided)" do
       argument :studio_id, ID, required: false
       argument :studio_location_id, ID, required: false
     end
     def upcoming_bookable_class_sessions_count(studio_id: nil, studio_location_id: nil)
       user = context[:current_user]
-      raise GraphQL::ExecutionError, 'Not authorized' unless user
+      raise GraphQL::ExecutionError, "Not authorized" unless user
 
-      scope = ClassSession.where(archived: false).where('start_time > ?', Time.current)
+      scope = ClassSession.where(archived: false).where("start_time > ?", Time.current)
 
       if user.client?
         scope = scope.where(studio_id: studio_id) if studio_id.present?
@@ -134,7 +134,7 @@ module Types
       end
 
       if studio_location_id
-        scope = scope.joins(:class_template).where(class_templates: { studio_location_id: [studio_location_id, nil] })
+        scope = scope.joins(:class_template).where(class_templates: { studio_location_id: [ studio_location_id, nil ] })
       end
 
       if user&.instructor?
@@ -146,7 +146,7 @@ module Types
           Booking
             .joins(:client)
             .where(clients: { user_id: user.id }, archived: false)
-            .where.not(status: 'cancelled')
+            .where.not(status: "cancelled")
             .select(:class_session_id)
 
         scope = scope.where.not(id: booked_session_ids)
@@ -160,13 +160,13 @@ module Types
       SQL
 
       eligible = joined
-        .group('class_sessions.id', 'class_sessions.capacity')
-        .having('class_sessions.capacity IS NULL OR class_sessions.capacity <= 0 OR class_sessions.capacity > COUNT(active_bookings.id)')
+        .group("class_sessions.id", "class_sessions.capacity")
+        .having("class_sessions.capacity IS NULL OR class_sessions.capacity <= 0 OR class_sessions.capacity > COUNT(active_bookings.id)")
 
       eligible.count.keys.length
     end
 
-    field :instructors, [Types::UserType], null: false,
+    field :instructors, [ Types::UserType ], null: false,
     description: "List instructor users (owner and staff)"
     def instructors
     user = context[:current_user]
@@ -175,7 +175,7 @@ module Types
     User.where(studio_id: user.studio_id, role: User::ROLES[:instructor]).order(:name)
     end
 
-    field :clients, [Types::ClientType], null: false,
+    field :clients, [ Types::ClientType ], null: false,
     description: "List clients visible to the current user (owner/staff: all, instructor: their clients)"
     def clients
     user = context[:current_user]
@@ -194,8 +194,8 @@ module Types
     end
     end
 
-    field :users, [Types::UserType], null: false,
-  	  description: "List all users (owner only)"
+    field :users, [ Types::UserType ], null: false,
+      description: "List all users (owner only)"
     def users
       user = context[:current_user]
       raise GraphQL::ExecutionError, "Not authorized" unless user&.owner?
@@ -203,7 +203,7 @@ module Types
       User.where(studio_id: user.studio_id).order(:email)
     end
 
-    field :bookings, [Types::BookingType], null: false,
+    field :bookings, [ Types::BookingType ], null: false,
     description: "Bookings visible to the current user based on role" do
     argument :studio_location_id, ID, required: false
     argument :studio_id, ID, required: false
@@ -229,13 +229,13 @@ module Types
 
     if studio_location_id
       scope = scope.joins(class_session: :class_template)
-          .where(class_templates: { studio_location_id: [studio_location_id, nil] })
+          .where(class_templates: { studio_location_id: [ studio_location_id, nil ] })
     end
 
     scope.includes(:client, :class_session, :payment).order(created_at: :desc)
     end
 
-    field :my_bookings, [Types::BookingType], null: false,
+    field :my_bookings, [ Types::BookingType ], null: false,
     description: "Bookings where the current user is the client, regardless of role" do
     argument :studio_location_id, ID, required: false
     argument :studio_id, ID, required: false
@@ -253,13 +253,13 @@ module Types
     end
     if studio_location_id
       scope = scope.joins(class_session: :class_template)
-          .where(class_templates: { studio_location_id: [studio_location_id, nil] })
+          .where(class_templates: { studio_location_id: [ studio_location_id, nil ] })
     end
 
     scope.includes(:client, :class_session, :payment).order(created_at: :desc)
   end
 
-    field :payments, [Types::PaymentType], null: false,
+    field :payments, [ Types::PaymentType ], null: false,
     description: "Payment records (owner and staff)"
     def payments
     user = context[:current_user]
@@ -320,8 +320,8 @@ module Types
     PaymentSetting.instance_for(studio)
     end
 
-    field :studio_locations, [Types::StudioLocationType], null: false,
-	  description: "All studio locations" do
+    field :studio_locations, [ Types::StudioLocationType ], null: false,
+    description: "All studio locations" do
       argument :studio_id, ID, required: false
     end
     def studio_locations(studio_id: nil)
@@ -333,7 +333,7 @@ module Types
     StudioLocation.where(studio_id: effective_studio_id).order(:name)
     end
 
-    field :instructor_earnings_weeks, [Types::InstructorEarningsWeekType], null: false,
+    field :instructor_earnings_weeks, [ Types::InstructorEarningsWeekType ], null: false,
       description: "Weekly instructor earnings (owner only)" do
       argument :week_start, GraphQL::Types::ISO8601Date, required: true
       argument :week_end, GraphQL::Types::ISO8601Date, required: false
@@ -367,21 +367,21 @@ module Types
 
       breakdown_from_snapshot = lambda do |payout|
         snapshot = payout.calculation_snapshot
-        raw_rows = Array(snapshot.is_a?(Hash) ? (snapshot['templateBreakdown'] || snapshot[:templateBreakdown]) : nil)
+        raw_rows = Array(snapshot.is_a?(Hash) ? (snapshot["templateBreakdown"] || snapshot[:templateBreakdown]) : nil)
         return nil if raw_rows.empty?
 
-        ids = raw_rows.map { |row| row.is_a?(Hash) ? (row['classTemplateId'] || row[:classTemplateId]) : nil }.compact
+        ids = raw_rows.map { |row| row.is_a?(Hash) ? (row["classTemplateId"] || row[:classTemplateId]) : nil }.compact
         return nil if ids.empty?
 
         templates_by_id = ClassTemplate.where(studio_id: user.studio_id, id: ids).index_by { |t| t.id.to_s }
         return nil unless ids.all? { |id| templates_by_id.key?(id.to_s) }
 
         raw_rows.map do |row|
-          template_id = row['classTemplateId'] || row[:classTemplateId]
+          template_id = row["classTemplateId"] || row[:classTemplateId]
           {
             class_template: templates_by_id.fetch(template_id.to_s),
-            gross_cents: row['grossCents'] || row[:grossCents] || 0,
-            instructor_earnings_cents: row['instructorEarningsCents'] || row[:instructorEarningsCents] || 0
+            gross_cents: row["grossCents"] || row[:grossCents] || 0,
+            instructor_earnings_cents: row["instructorEarningsCents"] || row[:instructorEarningsCents] || 0
           }
         end
       end
@@ -400,10 +400,10 @@ module Types
       existing = existing.where(instructor_id: instructor_id) if instructor_id
       existing = existing.where(currency: currency) if currency.present?
 
-      existing_by_key = existing.index_by { |p| [p.instructor_id, p.currency] }
+      existing_by_key = existing.index_by { |p| [ p.instructor_id, p.currency ] }
 
       results.map do |r|
-        existing_payout = existing_by_key[[r.instructor.id, r.currency]]
+        existing_payout = existing_by_key[[ r.instructor.id, r.currency ]]
 
         if existing_payout&.paid?
           snapshot = existing_payout.calculation_snapshot.is_a?(Hash) ? existing_payout.calculation_snapshot : {}
@@ -412,8 +412,8 @@ module Types
           locked_gross = existing_payout.gross_cents
           locked_instructor = existing_payout.instructor_earnings_cents
           locked_studio = existing_payout.studio_cut_cents
-          locked_payments_count = snapshot['paymentsCount'] || snapshot[:paymentsCount] || r.payments_count
-          locked_sessions_count = snapshot['sessionsTaughtCount'] || snapshot[:sessionsTaughtCount] || r.sessions_taught_count
+          locked_payments_count = snapshot["paymentsCount"] || snapshot[:paymentsCount] || r.payments_count
+          locked_sessions_count = snapshot["sessionsTaughtCount"] || snapshot[:sessionsTaughtCount] || r.sessions_taught_count
 
           locked_template_breakdown = if locked_breakdown
             locked_breakdown
@@ -486,7 +486,7 @@ module Types
       end
     end
 
-    field :instructor_payouts, [Types::InstructorPayoutType], null: false,
+    field :instructor_payouts, [ Types::InstructorPayoutType ], null: false,
       description: "Instructor payouts (owner only)" do
       argument :week_start, GraphQL::Types::ISO8601Date, required: false
       argument :instructor_id, ID, required: false
@@ -501,6 +501,55 @@ module Types
       scope = scope.where(instructor_id: instructor_id) if instructor_id
       scope = scope.where(currency: currency) if currency.present?
       scope
+    end
+
+    field :bundle_products, [ Types::BundleProductType ], null: false,
+      description: "Bundle products (owner/staff)"
+    def bundle_products
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authorized" unless Pundit.policy(user, BundleProduct)&.index?
+
+      BundleProduct.where(studio_id: user.studio_id).order(created_at: :desc)
+    end
+
+    field :bundle_products_for_class_session, [ Types::BundleProductType ], null: false,
+      description: "Active bundle products that can be redeemed for a specific class session" do
+      argument :class_session_id, ID, required: true
+    end
+    def bundle_products_for_class_session(class_session_id:)
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authorized" unless user
+
+      cs =
+        if user.client?
+          ClassSession.where(archived: false).find(class_session_id)
+        else
+          ClassSession.where(studio_id: user.studio_id).find(class_session_id)
+        end
+
+      currency = cs.class_template&.currency.presence || "cad"
+      scope = BundleProduct.where(studio_id: cs.studio_id, active: true, currency: currency)
+
+      scope = scope.where(class_template_id: [ cs.class_template_id, nil ])
+      scope = scope.where(instructor_id: [ cs.instructor_id, nil ])
+
+      scope.order(:title)
+    end
+
+    field :my_bundle_purchases, [ Types::BundlePurchaseType ], null: false,
+      description: "Bundle purchases for the current client user (credits remaining)" do
+      argument :studio_id, ID, required: false
+    end
+    def my_bundle_purchases(studio_id: nil)
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authorized" unless user
+      raise GraphQL::ExecutionError, "Not authorized" unless Pundit.policy(user, BundlePurchase)&.index?
+
+      client_ids = Client.where(user_id: user.id).select(:id)
+      scope = BundlePurchase.where(client_id: client_ids, status: "succeeded").where("credits_remaining > 0")
+      scope = scope.where(studio_id: studio_id) if studio_id.present?
+
+      scope.includes(:bundle_product).order(created_at: :desc)
     end
 
     # TODO: remove me

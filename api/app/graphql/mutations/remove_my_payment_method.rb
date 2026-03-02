@@ -6,18 +6,18 @@ module Mutations
     argument :studio_id, ID, required: false
 
     field :client, Types::ClientType, null: true
-    field :errors, [String], null: false
+    field :errors, [ String ], null: false
 
     def resolve(payment_method_id: nil, studio_id: nil)
       user = context[:current_user]
-      return { client: nil, errors: ["Not authenticated"] } unless user
+      return { client: nil, errors: [ "Not authenticated" ] } unless user
 
       effective_studio_id = user.client? ? (studio_id.presence || user.studio_id) : user.studio_id
       client = Client.find_by(user_id: user.id, studio_id: effective_studio_id)
-      return { client: nil, errors: ["Client record not found"] } unless client
+      return { client: nil, errors: [ "Client record not found" ] } unless client
 
       target_id = payment_method_id.presence || client.stripe_default_payment_method_id
-      return { client: client, errors: ["No saved card on file"] } if target_id.blank?
+      return { client: client, errors: [ "No saved card on file" ] } if target_id.blank?
 
       record = client.client_payment_methods.find_by(stripe_payment_method_id: target_id)
 

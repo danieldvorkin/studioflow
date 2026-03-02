@@ -6,25 +6,25 @@ module Mutations
     argument :studio_id, ID, required: false
 
     field :client, Types::ClientType, null: true
-    field :errors, [String], null: false
+    field :errors, [ String ], null: false
 
     def resolve(payment_method_id:, studio_id: nil)
       user = context[:current_user]
-      return { client: nil, errors: ["Not authenticated"] } unless user
+      return { client: nil, errors: [ "Not authenticated" ] } unless user
 
       effective_studio_id = user.client? ? (studio_id.presence || user.studio_id) : user.studio_id
       client = Client.find_by(user_id: user.id, studio_id: effective_studio_id)
-      return { client: nil, errors: ["Client record not found"] } unless client
+      return { client: nil, errors: [ "Client record not found" ] } unless client
 
       record = client.client_payment_methods.find_by(stripe_payment_method_id: payment_method_id)
-      return { client: nil, errors: ["Payment method not found"] } unless record
+      return { client: nil, errors: [ "Payment method not found" ] } unless record
 
       settings = PaymentSetting.instance_for(user.studio)
       unless settings.configured?
-        return { client: nil, errors: ["Stripe is not configured"] }
+        return { client: nil, errors: [ "Stripe is not configured" ] }
       end
 
-      return { client: nil, errors: ["Stripe customer is not initialized"] } if client.stripe_customer_id.blank?
+      return { client: nil, errors: [ "Stripe customer is not initialized" ] } if client.stripe_customer_id.blank?
 
       Stripe.api_key = settings.stripe_secret_key
 
@@ -34,7 +34,7 @@ module Mutations
           { invoice_settings: { default_payment_method: payment_method_id } }
         )
       rescue Stripe::StripeError => e
-        return { client: nil, errors: [e.message] }
+        return { client: nil, errors: [ e.message ] }
       end
 
       Client.transaction do

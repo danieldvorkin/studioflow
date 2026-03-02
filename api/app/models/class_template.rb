@@ -1,7 +1,7 @@
 class ClassTemplate < ApplicationRecord
   belongs_to :studio
   belongs_to :studio_location, optional: true
-  belongs_to :instructor, class_name: 'User', optional: true
+  belongs_to :instructor, class_name: "User", optional: true
   has_many :class_sessions, dependent: :destroy
 
   before_validation :infer_studio
@@ -30,11 +30,11 @@ class ClassTemplate < ApplicationRecord
     return if studio_id.blank?
 
     if studio_location && studio_location.studio_id != studio_id
-      errors.add(:studio_location, 'must belong to the same studio')
+      errors.add(:studio_location, "must belong to the same studio")
     end
 
     if instructor && instructor.studio_id != studio_id
-      errors.add(:instructor, 'must belong to the same studio')
+      errors.add(:instructor, "must belong to the same studio")
     end
   end
 end

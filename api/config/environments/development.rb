@@ -78,11 +78,11 @@ Rails.application.configure do
     gem_js_root = File.join(spec.full_gem_path, "app/assets/javascripts")
 
     config.middleware.insert_before 0, Rack::Static,
-      urls: ["/stylesheets/graphql/voyager/rails", "/javascripts/graphql/voyager/rails"],
+      urls: [ "/stylesheets/graphql/voyager/rails", "/javascripts/graphql/voyager/rails" ],
       root: gem_assets_root
 
     config.middleware.insert_before 0, Rack::Static,
-      urls: ["/graphql/voyager/rails"],
+      urls: [ "/graphql/voyager/rails" ],
       root: gem_js_root
   end
 

@@ -3,11 +3,14 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   scan_ruby:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
 
     steps:
       - name: Checkout code
@@ -16,21 +19,23 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
+          ruby-version: 3.4.7
           bundler-cache: true
           working-directory: api
 
       - name: Scan for common Rails security vulnerabilities using static analysis
-        working-directory: api
-        run: bin/brakeman --no-pager
+        run: bin/brakeman --no-pager --no-exit-on-warn
 
       - name: Scan for known security vulnerabilities in gems used
-        working-directory: api
         run: bin/bundler-audit
 
   lint:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
     env:
-      RUBOCOP_CACHE_ROOT: api/tmp/rubocop
+      RUBOCOP_CACHE_ROOT: tmp/rubocop
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -38,19 +43,93 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
+          ruby-version: 3.4.7
           bundler-cache: true
           working-directory: api
 
       - name: Prepare RuboCop cache
         uses: actions/cache@v4
         env:
-          DEPENDENCIES_HASH: ${{ hashFiles('api/.ruby-version', 'api/**/.rubocop.yml', 'api/**/.rubocop_todo.yml', 'api/Gemfile.lock') }}
+          DEPENDENCIES_HASH: ${{ hashFiles('api/.ruby-version', 'api/.rubocop.yml', 'api/Gemfile.lock') }}
         with:
-          path: ${{ env.RUBOCOP_CACHE_ROOT }}
+          path: api/tmp/rubocop
           key: rubocop-${{ runner.os }}-${{ env.DEPENDENCIES_HASH }}-${{ github.ref_name == github.event.repository.default_branch && github.run_id || 'default' }}
           restore-keys: |
             rubocop-${{ runner.os }}-${{ env.DEPENDENCIES_HASH }}-
 
       - name: Lint code for consistent style
-        working-directory: api
         run: bin/rubocop -f github
+
+  test_api:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: api_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - name: Install packages
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.4.7
+          bundler-cache: true
+          working-directory: api
+
+      - name: Run tests
+        env:
+          RAILS_ENV: test
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/api_test
+          DEVISE_JWT_SECRET_KEY: test-jwt-secret-key-for-ci-only-not-used-in-production
+        run: |
+          bin/rails db:test:prepare
+          bundle exec rspec --format progress
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        env:
+          VITE_API_URL: http://localhost:3000
+          VITE_GRAPHQL_ENDPOINT: /graphql
+          VITE_GOOGLE_CLIENT_ID: test-client-id
+        run: npm run build

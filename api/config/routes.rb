@@ -1,6 +1,6 @@
 Rails.application.routes.draw do
   # Respond to preflight OPTIONS requests for /graphql (CORS preflight)
-  match "/graphql", to: ->(env) { [200, { 'Content-Type' => 'text/plain' }, ['OK']] }, via: :options
+  match "/graphql", to: ->(env) { [ 200, { "Content-Type" => "text/plain" }, [ "OK" ] ] }, via: :options
   post "/graphql", to: "graphql#execute"
 
   if Rails.env.development?

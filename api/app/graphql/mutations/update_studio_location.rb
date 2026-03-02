@@ -8,14 +8,14 @@ module Mutations
     argument :zip, String, required: false
 
     field :studio_location, Types::StudioLocationType, null: true
-    field :errors, [String], null: false
+    field :errors, [ String ], null: false
 
     def resolve(id:, name: nil, address: nil, city: nil, state: nil, zip: nil)
       user = context[:current_user]
       raise GraphQL::ExecutionError, "Not authorized" unless user&.owner?
 
       location = StudioLocation.where(studio_id: user.studio_id).find_by(id: id)
-      return { studio_location: nil, errors: ["Studio location not found"] } unless location
+      return { studio_location: nil, errors: [ "Studio location not found" ] } unless location
 
       attrs = {
         name: name,

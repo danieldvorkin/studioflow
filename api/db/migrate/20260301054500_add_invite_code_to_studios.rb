@@ -9,7 +9,7 @@ class AddInviteCodeToStudios < ActiveRecord::Migration[8.1]
     end
 
     studio_class.reset_column_information
-    studio_class.where(invite_code: [nil, '']).find_each do |studio|
+    studio_class.where(invite_code: [ nil, '' ]).find_each do |studio|
       studio.update_columns(invite_code: "S#{SecureRandom.hex(6)}")
     end
 
