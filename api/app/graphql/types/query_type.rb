@@ -47,9 +47,17 @@ module Types
     user = context[:current_user]
     raise GraphQL::ExecutionError, "Not authorized" unless user
 
-    effective_studio_id = user.client? ? (studio_id.presence || user.studio_id) : user.studio_id
+    effective_studio_id =
+      if user.godmode?
+        studio_id.presence
+      elsif user.client?
+        studio_id.presence || user.studio_id
+      else
+        user.studio_id
+      end
 
-    scope = ClassTemplate.where(studio_id: effective_studio_id)
+    scope = ClassTemplate.all
+    scope = scope.where(studio_id: effective_studio_id) if effective_studio_id
     scope = scope.where(instructor_id: instructor_id) if instructor_id
     if user&.instructor?
       scope = scope.where(instructor_id: user.id)
@@ -71,9 +79,17 @@ module Types
     user = context[:current_user]
     raise GraphQL::ExecutionError, "Not authorized" unless user
 
-    effective_studio_id = user.client? ? (studio_id.presence || user.studio_id) : user.studio_id
+    effective_studio_id =
+      if user.godmode?
+        studio_id.presence
+      elsif user.client?
+        studio_id.presence || user.studio_id
+      else
+        user.studio_id
+      end
 
-    scope = ClassSession.where(studio_id: effective_studio_id, archived: false)
+    scope = ClassSession.where(archived: false)
+    scope = scope.where(studio_id: effective_studio_id) if effective_studio_id
     scope = scope.where("start_time >= ?", from) if from
     scope = scope.where("start_time <= ?", to) if to
     if studio_location_id
@@ -101,7 +117,9 @@ module Types
           .joins(:favorite_class_sessions)
           .where(favorite_class_sessions: { user_id: user.id }, archived: false)
 
-      if user.client?
+      if user.godmode?
+        scope = scope.where(studio_id: studio_id) if studio_id.present?
+      elsif user.client?
         scope = scope.where(studio_id: studio_id) if studio_id.present?
       else
         scope = scope.where(studio_id: user.studio_id)
@@ -127,7 +145,9 @@ module Types
 
       scope = ClassSession.where(archived: false).where("start_time > ?", Time.current)
 
-      if user.client?
+      if user.godmode?
+        scope = scope.where(studio_id: studio_id) if studio_id.present?
+      elsif user.client?
         scope = scope.where(studio_id: studio_id) if studio_id.present?
       else
         scope = scope.where(studio_id: user.studio_id)
@@ -172,7 +192,11 @@ module Types
     user = context[:current_user]
     raise GraphQL::ExecutionError, "Not authorized" unless user&.owner? || user&.staff?
 
-    User.where(studio_id: user.studio_id, role: User::ROLES[:instructor]).order(:name)
+    if user.godmode?
+      User.where(role: User::ROLES[:instructor]).order(:name)
+    else
+      User.where(studio_id: user.studio_id, role: User::ROLES[:instructor]).order(:name)
+    end
     end
 
     field :clients, [ Types::ClientType ], null: false,
@@ -181,7 +205,9 @@ module Types
     user = context[:current_user]
     raise GraphQL::ExecutionError, "Not authorized" unless user
 
-    if user.owner? || user.staff?
+    if user.godmode?
+      Client.order(:name)
+    elsif user.owner? || user.staff?
       Client.where(studio_id: user.studio_id).order(:name)
     elsif user.instructor?
       Client.where(studio_id: user.studio_id)
@@ -200,7 +226,11 @@ module Types
       user = context[:current_user]
       raise GraphQL::ExecutionError, "Not authorized" unless user&.owner?
 
-      User.where(studio_id: user.studio_id).order(:email)
+      if user.godmode?
+        User.order(:email)
+      else
+        User.where(studio_id: user.studio_id).order(:email)
+      end
     end
 
     field :bookings, [ Types::BookingType ], null: false,
@@ -212,17 +242,20 @@ module Types
     user = context[:current_user]
     raise GraphQL::ExecutionError, "Not authorized" unless user
 
-    effective_studio_id = user.client? ? (studio_id.presence || user.studio_id) : user.studio_id
+    effective_client_studio_id = studio_id.presence || user.studio_id
 
     scope =
-      if user.owner? || user.staff?
+      if user.godmode?
+        base = Booking.where(archived: false)
+        studio_id.present? ? base.where(studio_id: studio_id) : base
+      elsif user.owner? || user.staff?
         Booking.where(studio_id: user.studio_id, archived: false)
       elsif user.instructor?
         Booking.joins(class_session: :instructor)
          .where(studio_id: user.studio_id, class_sessions: { instructor_id: user.id }, archived: false)
       elsif user.client?
         Booking.joins(:client)
-         .where(studio_id: effective_studio_id, clients: { user_id: user.id }, archived: false)
+         .where(studio_id: effective_client_studio_id, clients: { user_id: user.id }, archived: false)
       else
         Booking.none
       end
@@ -265,7 +298,8 @@ module Types
     user = context[:current_user]
     raise GraphQL::ExecutionError, "Not authorized" unless user&.owner? || user&.staff?
 
-    Payment.where(studio_id: user.studio_id)
+    base = user.godmode? ? Payment.all : Payment.where(studio_id: user.studio_id)
+    base
       .includes(:booking, :client, :class_session)
       .order(created_at: :desc)
     end
@@ -287,7 +321,14 @@ module Types
       user = context[:current_user]
       raise GraphQL::ExecutionError, "Not authorized" unless user
 
-      effective_studio_id = user.client? ? (studio_id.presence || user.studio_id) : user.studio_id
+      effective_studio_id =
+        if user.godmode?
+          studio_id.presence || user.studio_id
+        elsif user.client?
+          studio_id.presence || user.studio_id
+        else
+          user.studio_id
+        end
       studio = Studio.find(effective_studio_id)
 
       PaymentSetting.instance_for(studio)
@@ -301,7 +342,14 @@ module Types
       user = context[:current_user]
       raise GraphQL::ExecutionError, "Not authorized" unless user
 
-      effective_studio_id = user.client? ? (studio_id.presence || user.studio_id) : user.studio_id
+      effective_studio_id =
+        if user.godmode?
+          studio_id.presence || user.studio_id
+        elsif user.client?
+          studio_id.presence || user.studio_id
+        else
+          user.studio_id
+        end
 
       Client.find_by(user_id: user.id, studio_id: effective_studio_id)
     end
@@ -314,7 +362,14 @@ module Types
     user = context[:current_user]
     raise GraphQL::ExecutionError, "Not authorized" unless user
 
-    effective_studio_id = user.client? ? (studio_id.presence || user.studio_id) : user.studio_id
+    effective_studio_id =
+      if user.godmode?
+        studio_id.presence || user.studio_id
+      elsif user.client?
+        studio_id.presence || user.studio_id
+      else
+        user.studio_id
+      end
     studio = Studio.find(effective_studio_id)
 
     PaymentSetting.instance_for(studio)
@@ -328,7 +383,14 @@ module Types
     user = context[:current_user]
     raise GraphQL::ExecutionError, "Not authorized" unless user
 
-    effective_studio_id = user.client? ? (studio_id.presence || user.studio_id) : user.studio_id
+    effective_studio_id =
+      if user.godmode?
+        studio_id.presence || user.studio_id
+      elsif user.client?
+        studio_id.presence || user.studio_id
+      else
+        user.studio_id
+      end
 
     StudioLocation.where(studio_id: effective_studio_id).order(:name)
     end
@@ -510,6 +572,31 @@ module Types
       raise GraphQL::ExecutionError, "Not authorized" unless Pundit.policy(user, BundleProduct)&.index?
 
       BundleProduct.where(studio_id: user.studio_id).order(created_at: :desc)
+    end
+
+    field :bundle_shop_products, [ Types::BundleProductType ], null: false,
+      description: "Active bundle products available for clients to purchase" do
+      argument :studio_id, ID, required: false
+      argument :currency, String, required: false
+    end
+    def bundle_shop_products(studio_id: nil, currency: nil)
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authorized" unless user
+
+      effective_studio_id =
+        if user.godmode?
+          studio_id.presence
+        elsif user.client?
+          studio_id.presence || user.studio_id
+        else
+          user.studio_id
+        end
+
+      raise GraphQL::ExecutionError, "Studio is required" if effective_studio_id.blank?
+
+      scope = BundleProduct.where(studio_id: effective_studio_id, active: true)
+      scope = scope.where(currency: currency) if currency.present?
+      scope.order(:title)
     end
 
     field :bundle_products_for_class_session, [ Types::BundleProductType ], null: false,

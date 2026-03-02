@@ -27,6 +27,10 @@ export const CLASS_SESSIONS = gql`
       endTime
       capacity
       room
+      bundleEnabled
+      bundleSpots
+      bundleSpotsTaken
+      bundleSpotsAvailable
       classTemplate { id title priceCents currency durationMinutes }
       seatsAvailable
       instructor { id name }
@@ -34,9 +38,76 @@ export const CLASS_SESSIONS = gql`
   }
 `
 
+export const BUNDLE_PRODUCTS = gql`
+  query BundleProducts {
+    bundleProducts {
+      id
+      title
+      description
+      active
+      creditsCount
+      priceCents
+      currency
+      classTemplate { id title }
+      instructor { id name email }
+    }
+  }
+`
+
+export const BUNDLE_SHOP_PRODUCTS = gql`
+  query BundleShopProducts($studioId: ID!, $currency: String) {
+    bundleShopProducts(studioId: $studioId, currency: $currency) {
+      id
+      title
+      description
+      active
+      creditsCount
+      priceCents
+      currency
+      classTemplate { id title }
+      instructor { id name email }
+    }
+  }
+`
+
+export const MY_BUNDLE_PURCHASES = gql`
+  query MyBundlePurchases($studioId: ID) {
+    myBundlePurchases(studioId: $studioId) {
+      id
+      status
+      creditsTotal
+      creditsRemaining
+      priceCents
+      currency
+      createdAt
+      bundleProduct {
+        id
+        title
+        description
+        creditsCount
+        currency
+      }
+    }
+  }
+`
+
+export const BUNDLE_PRODUCTS_FOR_CLASS_SESSION = gql`
+  query BundleProductsForClassSession($classSessionId: ID!) {
+    bundleProductsForClassSession(classSessionId: $classSessionId) {
+      id
+      title
+      creditsCount
+      priceCents
+      currency
+      classTemplate { id title }
+      instructor { id name }
+    }
+  }
+`
+
 export const CURRENT_USER = gql`
   query CurrentUser {
-    currentUser { id studioId email name role roleName active availableForSessions }
+    currentUser { id studioId email name role roleName godmode active availableForSessions }
   }
 `
 
@@ -72,6 +143,7 @@ export const ALL_USERS = gql`
   query AllUsers {
     users {
       id
+      studioId
       email
       name
       role
@@ -144,6 +216,12 @@ export const BOOKINGS = gql`
         errorMessage
         createdAt
       }
+      bundlePurchase {
+        id
+        creditsTotal
+        creditsRemaining
+        bundleProduct { id title }
+      }
       client { id name email }
       classSession {
         id
@@ -174,6 +252,12 @@ export const MY_BOOKINGS = gql`
         status
         errorMessage
         createdAt
+      }
+      bundlePurchase {
+        id
+        creditsTotal
+        creditsRemaining
+        bundleProduct { id title }
       }
       client { id name email }
       classSession {

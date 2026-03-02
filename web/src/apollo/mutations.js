@@ -235,14 +235,34 @@ export const SEND_BOOKING_PAYMENT_REMINDER = gql`
 `
 
 export const CREATE_CLASS_SESSION = gql`
-  mutation CreateClassSession($classTemplateId: ID!, $startTime: ISO8601DateTime!, $endTime: ISO8601DateTime, $capacity: Int, $room: String) {
-    createClassSession(input: { classTemplateId: $classTemplateId, startTime: $startTime, endTime: $endTime, capacity: $capacity, room: $room }) {
+  mutation CreateClassSession(
+    $classTemplateId: ID!
+    $startTime: ISO8601DateTime!
+    $endTime: ISO8601DateTime
+    $capacity: Int
+    $room: String
+    $bundleEnabled: Boolean
+    $bundleSpots: Int
+  ) {
+    createClassSession(input: {
+      classTemplateId: $classTemplateId
+      startTime: $startTime
+      endTime: $endTime
+      capacity: $capacity
+      room: $room
+      bundleEnabled: $bundleEnabled
+      bundleSpots: $bundleSpots
+    }) {
       classSession {
         id
         startTime
         endTime
         capacity
         room
+        bundleEnabled
+        bundleSpots
+        bundleSpotsTaken
+        bundleSpotsAvailable
         classTemplate { id title }
         instructor { id name }
       }
@@ -426,15 +446,120 @@ export const DELETE_CLASS_TEMPLATE = gql`
 `
 
 export const UPDATE_CLASS_SESSION = gql`
-  mutation UpdateClassSession($id: ID!, $startTime: ISO8601DateTime, $endTime: ISO8601DateTime, $capacity: Int, $room: String) {
-    updateClassSession(input: { id: $id, startTime: $startTime, endTime: $endTime, capacity: $capacity, room: $room }) {
+  mutation UpdateClassSession(
+    $id: ID!
+    $startTime: ISO8601DateTime
+    $endTime: ISO8601DateTime
+    $capacity: Int
+    $room: String
+    $bundleEnabled: Boolean
+    $bundleSpots: Int
+  ) {
+    updateClassSession(input: {
+      id: $id
+      startTime: $startTime
+      endTime: $endTime
+      capacity: $capacity
+      room: $room
+      bundleEnabled: $bundleEnabled
+      bundleSpots: $bundleSpots
+    }) {
       classSession {
         id
         startTime
         endTime
         capacity
         room
+        bundleEnabled
+        bundleSpots
+        bundleSpotsTaken
+        bundleSpotsAvailable
       }
+      errors
+    }
+  }
+`
+
+export const CREATE_BUNDLE_PRODUCT = gql`
+  mutation CreateBundleProduct(
+    $title: String!
+    $description: String
+    $active: Boolean
+    $creditsCount: Int!
+    $priceCents: Int!
+    $currency: String!
+    $classTemplateId: ID
+    $instructorId: ID
+  ) {
+    createBundleProduct(input: {
+      title: $title
+      description: $description
+      active: $active
+      creditsCount: $creditsCount
+      priceCents: $priceCents
+      currency: $currency
+      classTemplateId: $classTemplateId
+      instructorId: $instructorId
+    }) {
+      bundleProduct {
+        id
+        title
+        description
+        active
+        creditsCount
+        priceCents
+        currency
+        classTemplate { id title }
+        instructor { id name email }
+      }
+      errors
+    }
+  }
+`
+
+export const UPDATE_BUNDLE_PRODUCT = gql`
+  mutation UpdateBundleProduct(
+    $id: ID!
+    $title: String
+    $description: String
+    $active: Boolean
+    $creditsCount: Int
+    $priceCents: Int
+    $currency: String
+    $classTemplateId: ID
+    $instructorId: ID
+  ) {
+    updateBundleProduct(input: {
+      id: $id
+      title: $title
+      description: $description
+      active: $active
+      creditsCount: $creditsCount
+      priceCents: $priceCents
+      currency: $currency
+      classTemplateId: $classTemplateId
+      instructorId: $instructorId
+    }) {
+      bundleProduct {
+        id
+        title
+        description
+        active
+        creditsCount
+        priceCents
+        currency
+        classTemplate { id title }
+        instructor { id name email }
+      }
+      errors
+    }
+  }
+`
+
+export const DELETE_BUNDLE_PRODUCT = gql`
+  mutation DeleteBundleProduct($id: ID!) {
+    deleteBundleProduct(input: { id: $id }) {
+      success
       errors
     }
   }
@@ -492,6 +617,39 @@ export const CREATE_BOOKING_WITH_PAYMENT = gql`
         currency
         status
       }
+      errors
+    }
+  }
+`
+
+export const PURCHASE_BUNDLE_PRODUCT = gql`
+  mutation PurchaseBundleProduct($bundleProductId: ID!, $clientId: ID, $paymentMethodId: String) {
+    purchaseBundleProduct(
+      input: { bundleProductId: $bundleProductId, clientId: $clientId, paymentMethodId: $paymentMethodId }
+    ) {
+      bundlePurchase {
+        id
+        status
+        creditsTotal
+        creditsRemaining
+        priceCents
+        currency
+        createdAt
+        bundleProduct { id title creditsCount currency }
+      }
+      errors
+    }
+  }
+`
+
+export const CREATE_BOOKING_WITH_BUNDLE = gql`
+  mutation CreateBookingWithBundle($clientId: ID, $classSessionId: ID!, $bundlePurchaseId: ID!) {
+    createBookingWithBundle(
+      input: { clientId: $clientId, classSessionId: $classSessionId, bundlePurchaseId: $bundlePurchaseId }
+    ) {
+      booking { id status }
+      payment { id amountCents currency status }
+      bundlePurchase { id creditsRemaining }
       errors
     }
   }

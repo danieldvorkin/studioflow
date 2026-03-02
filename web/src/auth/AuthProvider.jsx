@@ -11,6 +11,7 @@ const CURRENT_USER = gql`
       name
       role
       roleName
+      godmode
       active
       availableForSessions
     }

@@ -4,8 +4,16 @@ import { useForm } from 'react-hook-form'
 import { useEffect, useMemo, useState } from 'react'
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { loadStripe } from '@stripe/stripe-js'
-import { CLASS_SESSIONS, CLIENTS, MY_BOOKINGS, MY_CLIENT, PAYMENT_PUBLIC_SETTINGS } from '../apollo/queries'
-import { CREATE_CLIENT, CREATE_BOOKING_WITH_PAYMENT } from '../apollo/mutations'
+import {
+  BUNDLE_PRODUCTS_FOR_CLASS_SESSION,
+  CLASS_SESSIONS,
+  CLIENTS,
+  MY_BOOKINGS,
+  MY_BUNDLE_PURCHASES,
+  MY_CLIENT,
+  PAYMENT_PUBLIC_SETTINGS,
+} from '../apollo/queries'
+import { CREATE_BOOKING_WITH_BUNDLE, CREATE_CLIENT, CREATE_BOOKING_WITH_PAYMENT } from '../apollo/mutations'
 import { useToast } from '../components/ToastProvider'
 import { useTheme } from '../theme/ThemeProvider'
 import { getStripeCardElementOptions } from '../theme/stripeElements'
@@ -13,7 +21,7 @@ import { normalizeStripeEmail } from '../payments/stripeEmail'
 import { useStudio } from '../studio/StudioProvider'
 import { useAuth } from '../auth/AuthProvider'
 
-function BookingForm({ session, studioIdForBooking }) {
+function BookingForm({ session, studioIdForBooking, stripeConfigured }) {
   const { id } = useParams() // classSessionId
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -39,11 +47,14 @@ function BookingForm({ session, studioIdForBooking }) {
   })
   const [createClient] = useMutation(CREATE_CLIENT)
   const [createBookingWithPayment] = useMutation(CREATE_BOOKING_WITH_PAYMENT)
+  const [createBookingWithBundle] = useMutation(CREATE_BOOKING_WITH_BUNDLE)
   const { register, handleSubmit, setValue } = useForm()
   const { addToast } = useToast()
   const stripe = useStripe()
   const elements = useElements()
   const [paymentChoice, setPaymentChoice] = useState('new')
+  const [paymentSource, setPaymentSource] = useState('card')
+  const [didAutoSelectBundle, setDidAutoSelectBundle] = useState(false)
   const [useExistingClient, setUseExistingClient] = useState(false)
   const [existingClientId, setExistingClientId] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -57,6 +68,49 @@ function BookingForm({ session, studioIdForBooking }) {
   )
 
   const canUseSaved = bookingForMyClient && savedMethods.length > 0
+
+  const shouldShowBundlePayments = isClientUser && session?.bundleEnabled === true
+
+  const { data: bundleProductsData, loading: bundleProductsLoading } = useQuery(
+    BUNDLE_PRODUCTS_FOR_CLASS_SESSION,
+    {
+      skip: !shouldShowBundlePayments,
+      variables: { classSessionId: id },
+      fetchPolicy: 'cache-and-network',
+    },
+  )
+
+  const { data: myBundlePurchasesData, loading: myBundlePurchasesLoading } = useQuery(MY_BUNDLE_PURCHASES, {
+    skip: !shouldShowBundlePayments,
+    variables: studioIdForBooking ? { studioId: studioIdForBooking } : {},
+    fetchPolicy: 'cache-and-network',
+  })
+
+  const eligibleBundleProductIds = useMemo(() => {
+    const list = bundleProductsData?.bundleProductsForClassSession || []
+    return new Set(list.map((bp) => bp?.id).filter(Boolean))
+  }, [bundleProductsData])
+
+  const eligibleBundlePurchases = useMemo(() => {
+    const purchases = myBundlePurchasesData?.myBundlePurchases || []
+    return purchases.filter((p) => p?.creditsRemaining > 0 && eligibleBundleProductIds.has(p?.bundleProduct?.id))
+  }, [eligibleBundleProductIds, myBundlePurchasesData])
+
+  const [selectedBundlePurchaseId, setSelectedBundlePurchaseId] = useState('')
+
+  useEffect(() => {
+    if (!selectedBundlePurchaseId && eligibleBundlePurchases.length > 0) {
+      setSelectedBundlePurchaseId(eligibleBundlePurchases[0].id)
+    }
+  }, [eligibleBundlePurchases, selectedBundlePurchaseId])
+
+  useEffect(() => {
+    if (!shouldShowBundlePayments) return
+    if (!didAutoSelectBundle && eligibleBundlePurchases.length > 0) {
+      setPaymentSource('bundle')
+      setDidAutoSelectBundle(true)
+    }
+  }, [didAutoSelectBundle, eligibleBundlePurchases.length, shouldShowBundlePayments])
 
   useEffect(() => {
     // If we switch to booking for a different client, saved-card selection (if any)
@@ -142,6 +196,34 @@ function BookingForm({ session, studioIdForBooking }) {
       }
 
       let paymentMethodIdToUse = null
+      if (isClientUser && paymentSource === 'bundle') {
+        if (!selectedBundlePurchaseId) throw new Error('Please choose a bundle credit')
+
+        const bookingRes = await createBookingWithBundle({
+          variables: {
+            clientId: null,
+            classSessionId: id,
+            bundlePurchaseId: selectedBundlePurchaseId,
+          },
+        })
+
+        const bookingPayload = bookingRes.data?.createBookingWithBundle
+        const bookingErrors = bookingPayload?.errors || []
+        const booking = bookingPayload?.booking
+
+        if (bookingErrors.length || !booking) {
+          throw new Error(bookingErrors.join(', ') || 'Booking failed')
+        }
+
+        addToast({ message: 'Booking confirmed', type: 'success' })
+        navigate('/dashboard')
+        return
+      }
+
+      if (!stripeConfigured) {
+        throw new Error('Payments are not configured for this studio')
+      }
+
       if (paymentChoice === 'saved') {
         if (!canUseSaved) {
           throw new Error('Saved card can only be used when booking for your own profile')
@@ -241,6 +323,10 @@ function BookingForm({ session, studioIdForBooking }) {
     ? (session.classTemplate.priceCents / 100).toFixed(2)
     : null
 
+  const showBundleOption = shouldShowBundlePayments
+  const canPayWithBundle = eligibleBundlePurchases.length > 0
+  const loadingBundleData = bundleProductsLoading || myBundlePurchasesLoading
+
   return (
     <div className="mx-auto max-w-5xl space-y-4">
       <div>
@@ -319,14 +405,89 @@ function BookingForm({ session, studioIdForBooking }) {
         <div className="space-y-1">
           <label className="block text-xs font-medium text-slate-300">Payment</label>
 
-          <div className="rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2 text-[11px] text-slate-300">
-            <div className="font-semibold text-slate-200">Secure payment</div>
-            <div className="mt-0.5 text-slate-400">
-              Card details are sent directly to Stripe for processing. We don’t store your full card number.
-            </div>
-          </div>
+          {isClientUser && showBundleOption && (
+            <div className="space-y-2 rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2 text-xs text-slate-200">
+              <div className="flex items-center justify-between gap-3">
+                <div className="font-semibold text-slate-200">Payment source</div>
+                {loadingBundleData && <span className="text-[11px] text-slate-500">Loading bundle credits…</span>}
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="inline-flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="paymentSource"
+                    className="h-3 w-3"
+                    checked={paymentSource === 'card'}
+                    onChange={() => setPaymentSource('card')}
+                  />
+                  <span>Card</span>
+                </label>
+                <label className="inline-flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="paymentSource"
+                    className="h-3 w-3"
+                    checked={paymentSource === 'bundle'}
+                    disabled={!canPayWithBundle}
+                    onChange={() => setPaymentSource('bundle')}
+                  />
+                  <span>Bundle credits</span>
+                  {!loadingBundleData && !canPayWithBundle && (
+                    <span className="text-[11px] text-slate-500">(no eligible credits)</span>
+                  )}
+                </label>
+              </div>
 
-          {canUseSaved && (
+              {paymentSource === 'bundle' && (
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-medium text-slate-400">Choose credits</label>
+                  <select
+                    value={selectedBundlePurchaseId}
+                    onChange={(e) => setSelectedBundlePurchaseId(e.target.value)}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                    disabled={!canPayWithBundle}
+                  >
+                    {!canPayWithBundle && <option value="">No eligible bundle credits</option>}
+                    {eligibleBundlePurchases.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.bundleProduct?.title || 'Bundle'} — {p.creditsRemaining} credits remaining
+                      </option>
+                    ))}
+                  </select>
+                  {!canPayWithBundle && (
+                    <div className="text-[11px] text-slate-500">
+                      <button
+                        type="button"
+                        onClick={() => navigate('/my-bundles')}
+                        className="underline decoration-slate-600 underline-offset-2 hover:text-slate-300"
+                      >
+                        Buy bundle credits
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {(paymentSource !== 'bundle') && (
+            <>
+              <div className="rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2 text-[11px] text-slate-300">
+                <div className="font-semibold text-slate-200">Secure payment</div>
+                <div className="mt-0.5 text-slate-400">
+                  Card details are sent directly to Stripe for processing. We don’t store your full card number.
+                </div>
+              </div>
+
+              {!stripeConfigured && (
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+                  Payments aren’t configured yet for this studio.
+                </div>
+              )}
+            </>
+          )}
+
+          {stripeConfigured && canUseSaved && (paymentSource !== 'bundle') && (
             <div className="space-y-2 rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2 text-xs text-slate-200">
               <div className="flex flex-col gap-1">
                 <label className="inline-flex items-center gap-2">
@@ -373,7 +534,7 @@ function BookingForm({ session, studioIdForBooking }) {
             </div>
           )}
 
-          {(!canUseSaved || paymentChoice === 'new') && (
+          {stripeConfigured && (paymentSource !== 'bundle') && (!canUseSaved || paymentChoice === 'new') && (
             <>
               <div className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm">
                 <CardElement
@@ -391,10 +552,12 @@ function BookingForm({ session, studioIdForBooking }) {
         </div>
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || (paymentSource !== 'bundle' && !stripeConfigured) || (paymentSource === 'bundle' && !canPayWithBundle)}
           className="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-sky-500 px-3 py-2 text-sm font-semibold text-on-accent hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-70"
         >
-          {priceDollars ? `Pay ${currencySymbol}${priceDollars} ${currencyLabel} & book` : 'Confirm booking'}
+          {paymentSource === 'bundle'
+            ? 'Book using bundle credits'
+            : (priceDollars ? `Pay ${currencySymbol}${priceDollars} ${currencyLabel} & book` : 'Confirm booking')}
         </button>
         </form>
         <aside className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 text-sm">
@@ -446,6 +609,7 @@ export default function Booking() {
   const { data: myBookingsData } = useQuery(MY_BOOKINGS, {
     skip: !isClientUser,
     fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: 'cache-first',
     variables: {},
   })
 
@@ -456,6 +620,8 @@ export default function Booking() {
         )
       : null
 
+  const redirectingToExistingBooking = !!existingBookingForRoute?.id
+
   useEffect(() => {
     if (existingBookingForRoute?.id) {
       navigate(`/bookings/${existingBookingForRoute.id}`, { replace: true })
@@ -463,6 +629,7 @@ export default function Booking() {
   }, [existingBookingForRoute?.id, navigate])
 
   const { data: sessionsData } = useQuery(CLASS_SESSIONS, {
+    skip: redirectingToExistingBooking,
     variables: isClientUser
       ? studioIdForBooking
         ? { from: null, to: null, studioId: studioIdForBooking }
@@ -471,6 +638,7 @@ export default function Booking() {
   })
 
   const { data: paymentPublicSettingsData } = useQuery(PAYMENT_PUBLIC_SETTINGS, {
+    skip: redirectingToExistingBooking,
     variables: isClientUser
       ? studioIdForBooking
         ? { studioId: studioIdForBooking }
@@ -480,31 +648,19 @@ export default function Booking() {
 
   const session = (sessionsData?.classSessions || []).find((s) => s.id === id)
   const stripePublishableKey = paymentPublicSettingsData?.paymentPublicSettings?.stripePublishableKey
+  const stripeConfigured = paymentPublicSettingsData?.paymentPublicSettings?.configured === true
 
   const stripePromise = useMemo(() => (
     stripePublishableKey ? loadStripe(stripePublishableKey) : null
   ), [stripePublishableKey])
 
-  if (existingBookingForRoute?.id) return <div>Opening your booking…</div>
+  if (redirectingToExistingBooking) return <div>Opening your booking…</div>
 
   if (!session) return <div>Loading session...</div>
 
-  if (!stripePublishableKey) {
-    return (
-      <div className="mx-auto max-w-xl space-y-4">
-        <h2 className="text-xl font-semibold text-slate-50">Book session</h2>
-        <p className="text-sm text-amber-400">
-          Payments are not configured yet. Please ask the studio owner to add Stripe keys in the Owner area.
-        </p>
-      </div>
-    )
-  }
-
-  if (!stripePromise) return <div>Loading payment configuration…</div>
-
   return (
     <Elements stripe={stripePromise}>
-      <BookingForm session={session} studioIdForBooking={studioIdForBooking} />
+      <BookingForm session={session} studioIdForBooking={studioIdForBooking} stripeConfigured={stripeConfigured} />
     </Elements>
   )
 }

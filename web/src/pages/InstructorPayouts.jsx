@@ -3,11 +3,15 @@ import { Navigate } from 'react-router-dom'
 import { CURRENT_USER } from '../apollo/queries'
 import { useToast } from '../components/ToastProvider'
 import InstructorPayoutsModule from '../components/InstructorPayoutsModule'
+import { useAuth } from '../auth/AuthProvider'
 
 export default function InstructorPayoutsPage() {
+  const auth = useAuth()
   const { data: userData, loading: userLoading } = useQuery(CURRENT_USER)
   const user = userData?.currentUser
-  const isOwner = user?.roleName === 'owner' || user?.role === 0
+  const roleName = (user?.roleName || '').toString().toLowerCase()
+  const isGodmode = user?.godmode === true || roleName === 'godmode'
+  const isOwner = roleName === 'owner' || user?.role === 0
   const { addToast } = useToast()
 
   if (userLoading || (!user && !userLoading)) {
@@ -15,6 +19,10 @@ export default function InstructorPayoutsPage() {
   }
 
   if (!user) return <Navigate to="/signin" replace />
+
+  if (isGodmode && !auth.isImpersonating) {
+    return <Navigate to="/owner" replace />
+  }
 
   if (!isOwner) {
     return (

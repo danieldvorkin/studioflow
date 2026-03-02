@@ -7,6 +7,7 @@ module Types
     field :avatar_url, String, null: true
     field :role, Integer, null: true
     field :role_name, String, null: true
+    field :godmode, Boolean, null: false, method: :godmode?
     field :active, Boolean, null: false
     field :available_for_sessions, Boolean, null: false
 

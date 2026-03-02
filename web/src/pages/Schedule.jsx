@@ -146,6 +146,8 @@ export default function Schedule() {
     time: '09:00',
     capacity: '',
     room: '',
+    bundleEnabled: false,
+    bundleSpots: '',
   })
   const [monthExpandedSessionId, setMonthExpandedSessionId] = useState(null)
   const weekStart = useMemo(() => startOfWeek(anchorDate), [anchorDate])
@@ -365,6 +367,8 @@ export default function Schedule() {
     startTime: '',
     capacity: '',
     room: '',
+    bundleEnabled: false,
+    bundleSpots: '',
   })
 
   const [editingSessionId, setEditingSessionId] = useState(null)
@@ -391,7 +395,7 @@ export default function Schedule() {
     setShowNewEventModal(true)
   }
 
-  const createSessionForDayAndTime = async ({ dayKey, classTemplateId, time, capacity, room }) => {
+  const createSessionForDayAndTime = async ({ dayKey, classTemplateId, time, capacity, room, bundleEnabled, bundleSpots }) => {
     if (!dayKey || !classTemplateId || !time) return
 
     const base = dateFromLocalDayKey(dayKey)
@@ -402,15 +406,20 @@ export default function Schedule() {
 
     const startIso = base.toISOString()
 
-    const res = await createClassSession({
-      variables: {
-        classTemplateId,
-        startTime: startIso,
-        endTime: null,
-        capacity: capacity ? Number(capacity) : null,
-        room: room || null,
-      },
-    })
+    const variables = {
+      classTemplateId,
+      startTime: startIso,
+      endTime: null,
+      capacity: capacity ? Number(capacity) : null,
+      room: room || null,
+    }
+
+    if (userIsOwner || userIsStaff || userIsInstructor) {
+      variables.bundleEnabled = bundleEnabled === true
+      variables.bundleSpots = bundleEnabled ? (bundleSpots ? Number(bundleSpots) : null) : null
+    }
+
+    const res = await createClassSession({ variables })
 
     const payload = res.data?.createClassSession
     const errors = payload?.errors || []
@@ -434,22 +443,27 @@ export default function Schedule() {
     e.preventDefault()
     if (!form.classTemplateId || !form.startTime) return
     try {
-      const res = await createClassSession({
-        variables: {
-          classTemplateId: form.classTemplateId,
-          startTime: new Date(form.startTime).toISOString(),
-          endTime: null,
-          capacity: form.capacity ? Number(form.capacity) : null,
-          room: form.room || null,
-        },
-      })
+      const variables = {
+        classTemplateId: form.classTemplateId,
+        startTime: new Date(form.startTime).toISOString(),
+        endTime: null,
+        capacity: form.capacity ? Number(form.capacity) : null,
+        room: form.room || null,
+      }
+
+      if (userIsOwner || userIsStaff || userIsInstructor) {
+        variables.bundleEnabled = form.bundleEnabled === true
+        variables.bundleSpots = form.bundleEnabled ? (form.bundleSpots ? Number(form.bundleSpots) : null) : null
+      }
+
+      const res = await createClassSession({ variables })
       const payload = res.data?.createClassSession
       const errors = payload?.errors || []
       if (errors.length || !payload?.classSession) {
         throw new Error(errors.join(', ') || 'Could not create session')
       }
       addToast({ message: 'Session created', type: 'success' })
-      setForm({ classTemplateId: '', startTime: '', capacity: '', room: '' })
+      setForm({ classTemplateId: '', startTime: '', capacity: '', room: '', bundleEnabled: false, bundleSpots: '' })
       await refetch()
     } catch (err) {
       addToast({ message: err.message || 'Failed to create session', type: 'error' })
@@ -619,6 +633,30 @@ export default function Schedule() {
               onChange={(e) => setForm((f) => ({ ...f, room: e.target.value }))}
             />
           </div>
+
+          {(userIsOwner || userIsStaff || userIsInstructor) && (
+            <div className="flex flex-col gap-2 rounded-xl border border-slate-800 bg-slate-950/30 p-3 md:flex-row md:items-end">
+              <label className="flex items-center gap-2 text-xs font-medium text-slate-200">
+                <input
+                  type="checkbox"
+                  checked={form.bundleEnabled}
+                  onChange={(e) => setForm((f) => ({ ...f, bundleEnabled: e.target.checked }))}
+                />
+                Allow bundle credits
+              </label>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-slate-300">Bundle spots</label>
+                <input
+                  type="number"
+                  min="1"
+                  disabled={!form.bundleEnabled}
+                  className="w-28 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 disabled:opacity-60"
+                  value={form.bundleSpots}
+                  onChange={(e) => setForm((f) => ({ ...f, bundleSpots: e.target.value }))}
+                />
+              </div>
+            </div>
+          )}
           <button
             type="submit"
             className="mt-2 inline-flex items-center justify-center rounded-lg bg-sky-500 px-4 py-2 text-sm font-semibold text-on-accent hover:bg-sky-400 md:mt-0"
@@ -811,6 +849,8 @@ export default function Schedule() {
                                         endTime: candidateEnd ? candidateEnd.toISOString() : null,
                                         capacity: typeof s.capacity === 'number' ? s.capacity : null,
                                         room: s.room || null,
+                                        bundleEnabled: (userIsOwner || userIsStaff || userIsInstructor) ? (s.bundleEnabled === true) : undefined,
+                                        bundleSpots: (userIsOwner || userIsStaff || userIsInstructor) && (s.bundleEnabled === true) ? (typeof s.bundleSpots === 'number' ? s.bundleSpots : null) : undefined,
                                       },
                                     })
 
@@ -1279,6 +1319,53 @@ export default function Schedule() {
                                   >
                                     Time
                                   </button>
+                                  {(userIsOwner || userIsStaff || userIsInstructor) && (
+                                    <button
+                                      type="button"
+                                      onClick={async () => {
+                                        const currentEnabled = s.bundleEnabled === true
+                                        const currentSpots = typeof s.bundleSpots === 'number' ? String(s.bundleSpots) : ''
+
+                                        const next = window.prompt(
+                                          currentEnabled
+                                            ? 'Bundle spots (leave blank to disable)'
+                                            : 'Bundle spots (required to enable)',
+                                          currentSpots,
+                                        )
+
+                                        if (next === null) return
+                                        const trimmed = String(next).trim()
+
+                                        const variables = { id: s.id }
+
+                                        if (!trimmed) {
+                                          variables.bundleEnabled = false
+                                          variables.bundleSpots = null
+                                        } else {
+                                          const n = Number(trimmed)
+                                          if (!Number.isFinite(n) || n <= 0) {
+                                            addToast({ message: 'Bundle spots must be a positive number', type: 'error' })
+                                            return
+                                          }
+                                          variables.bundleEnabled = true
+                                          variables.bundleSpots = Math.floor(n)
+                                        }
+
+                                        try {
+                                          const res = await updateClassSession({ variables })
+                                          const errors = res.data?.updateClassSession?.errors || []
+                                          if (errors.length) throw new Error(errors.join(', '))
+                                          addToast({ message: 'Bundle settings updated', type: 'success' })
+                                          await refetch()
+                                        } catch (e) {
+                                          addToast({ message: e.message || 'Update failed', type: 'error' })
+                                        }
+                                      }}
+                                      className="rounded-full border border-slate-700 px-3 py-1 text-slate-200 hover:bg-slate-800"
+                                    >
+                                      Bundle
+                                    </button>
+                                  )}
                                   <button
                                     type="button"
                                     onClick={async () => {
@@ -1410,6 +1497,34 @@ export default function Schedule() {
                 />
               </div>
 
+              {(userIsOwner || userIsStaff || userIsInstructor) && (
+                <div className="rounded-xl border border-slate-800 bg-slate-950/30 p-3">
+                  <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Bundles</div>
+                  <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
+                    <label className="flex items-center gap-2 text-sm text-slate-200">
+                      <input
+                        type="checkbox"
+                        checked={newEventForm.bundleEnabled}
+                        onChange={(e) => setNewEventForm((f) => ({ ...f, bundleEnabled: e.target.checked }))}
+                      />
+                      Allow bundle credits
+                    </label>
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-slate-300">Bundle spots</label>
+                      <input
+                        type="number"
+                        min="1"
+                        disabled={!newEventForm.bundleEnabled}
+                        className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 disabled:opacity-60"
+                        value={newEventForm.bundleSpots}
+                        onChange={(e) => setNewEventForm((f) => ({ ...f, bundleSpots: e.target.value }))}
+                      />
+                      <p className="text-[11px] text-slate-500">How many seats can be booked using bundle credits.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center justify-end gap-2">
                 <button
                   type="button"
@@ -1432,6 +1547,8 @@ export default function Schedule() {
                         time: newEventForm.time,
                         capacity: newEventForm.capacity,
                         room: newEventForm.room,
+                        bundleEnabled: newEventForm.bundleEnabled,
+                        bundleSpots: newEventForm.bundleSpots,
                       })
                       addToast({ message: 'Session created', type: 'success' })
                       closeNewEventModal()

@@ -8,9 +8,10 @@ import { useAuth } from '../auth/AuthProvider'
 export default function ClientsPage() {
   const { data: userData } = useQuery(CURRENT_USER)
   const user = userData?.currentUser
-  const role = user?.roleName
-  const isOwner = role === 'owner' || user?.role === 0
-  const isInstructor = role === 'instructor'
+  const role = (user?.roleName || '').toString().toLowerCase()
+  const isGodmode = user?.godmode === true || role === 'godmode'
+  const isOwner = isGodmode || role === 'owner' || user?.role === 0
+  const isInstructor = isGodmode || role === 'instructor'
 
   const { data, loading } = useQuery(CLIENTS, {
     skip: !user,

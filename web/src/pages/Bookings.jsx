@@ -13,9 +13,10 @@ const EMPTY_BOOKINGS = []
 export default function BookingsPage({ scope = 'visible' }) {
   const { user } = useAuth()
   const role = (user?.roleName || '').toString().toLowerCase()
+  const isGodmode = user?.godmode === true || role === 'godmode'
   const isClient = role === 'client'
-  const isInstructor = role === 'instructor'
-  const isOwner = role === 'owner' || user?.role === 0
+  const isInstructor = isGodmode || role === 'instructor'
+  const isOwner = isGodmode || role === 'owner' || user?.role === 0
 
   const { locationId } = useLocationContext()
   const { selectedStudioId } = useStudio()
@@ -279,7 +280,7 @@ export default function BookingsPage({ scope = 'visible' }) {
                           </div>
                           <ul className="flex flex-col gap-1">
                             {attendees.map((b) => {
-                              const paid = b.paid || b.payment?.status === 'succeeded'
+                              const paid = b.paid || b.payment?.status === 'succeeded' || !!b.bundlePurchase
                               return (
                                 <li
                                   key={b.id}
@@ -435,10 +436,24 @@ export default function BookingsPage({ scope = 'visible' }) {
                       <span>Instructor: {b.classSession.instructor.name}</span>
                     )}
                     {b.classSession.room && <span>Room: {b.classSession.room}</span>}
+                    {b.bundlePurchase && (
+                      <span>
+                        Payment: Bundle credit
+                        {b.bundlePurchase.bundleProduct?.title ? ` • ${b.bundlePurchase.bundleProduct.title}` : ''}
+                        {Number.isFinite(b.bundlePurchase.creditsRemaining) && Number.isFinite(b.bundlePurchase.creditsTotal)
+                          ? ` • ${b.bundlePurchase.creditsRemaining}/${b.bundlePurchase.creditsTotal} remaining`
+                          : ''}
+                      </span>
+                    )}
                     {b.payment && (
                       <span>
                         Payment: {b.payment.status === 'succeeded' ? 'Paid' : b.payment.status}{' '}
                         ${(b.payment.amountCents / 100).toFixed(2)} {b.payment.currency.toUpperCase()}
+                      </span>
+                    )}
+                    {!b.payment && !b.bundlePurchase && (
+                      <span>
+                        Payment: {b.paid ? 'Paid' : 'Unpaid'}
                       </span>
                     )}
                   </div>

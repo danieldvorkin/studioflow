@@ -24,6 +24,7 @@ import Booking from './pages/Booking'
 import Dashboard from './pages/Dashboard'
 import Schedule from './pages/Schedule'
 import Owner from './pages/Owner'
+import GodmodeStudio from './pages/GodmodeStudio'
 import LocationsPage from './pages/Locations'
 import BookingsPage from './pages/Bookings'
 import BookingShow from './pages/BookingShow'
@@ -31,6 +32,8 @@ import ClientsPage from './pages/Clients'
 import Profile from './pages/Profile'
 import InstructorPayoutsPage from './pages/InstructorPayouts'
 import Favorites from './pages/Favorites'
+import BundlesPage from './pages/Bundles'
+import MyBundlesPage from './pages/MyBundles'
 import { useTheme } from './theme/ThemeProvider'
 import { useLocationContext } from './location/LocationProvider'
 import { STUDIO_SETTINGS } from './apollo/queries'
@@ -103,9 +106,14 @@ function AppShell() {
   const clientsPageEnabled = studioSettingsData?.studioSettings?.clientsPageEnabled !== false
 
   const roleRaw = user?.roleName
-  const isOwner = roleRaw === 'owner' || user?.role === 0 || roleRaw === 'OWNER'
-  const isStaff = roleRaw === 'staff' || user?.role === 1
-  const isInstructor = roleRaw === 'instructor'
+  const isGodmode = user?.godmode === true || (roleRaw || '').toString().toLowerCase() === 'godmode'
+  const isOwner = isGodmode || roleRaw === 'owner' || user?.role === 0 || roleRaw === 'OWNER'
+  const isStaff = isGodmode || roleRaw === 'staff' || user?.role === 1
+  const isInstructor = isGodmode || roleRaw === 'instructor'
+
+  const showGodmodeNav = isGodmode && !isImpersonating
+  const showOwnerNav = isOwner && (!isGodmode || isImpersonating)
+  const showStudioAdminTools = (isOwner || isStaff) && (!isGodmode || isImpersonating)
 
   const canManageStudio = isOwner || isStaff || isInstructor
 
@@ -154,11 +162,18 @@ function AppShell() {
             <NavItem to="/bookings" end={false}>Bookings</NavItem>
             {!isClient && <NavItem to="/my-bookings">My bookings</NavItem>}
             {isClient && <NavItem to="/saved">Saved</NavItem>}
+            {isClient && <NavItem to="/my-bundles">Bundles</NavItem>}
             {canManageStudio && clientsPageEnabled && <NavItem to="/clients">Clients</NavItem>}
             {canManageStudio && <NavItem to="/templates" end={false}>Classes</NavItem>}
+            {showStudioAdminTools && <NavItem to="/bundles">Bundles</NavItem>}
           </NavFolder>
 
-          {isOwner && (
+          {showGodmodeNav && (
+            <NavFolder label="Godmode" defaultOpen>
+              <NavItem to="/owner">Owners</NavItem>
+            </NavFolder>
+          )}
+          {showOwnerNav && (
             <NavFolder label="Owner" defaultOpen>
               <NavItem to="/owner">Owner</NavItem>
               <NavItem to="/owner/instructor-payouts">Instructor payouts</NavItem>
@@ -248,15 +263,26 @@ function AppShell() {
                   {isClient && (
                     <NavItem to="/saved" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Saved</NavItem>
                   )}
+                  {isClient && (
+                    <NavItem to="/my-bundles" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Bundles</NavItem>
+                  )}
                   {canManageStudio && clientsPageEnabled && (
                     <NavItem to="/clients" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Clients</NavItem>
                   )}
                   {canManageStudio && (
                     <NavItem to="/templates" end={false} variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Classes</NavItem>
                   )}
+                  {showStudioAdminTools && (
+                    <NavItem to="/bundles" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Bundles</NavItem>
+                  )}
                 </NavFolder>
 
-                {isOwner && (
+                {showGodmodeNav && (
+                  <NavFolder label="Godmode" defaultOpen variant="mobile">
+                    <NavItem to="/owner" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Owners</NavItem>
+                  </NavFolder>
+                )}
+                {showOwnerNav && (
                   <NavFolder label="Owner" defaultOpen variant="mobile">
                     <NavItem to="/owner" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Owner</NavItem>
                     <NavItem to="/owner/instructor-payouts" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Instructor payouts</NavItem>
@@ -471,6 +497,14 @@ function App() {
             )}
           />
           <Route
+            path="/owner/studios/:studioId"
+            element={(
+              <ProtectedRoute>
+                <GodmodeStudio />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
             path="/owner/instructor-payouts"
             element={(
               <ProtectedRoute>
@@ -509,6 +543,22 @@ function App() {
             element={(
               <ProtectedRoute>
                 <BookingsPage />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/bundles"
+            element={(
+              <ProtectedRoute>
+                <BundlesPage />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/my-bundles"
+            element={(
+              <ProtectedRoute>
+                <MyBundlesPage />
               </ProtectedRoute>
             )}
           />

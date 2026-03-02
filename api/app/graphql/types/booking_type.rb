@@ -10,6 +10,7 @@ module Types
     field :price_cents, Integer, null: false
     field :archived, Boolean, null: false
     field :payment, Types::PaymentType, null: true
+    field :bundle_purchase, Types::BundlePurchaseType, null: true
     field :created_at, GraphQL::Types::ISO8601DateTime, null: false
   end
 end

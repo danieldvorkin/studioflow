@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@apollo/client'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   DndContext,
@@ -18,7 +18,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { CURRENT_USER, ALL_USERS, BOOKINGS, CLIENTS, PAYMENT_SETTINGS, PAYMENTS, STUDIO_SETTINGS } from '../apollo/queries'
+import { CURRENT_USER, ALL_USERS, BOOKINGS, CLIENTS, PAYMENT_SETTINGS, PAYMENTS, STUDIO_SETTINGS, STUDIOS } from '../apollo/queries'
 import { UPDATE_USER, CANCEL_BOOKING, UPDATE_PAYMENT_SETTINGS, START_IMPERSONATION, INVITE_USER } from '../apollo/mutations'
 import { useToast } from '../components/ToastProvider'
 import { useAuth } from '../auth/AuthProvider'
@@ -32,23 +32,35 @@ const GRID_GAP_PX = 12
 const DEFAULT_MODULE_HEIGHT = 320
 
 export default function Owner() {
+  const navigate = useNavigate()
   const { data: userData, loading: userLoading } = useQuery(CURRENT_USER)
   const user = userData?.currentUser
+  const auth = useAuth()
+  const [selectedOwnerByStudioId, setSelectedOwnerByStudioId] = useState({})
+
+  const roleName = (user?.roleName || '').toString().toLowerCase()
+  const isGodmode = user?.godmode === true || roleName === 'godmode'
+  const showGodmodeOwnerPicker = isGodmode && !auth.isImpersonating
+
+  const { data: studiosData, loading: studiosLoading } = useQuery(STUDIOS, {
+    skip: !showGodmodeOwnerPicker,
+    fetchPolicy: 'cache-and-network',
+  })
 
   const { data, loading, refetch } = useQuery(ALL_USERS, {
     skip: !user,
   })
   const { data: bookingsData, loading: bookingsLoading, refetch: refetchBookings } = useQuery(BOOKINGS, {
-    skip: !user,
+    skip: !user || showGodmodeOwnerPicker,
   })
   const { data: clientsData, loading: clientsLoading } = useQuery(CLIENTS, {
-    skip: !user,
+    skip: !user || showGodmodeOwnerPicker,
   })
   const { data: paymentSettingsData } = useQuery(PAYMENT_SETTINGS, {
-    skip: !user,
+    skip: !user || showGodmodeOwnerPicker,
   })
   const { data: paymentsData, loading: paymentsLoading } = useQuery(PAYMENTS, {
-    skip: !user,
+    skip: !user || showGodmodeOwnerPicker,
   })
 
   const [updateUser] = useMutation(UPDATE_USER)
@@ -58,7 +70,6 @@ export default function Owner() {
   const [startImpersonation] = useMutation(START_IMPERSONATION)
 
   const { addToast } = useToast()
-  const auth = useAuth()
   const { applyTheme, clearThemeOverride } = useTheme()
 
   if (userLoading || (!user && !userLoading)) {
@@ -67,7 +78,126 @@ export default function Owner() {
 
   if (!user) return <Navigate to="/signin" replace />
 
-  const isOwner = user.roleName === 'owner' || user.role === 0
+  if (showGodmodeOwnerPicker) {
+    const studios = studiosData?.studios || []
+    const studioNameById = Object.fromEntries(studios.map((s) => [s.id?.toString?.() || s.id, s.name]))
+
+    const allUsers = data?.users || []
+    const owners = allUsers
+      .filter((u) => {
+        const rn = (u?.roleName || '').toString().toLowerCase()
+        const email = (u?.email || '').toString().trim().toLowerCase()
+        if (!email) return false
+        if (rn === 'godmode') return false
+        if (email === 'dvorkin212@gmail.com') return false
+        return rn === 'owner' || u?.role === 0
+      })
+      .sort((a, b) => {
+        const aStudio = studioNameById[a?.studioId?.toString?.() || a?.studioId] || ''
+        const bStudio = studioNameById[b?.studioId?.toString?.() || b?.studioId] || ''
+        const studioCmp = aStudio.localeCompare(bStudio)
+        if (studioCmp !== 0) return studioCmp
+        return (a?.email || '').localeCompare(b?.email || '')
+      })
+
+    const ownersByStudioId = owners.reduce((acc, owner) => {
+      const sid = owner?.studioId?.toString?.() || owner?.studioId
+      if (!sid) return acc
+      acc[sid] ||= []
+      acc[sid].push(owner)
+      return acc
+    }, {})
+
+    const studioIds = Object.keys(ownersByStudioId).sort((a, b) => {
+      const aName = studioNameById[a] || ''
+      const bName = studioNameById[b] || ''
+      const nameCmp = aName.localeCompare(bName)
+      if (nameCmp !== 0) return nameCmp
+      return a.localeCompare(b)
+    })
+
+    return (
+      <div className="mx-auto flex max-w-6xl flex-col gap-6">
+        <header className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-50">Godmode</h1>
+          <p className="text-sm text-slate-400">Select a studio owner to open their owner workspace.</p>
+        </header>
+
+        <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-sm shadow-black/20">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Owners</h2>
+            <div className="text-xs text-slate-500">
+              {studiosLoading || loading ? 'Loading…' : `${owners.length} owner${owners.length === 1 ? '' : 's'}`}
+            </div>
+          </div>
+
+          {studioIds.length === 0 && !loading ? (
+            <div className="text-sm text-slate-300">No owners found.</div>
+          ) : (
+            <div className="overflow-hidden rounded-xl border border-slate-800">
+              <div className="grid grid-cols-12 gap-0 bg-slate-950/60 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                <div className="col-span-5">Studio</div>
+                <div className="col-span-4">Owner</div>
+                <div className="col-span-3 text-right">Actions</div>
+              </div>
+              <div className="divide-y divide-slate-800">
+                {studioIds.map((studioId) => {
+                  const studioLabel = studioNameById[studioId] || `Studio ${studioId}`
+                  const studioOwners = ownersByStudioId[studioId] || []
+                  const selectedOwnerId = selectedOwnerByStudioId[studioId] || ''
+                  const selectedOwner = studioOwners.find((o) => (o.id || '').toString() === selectedOwnerId.toString()) || null
+
+                  return (
+                    <div key={studioId} className="grid grid-cols-12 items-center gap-0 px-3 py-3 text-sm">
+                      <div className="col-span-5 min-w-0">
+                        <div className="truncate text-slate-100">{studioLabel}</div>
+                        <div className="truncate text-xs text-slate-500">ID {studioId}</div>
+                      </div>
+
+                      <div className="col-span-4 min-w-0">
+                        <select
+                          className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                          value={selectedOwnerId}
+                          onChange={(e) => setSelectedOwnerByStudioId((prev) => ({ ...prev, [studioId]: e.target.value }))}
+                        >
+                          <option value="">Select owner…</option>
+                          {studioOwners.map((o) => (
+                            <option key={o.id} value={o.id}>
+                              {o.name ? `${o.name} (${o.email})` : o.email}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="col-span-3 flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/owner/studios/${studioId}`)}
+                          className="inline-flex items-center rounded-full border border-slate-600 px-3 py-1 text-xs font-semibold text-slate-200 hover:bg-slate-800"
+                        >
+                          View summary
+                        </button>
+                        <button
+                          type="button"
+                          disabled={!selectedOwner}
+                          onClick={() => selectedOwner && handleViewAs(selectedOwner)}
+                          className="inline-flex items-center rounded-full bg-sky-500 px-3 py-1 text-xs font-semibold text-on-accent hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          Open workspace
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </section>
+      </div>
+    )
+  }
+
+  const isOwner = roleName === 'owner' || user.role === 0
 
   if (!isOwner) {
     return (
@@ -115,7 +245,7 @@ export default function Owner() {
     }
   }
 
-  const handleViewAs = async (targetUser) => {
+  async function handleViewAs(targetUser) {
     try {
       const res = await startImpersonation({ variables: { userId: targetUser.id } })
       const payload = res.data?.startImpersonation

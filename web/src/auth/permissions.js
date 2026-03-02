@@ -1,5 +1,6 @@
 export function roleName(user) {
   if (!user) return null
+  if (user.godmode === true) return 'godmode'
   const name = (user.roleName || '').toString().toLowerCase()
   if (name) return name
   if (user.role === 0) return 'owner'
@@ -9,36 +10,43 @@ export function roleName(user) {
   return null
 }
 
+export function isGodmode(user) {
+  return roleName(user) === 'godmode'
+}
+
 export function isOwner(user) {
-  return roleName(user) === 'owner'
+  const role = roleName(user)
+  return role === 'owner' || role === 'godmode'
 }
 
 export function isStaff(user) {
-  return roleName(user) === 'staff'
+  const role = roleName(user)
+  return role === 'staff' || role === 'godmode'
 }
 
 export function isInstructor(user) {
-  return roleName(user) === 'instructor'
+  const role = roleName(user)
+  return role === 'instructor' || role === 'godmode'
 }
 
 export function canManageTemplates(user) {
   const role = roleName(user)
-  return role === 'owner' || role === 'staff' || role === 'instructor'
+  return role === 'godmode' || role === 'owner' || role === 'staff' || role === 'instructor'
 }
 
 export function canScheduleSessions(user) {
   const role = roleName(user)
-  return role === 'owner' || role === 'staff' || role === 'instructor'
+  return role === 'godmode' || role === 'owner' || role === 'staff' || role === 'instructor'
 }
 
 export function canDeleteSessions(user) {
   const role = roleName(user)
-  return role === 'owner' || role === 'staff'
+  return role === 'godmode' || role === 'owner' || role === 'staff'
 }
 
 export function canEditSession(user, session) {
   const role = roleName(user)
-  if (role === 'owner' || role === 'staff') return true
+  if (role === 'godmode' || role === 'owner' || role === 'staff') return true
   if (role === 'instructor') {
     const sessionInstructorId = session?.instructor?.id
     return sessionInstructorId && user?.id && sessionInstructorId.toString() === user.id.toString()

@@ -53,6 +53,7 @@ export default function Dashboard() {
   const { locationId, locations } = useLocationContext()
   const roleName = (userData?.currentUser?.roleName || '').toString().toLowerCase()
   const roleInt = userData?.currentUser?.role
+  const isGodmode = roleName === 'godmode' || userData?.currentUser?.godmode === true
   const isClient = roleName === 'client'
 
   const { data: templatesData, loading: templatesLoading } = useQuery(CLASS_TEMPLATES, {
@@ -81,9 +82,9 @@ export default function Dashboard() {
   const bookings = bookingsData?.bookings || []
 
   // roleName/roleInt already computed above
-  const isOwner = roleName === 'owner' || roleName === 'owner_user' || roleName === 'owneruser' || roleInt === 0
-  const isStaff = roleName === 'staff' || roleInt === 1
-  const isInstructor = roleName === 'instructor'
+  const isOwner = isGodmode || roleName === 'owner' || roleName === 'owner_user' || roleName === 'owneruser' || roleInt === 0
+  const isStaff = isGodmode || roleName === 'staff' || roleInt === 1
+  const isInstructor = isGodmode || roleName === 'instructor'
   // isClient already computed above
 
   const now = new Date()

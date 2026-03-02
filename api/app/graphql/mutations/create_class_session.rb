@@ -5,11 +5,13 @@ module Mutations
     argument :end_time, GraphQL::Types::ISO8601DateTime, required: false
     argument :capacity, Integer, required: false
     argument :room, String, required: false
+    argument :bundle_enabled, Boolean, required: false
+    argument :bundle_spots, Integer, required: false
 
     field :class_session, Types::ClassSessionType, null: true
     field :errors, [ String ], null: false
 
-    def resolve(class_template_id:, start_time:, end_time: nil, capacity: nil, room: nil)
+    def resolve(class_template_id:, start_time:, end_time: nil, capacity: nil, room: nil, bundle_enabled: nil, bundle_spots: nil)
       user = context[:current_user]
       ct = ClassTemplate.where(studio_id: user&.studio_id).find(class_template_id)
       raise Pundit::NotAuthorizedError unless Pundit.policy!(user, ClassSession).create?
@@ -26,14 +28,18 @@ module Mutations
         end
       end
 
-      cs = ct.class_sessions.build(
+      cs_attrs = {
         studio_id: user.studio_id,
         start_time: start_time,
         end_time: end_time,
         capacity: capacity,
         room: room,
         instructor_id: ct.instructor_id
-      )
+      }
+      cs_attrs[:bundle_enabled] = bundle_enabled unless bundle_enabled.nil?
+      cs_attrs[:bundle_spots] = bundle_spots unless bundle_spots.nil?
+
+      cs = ct.class_sessions.build(cs_attrs)
       if cs.save
         { class_session: cs, errors: [] }
       else

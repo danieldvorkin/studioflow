@@ -4,11 +4,15 @@ import { STUDIO_LOCATIONS, CURRENT_USER } from '../apollo/queries'
 import { CREATE_STUDIO_LOCATION, UPDATE_STUDIO_LOCATION, DELETE_STUDIO_LOCATION } from '../apollo/mutations'
 import { useState } from 'react'
 import { useToast } from '../components/ToastProvider'
+import { useAuth } from '../auth/AuthProvider'
 
 export default function LocationsPage() {
+  const auth = useAuth()
   const { data: userData, loading: userLoading } = useQuery(CURRENT_USER)
   const user = userData?.currentUser
-  const isOwner = user?.roleName === 'owner' || user?.role === 0
+  const roleName = (user?.roleName || '').toString().toLowerCase()
+  const isGodmode = user?.godmode === true || roleName === 'godmode'
+  const isOwner = roleName === 'owner' || user?.role === 0
 
   const { data, loading, refetch } = useQuery(STUDIO_LOCATIONS, {
     skip: !user,
@@ -29,6 +33,10 @@ export default function LocationsPage() {
   }
 
   if (!user) return <Navigate to="/signin" replace />
+
+  if (isGodmode && !auth.isImpersonating) {
+    return <Navigate to="/owner" replace />
+  }
 
   if (!isOwner) {
     return (

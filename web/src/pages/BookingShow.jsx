@@ -212,10 +212,11 @@ export default function BookingShow() {
   const { data: userData } = useQuery(CURRENT_USER)
   const user = userData?.currentUser
   const role = (user?.roleName || '').toString().toLowerCase()
+  const isGodmode = user?.godmode === true || role === 'godmode'
   const isClient = role === 'client'
-  const isInstructor = role === 'instructor'
-  const isOwner = role === 'owner' || user?.role === 0
-  const isStaff = role === 'staff' || user?.role === 1
+  const isInstructor = isGodmode || role === 'instructor'
+  const isOwner = isGodmode || role === 'owner' || user?.role === 0
+  const isStaff = isGodmode || role === 'staff' || user?.role === 1
 
   const { data: bookingsData, loading: bookingsLoading } = useQuery(BOOKINGS, {
     skip: !user || isClient,
@@ -350,6 +351,8 @@ export default function BookingShow() {
       ? (template.priceCents / 100).toFixed(2)
       : null
   const payment = booking.payment
+  const bundlePurchase = booking.bundlePurchase
+  const usedBundleCredit = !!bundlePurchase
   const paymentAmount = payment ? (payment.amountCents / 100).toFixed(2) : priceDollars
   const currency = (template?.currency || 'cad').toLowerCase()
   const currencyLabel = currency.toUpperCase()
@@ -434,12 +437,40 @@ export default function BookingShow() {
               <span>Class</span>
               <span>{template?.title || 'Class'}</span>
             </div>
-            {!payment && (
+            {!payment && !usedBundleCredit && (
               <div className="flex justify-between">
                 <span>Payment status</span>
                 <span className="font-medium text-amber-200">Unpaid</span>
               </div>
             )}
+
+            {usedBundleCredit && (
+              <>
+                <div className="flex justify-between">
+                  <span>Payment status</span>
+                  <span className="font-medium text-emerald-200">Paid</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Payment source</span>
+                  <span className="font-medium text-slate-100">Bundle credit</span>
+                </div>
+                {bundlePurchase?.bundleProduct?.title && (
+                  <div className="flex justify-between">
+                    <span>Bundle</span>
+                    <span className="text-slate-100">{bundlePurchase.bundleProduct.title}</span>
+                  </div>
+                )}
+                {Number.isFinite(bundlePurchase?.creditsRemaining) && Number.isFinite(bundlePurchase?.creditsTotal) && (
+                  <div className="flex justify-between">
+                    <span>Credits remaining</span>
+                    <span className="text-slate-100">
+                      {bundlePurchase.creditsRemaining} / {bundlePurchase.creditsTotal}
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
+
             {payment && (
               <>
                 <div className="flex justify-between">
@@ -459,13 +490,23 @@ export default function BookingShow() {
                 )}
               </>
             )}
-            {paymentAmount && (
+            {usedBundleCredit && (
+              <>
+                <div className="mt-2 h-px bg-slate-800" />
+                <div className="flex justify-between text-sm font-semibold text-slate-50">
+                  <span>Total</span>
+                  <span>1 credit</span>
+                </div>
+              </>
+            )}
+
+            {!usedBundleCredit && paymentAmount && (
               <>
                 <div className="mt-2 h-px bg-slate-800" />
                 <div className="flex justify-between text-sm font-semibold text-slate-50">
                   <span>Total</span>
                   <span>
-                    ${paymentAmount}{' '}
+                    {currencySymbol}{paymentAmount}{' '}
                     {payment?.currency ? payment.currency.toUpperCase() : ''}
                   </span>
                 </div>

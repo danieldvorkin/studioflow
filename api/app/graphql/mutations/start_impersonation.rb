@@ -7,14 +7,23 @@ module Mutations
     field :errors, [ String ], null: false
 
     def resolve(user_id:)
-      owner = context[:current_user]
+      actor = context[:current_user]
 
-      unless owner&.owner?
+      unless actor&.owner?
         return { token: nil, user: nil, errors: [ "Not authorized" ] }
       end
 
-      user = ::User.where(studio_id: owner.studio_id).find_by(id: user_id)
+      user =
+        if actor.respond_to?(:godmode?) && actor.godmode?
+          ::User.find_by(id: user_id)
+        else
+          ::User.where(studio_id: actor.studio_id).find_by(id: user_id)
+        end
       return { token: nil, user: nil, errors: [ "User not found" ] } unless user
+
+      if user.respond_to?(:godmode?) && user.godmode?
+        return { token: nil, user: nil, errors: [ "Not authorized" ] }
+      end
 
       token = Warden::JWTAuth::UserEncoder.new.call(user, :user, nil).first
 
