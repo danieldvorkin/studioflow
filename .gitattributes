@@ -1,0 +1,11 @@
+# Root gitattributes for the monorepo.
+
+# Mark the database schema as having been generated.
+api/db/schema.rb linguist-generated
+
+# Mark any vendored files as having been vendored.
+api/vendor/* linguist-vendored
+
+# Treat Rails credentials as binary-ish and use rails diff driver when configured.
+api/config/credentials/*.yml.enc diff=rails_credentials
+api/config/credentials.yml.enc diff=rails_credentials

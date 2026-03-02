@@ -22,17 +22,22 @@ vi.mock('@stripe/stripe-js', () => ({
   loadStripe: () => null,
 }))
 
+const { redirectToExternalUrl } = vi.hoisted(() => ({
+  redirectToExternalUrl: vi.fn(),
+}))
+
+vi.mock('../../payments/redirectToExternalUrl', () => ({
+  redirectToExternalUrl,
+}))
+
 import BookingShow from '../../pages/BookingShow.jsx'
-import * as RedirectModule from '../../payments/redirectToExternalUrl.js'
 import { CURRENT_USER, MY_BOOKINGS, PAYMENT_PUBLIC_SETTINGS, MY_CLIENT } from '../../apollo/queries.js'
 import { CREATE_BOOKING_CHECKOUT_SESSION } from '../../apollo/mutations.js'
 
 describe('Client BookingShow pay now', () => {
-  const redirectSpy = vi.spyOn(RedirectModule, 'redirectToExternalUrl').mockImplementation(() => {})
-
   beforeEach(() => {
     addToast.mockReset()
-    redirectSpy.mockClear()
+    redirectToExternalUrl.mockClear()
   })
 
   afterEach(() => {
@@ -138,8 +143,8 @@ describe('Client BookingShow pay now', () => {
 
     // Apollo mutation resolves async
     await waitFor(() => {
-      expect(redirectSpy).toHaveBeenCalled()
+      expect(redirectToExternalUrl).toHaveBeenCalled()
     })
-    expect(redirectSpy).toHaveBeenCalledWith('https://stripe.test/checkout')
+    expect(redirectToExternalUrl).toHaveBeenCalledWith('https://stripe.test/checkout')
   })
 })

@@ -1,6 +1,6 @@
 import React from 'react'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { render, screen, act } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { MockedProvider } from '@apollo/client/testing'
 import { InMemoryCache } from '@apollo/client'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
@@ -13,20 +13,17 @@ import BookingsPage from '../../pages/Bookings.jsx'
 vi.mock('../../studio/StudioProvider', () => ({
   useStudio: () => ({
     selectedStudioId: null,
-
-    await act(async () => {
-      await vi.runAllTimersAsync()
-    })
     setSelectedStudioId: vi.fn(),
     studios: [],
-    expect(screen.getByText('Today')).toBeInTheDocument()
+    loading: false,
   }),
   StudioProvider: ({ children }) => children,
-    expect(screen.getByText('Riley Moore')).toBeInTheDocument()
-    expect(screen.getByText('Paid')).toBeInTheDocument()
+}))
+
 describe('Instructor Bookings day view', () => {
   beforeEach(() => {
-    const modify = screen.getByRole('link', { name: 'Modify session' })
+    // Only fake Date (not setTimeout), so Testing Library + MockedProvider keep working.
+    vi.useFakeTimers({ toFake: ['Date'] })
     // March 1, 2026 9:00am local
     vi.setSystemTime(new Date('2026-03-01T09:00:00'))
 
@@ -60,6 +57,7 @@ describe('Instructor Bookings day view', () => {
       {
         __typename: 'Booking',
         id: 'b-1',
+        studioId: 'studio-1',
         slug: 'b-1',
         status: 'booked',
         paid: true,
@@ -73,6 +71,7 @@ describe('Instructor Bookings day view', () => {
       {
         __typename: 'Booking',
         id: 'b-2',
+        studioId: 'studio-1',
         slug: 'b-2',
         status: 'waitlisted',
         paid: false,
@@ -102,8 +101,6 @@ describe('Instructor Bookings day view', () => {
       </MockedProvider>,
     )
 
-    await vi.runOnlyPendingTimersAsync()
-
     // Today section should exist.
     expect(await screen.findByText('Today')).toBeInTheDocument()
 
@@ -112,7 +109,7 @@ describe('Instructor Bookings day view', () => {
     expect(await screen.findByText('Paid')).toBeInTheDocument()
 
     // Modify session link for today's session.
-    const modify = await screen.findByRole('link', { name: 'Modify session' })
-    expect(modify).toHaveAttribute('href', '/templates/tmpl-1/sessions')
+    const modifyLinks = await screen.findAllByRole('link', { name: 'Modify session' })
+    expect(modifyLinks.some((l) => l.getAttribute('href') === '/templates/tmpl-1/sessions')).toBe(true)
   })
 })

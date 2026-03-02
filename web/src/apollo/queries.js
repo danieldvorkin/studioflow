@@ -260,6 +260,7 @@ export const MY_FAVORITE_CLASS_SESSIONS = gql`
   query MyFavoriteClassSessions($studioId: ID, $studioLocationId: ID) {
     myFavoriteClassSessions(studioId: $studioId, studioLocationId: $studioLocationId) {
       id
+      studioId
       startTime
       endTime
       capacity

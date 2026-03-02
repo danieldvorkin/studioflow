@@ -8,7 +8,7 @@ import {
   NavLink,
   useLocation,
 } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@apollo/client'
 import './App.css'
 import SignIn from './pages/SignIn'
@@ -85,13 +85,14 @@ function AppShell() {
     (user?.email ? user.email[0].toUpperCase() : '?')
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const mobileNavOpenRef = useRef(mobileNavOpen)
   const routerLocation = useLocation()
   const { theme, toggleTheme } = useTheme()
 
   const { locations, locationId, setLocationId } = useLocationContext()
 
   const role = (user?.roleName || '').toString().toLowerCase()
-  const isClient = role === 'client'
+  const isClient = role === 'client' || user?.role === 2 || user?.role === 'client'
   const { studios, selectedStudioId, setSelectedStudioId } = useStudio()
 
   const { data: studioSettingsData } = useQuery(STUDIO_SETTINGS, {
@@ -109,10 +110,14 @@ function AppShell() {
   const canManageStudio = isOwner || isStaff || isInstructor
 
   useEffect(() => {
-    if (!mobileNavOpen) return undefined
+    mobileNavOpenRef.current = mobileNavOpen
+  }, [mobileNavOpen])
+
+  useEffect(() => {
+    if (!mobileNavOpenRef.current) return undefined
     const t = window.setTimeout(() => setMobileNavOpen(false), 0)
     return () => window.clearTimeout(t)
-  }, [routerLocation.pathname, mobileNavOpen])
+  }, [routerLocation.pathname])
 
   useEffect(() => {
     if (!mobileNavOpen) return undefined
@@ -148,7 +153,7 @@ function AppShell() {
             <NavItem to="/schedule">Calendar</NavItem>
             <NavItem to="/bookings" end={false}>Bookings</NavItem>
             {!isClient && <NavItem to="/my-bookings">My bookings</NavItem>}
-            {isClient && <NavItem to="/favorites">Favorites</NavItem>}
+            {isClient && <NavItem to="/saved">Saved</NavItem>}
             {canManageStudio && clientsPageEnabled && <NavItem to="/clients">Clients</NavItem>}
             {canManageStudio && <NavItem to="/templates" end={false}>Classes</NavItem>}
           </NavFolder>
@@ -241,7 +246,7 @@ function AppShell() {
                     <NavItem to="/my-bookings" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>My bookings</NavItem>
                   )}
                   {isClient && (
-                    <NavItem to="/favorites" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Favorites</NavItem>
+                    <NavItem to="/saved" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Saved</NavItem>
                   )}
                   {canManageStudio && clientsPageEnabled && (
                     <NavItem to="/clients" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Clients</NavItem>
@@ -296,7 +301,7 @@ function AppShell() {
             <button
               type="button"
               className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 md:hidden"
-              onClick={() => setMobileNavOpen(true)}
+              onClick={() => setMobileNavOpen((v) => !v)}
               aria-expanded={mobileNavOpen}
             >
               <span className="sr-only">Toggle navigation</span>
@@ -524,13 +529,14 @@ function App() {
             )}
           />
           <Route
-            path="/favorites"
+            path="/saved"
             element={(
               <ProtectedRoute>
                 <Favorites />
               </ProtectedRoute>
             )}
           />
+          <Route path="/favorites" element={<Navigate to="/saved" replace />} />
           <Route
             path="/clients"
             element={(

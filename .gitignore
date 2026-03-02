@@ -1,0 +1,48 @@
+# Root gitignore for the monorepo.
+# Keep rules scoped to subprojects to avoid surprising global ignores.
+
+## API (Rails)
+/api/.bundle
+/api/.env*
+
+/api/log/*
+/api/tmp/*
+!/api/log/.keep
+!/api/tmp/.keep
+
+/api/tmp/pids/*
+!/api/tmp/pids/
+!/api/tmp/pids/.keep
+
+/api/storage/*
+!/api/storage/.keep
+
+/api/tmp/storage/*
+!/api/tmp/storage/
+!/api/tmp/storage/.keep
+
+/api/config/*.key
+
+## Web (Vite/React)
+/web/logs/
+/web/*.log
+/web/npm-debug.log*
+/web/yarn-debug.log*
+/web/yarn-error.log*
+/web/pnpm-debug.log*
+/web/lerna-debug.log*
+
+/web/node_modules/
+/web/dist/
+/web/dist-ssr/
+/web/*.local
+
+/web/.vscode/*
+!/web/.vscode/extensions.json
+/web/.idea/
+/web/.DS_Store
+/web/*.suo
+/web/*.ntvs*
+/web/*.njsproj
+/web/*.sln
+/web/*.sw?

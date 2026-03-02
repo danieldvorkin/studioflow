@@ -32,6 +32,7 @@ describe('Client favorites', () => {
     const session = {
       __typename: 'ClassSession',
       id: 'sess-1',
+      studioId: 'studio-1',
       startTime: new Date('2026-03-01T14:30:00Z').toISOString(),
       endTime: null,
       capacity: 10,
@@ -102,6 +103,11 @@ describe('Client favorites', () => {
       result: { data: { myFavoriteClassSessions: [session] } },
     }
 
+    const favoritesPageMock2 = {
+      request: { query: MY_FAVORITE_CLASS_SESSIONS, variables: { studioId: 'studio-1' } },
+      result: { data: { myFavoriteClassSessions: [session] } },
+    }
+
     const sessionFlowMocks = [
       favoritesEmptyMock,
       sessionsMock,
@@ -114,7 +120,9 @@ describe('Client favorites', () => {
 
     const favoritesPageMocks = [
       studioLocationsMock,
+      myBookingsMock,
       favoritesPageMock,
+      favoritesPageMock2,
     ]
 
     const { unmount } = render(

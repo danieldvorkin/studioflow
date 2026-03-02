@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from '@apollo/client'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useEffect, useMemo, useState } from 'react'
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
@@ -13,20 +13,18 @@ import { normalizeStripeEmail } from '../payments/stripeEmail'
 import { useStudio } from '../studio/StudioProvider'
 import { useAuth } from '../auth/AuthProvider'
 
-function BookingForm({ session }) {
+function BookingForm({ session, studioIdForBooking }) {
   const { id } = useParams() // classSessionId
   const navigate = useNavigate()
   const { user } = useAuth()
   const roleName = (user?.roleName || '').toString().toLowerCase()
   const isClientUser = roleName === 'client'
 
-  const { selectedStudioId } = useStudio()
-
   const { data: myClientData } = useQuery(MY_CLIENT, {
     skip: !user,
     variables: isClientUser
-      ? selectedStudioId
-        ? { studioId: selectedStudioId }
+      ? studioIdForBooking
+        ? { studioId: studioIdForBooking }
         : {}
       : {},
   })
@@ -437,10 +435,13 @@ function BookingForm({ session }) {
 export default function Booking() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
   const roleName = (user?.roleName || '').toString().toLowerCase()
   const isClientUser = roleName === 'client'
   const { selectedStudioId } = useStudio()
+
+  const studioIdForBooking = location?.state?.studioId || selectedStudioId
 
   const { data: myBookingsData } = useQuery(MY_BOOKINGS, {
     skip: !isClientUser,
@@ -463,16 +464,16 @@ export default function Booking() {
 
   const { data: sessionsData } = useQuery(CLASS_SESSIONS, {
     variables: isClientUser
-      ? selectedStudioId
-        ? { from: null, to: null, studioId: selectedStudioId }
+      ? studioIdForBooking
+        ? { from: null, to: null, studioId: studioIdForBooking }
         : { from: null, to: null }
       : { from: null, to: null },
   })
 
   const { data: paymentPublicSettingsData } = useQuery(PAYMENT_PUBLIC_SETTINGS, {
     variables: isClientUser
-      ? selectedStudioId
-        ? { studioId: selectedStudioId }
+      ? studioIdForBooking
+        ? { studioId: studioIdForBooking }
         : {}
       : {},
   })
@@ -503,7 +504,7 @@ export default function Booking() {
 
   return (
     <Elements stripe={stripePromise}>
-      <BookingForm session={session} />
+      <BookingForm session={session} studioIdForBooking={studioIdForBooking} />
     </Elements>
   )
 }

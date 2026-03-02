@@ -21,7 +21,7 @@ export function useStudio() {
 export function StudioProvider({ children }) {
   const { user } = useAuth()
   const role = (user?.roleName || '').toString().toLowerCase()
-  const isClient = role === 'client'
+  const isClient = role === 'client' || user?.role === 2 || user?.role === 'client'
 
   const { data, loading } = useQuery(STUDIOS, {
     skip: !user || !isClient,
