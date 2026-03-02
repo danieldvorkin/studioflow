@@ -119,6 +119,13 @@ npm run lint
 npm test
 ```
 
+## Git hooks (optional)
+
+This repo includes an optional Git hook that inserts a metadata line into commit messages with your local timestamp and Git user name.
+
+- Enable hooks for this repo: `./bin/setup-githooks`
+- Bypass for a single commit: `SKIP_COMMIT_META=1 git commit ...`
+
 ## Troubleshooting
 
 - **Ports in use**: the dev servers expect `3000` (API) and `5173` (web). Stop anything else using those ports.

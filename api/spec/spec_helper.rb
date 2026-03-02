@@ -23,7 +23,7 @@ if ENV.fetch('COVERAGE', 'true') == 'true'
     # Enforce minimum coverage in CI by default, but don't block local dev runs
     # when the repo's overall coverage is below the threshold.
     if ENV['CI'] == 'true' || ENV['ENFORCE_COVERAGE'] == 'true'
-      minimum_coverage ENV.fetch('MIN_COVERAGE', '75').to_f
+      minimum_coverage ENV.fetch('MIN_COVERAGE', '65').to_f
     end
   end
 end

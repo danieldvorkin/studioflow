@@ -19,40 +19,38 @@ if [[ -z "$user_name" ]]; then
   user_name="${GIT_AUTHOR_NAME:-${USER:-unknown}}"
 fi
 
-# Local timestamp.
-now="$(date '+%Y-%m-%d %H:%M:%S %z')"
-meta_line="Commit-Meta: ${now} | ${user_name}"
-
-# Skip if meta already present anywhere.
-if grep -q "^Commit-Meta: " "$MSG_FILE"; then
-  exit 0
-fi
+# Local timestamp (minute precision keeps subject lines shorter).
+now="$(date '+%Y-%m-%d %H:%M %z')"
+prefix="[${now} ${user_name}]"
 
 # Read current message (strip only trailing newlines for predictable formatting)
 msg="$(cat "$MSG_FILE" | perl -0777 -pe 's/\n+\z//')"
 
 # If the message is empty (shouldn't happen), just set meta as the message.
 if [[ -z "$msg" ]]; then
-  printf '%s\n' "$meta_line" > "$MSG_FILE"
+  printf '%s\n' "$prefix" > "$MSG_FILE"
   exit 0
 fi
 
-# Keep the existing subject line intact; insert metadata into the body.
-#
-# Result:
-#   <original subject>
-#
-#   Commit-Meta: ...
-#   <rest of original body (if any)>
+# Prefix the existing subject line so the metadata is visible
+# anywhere that only shows the first line (e.g. GitHub commit lists).
 {
-  # Print first line (subject)
-  printf '%s\n' "$(printf '%s' "$msg" | head -n 1)"
-
-  # Rest of message (body)
+  subject="$(printf '%s' "$msg" | head -n 1)"
   rest="$(printf '%s' "$msg" | tail -n +2)"
 
-  printf '\n%s\n' "$meta_line"
+  # Don't touch commented templates or empty subjects.
+  if [[ -z "$subject" ]] || [[ "$subject" =~ ^# ]]; then
+    printf '%s\n' "$msg"
+    exit 0
+  fi
 
+  # Idempotency: skip if already prefixed.
+  if printf '%s' "$subject" | grep -Eq '^\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2} [+-][0-9]{4} .+\] '; then
+    printf '%s\n' "$msg"
+    exit 0
+  fi
+
+  printf '%s %s\n' "$prefix" "$subject"
   if [[ -n "$rest" ]]; then
     printf '%s\n' "$rest"
   fi
