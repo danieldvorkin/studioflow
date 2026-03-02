@@ -1,0 +1,17 @@
+Your booking was cancelled
+
+Hi <%= @booking&.client&.name.presence || @booking&.client&.email %>,
+
+Your booking for <%= @booking&.class_session&.class_template&.title || 'your class' %> was cancelled.
+
+<% if (start_time = @booking&.class_session&.start_time) %>
+When: <%= start_time.strftime('%B %-d, %Y at %-I:%M %p') %>
+<% end %>
+<% if (location_name = @booking&.class_session&.class_template&.studio_location&.name) %>
+Location: <%= location_name %>
+<% end %>
+
+If this was unexpected, please contact the studio.
+
+Thanks,
+Pilates Studio

@@ -1,0 +1,2 @@
+backend: cd api && bin/rails server -p 3000
+frontend: cd web && npm run dev

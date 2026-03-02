@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  background-color: var(--app-canvas);
+  color: var(--app-fg);
+}
+
+:root {
+  /* Base palettes from Tailwind v4 CSS variables.
+     We keep these as stable sources of truth, and then remap `--color-slate-*`
+     per theme on the BODY so all existing `bg-slate-*` utilities reskin cleanly.
+  */
+  --base-zinc-50: var(--color-zinc-50);
+  --base-zinc-100: var(--color-zinc-100);
+  --base-zinc-200: var(--color-zinc-200);
+  --base-zinc-300: var(--color-zinc-300);
+  --base-zinc-400: var(--color-zinc-400);
+  --base-zinc-500: var(--color-zinc-500);
+  --base-zinc-600: var(--color-zinc-600);
+  --base-zinc-700: var(--color-zinc-700);
+  --base-zinc-800: var(--color-zinc-800);
+  --base-zinc-900: var(--color-zinc-900);
+  --base-zinc-950: var(--color-zinc-950);
+
+  /* Used for buttons like `bg-sky-500` where we want dark text in BOTH themes. */
+  --app-on-accent: var(--base-zinc-950);
+}
+
+/* Default (dark-ish) theme mapping: make slate utilities use a softer neutral palette
+   and tune semantic app tokens for comfortable contrast.
+*/
+:root:not([data-theme]) body,
+:root[data-theme='dark'] body {
+  /* Progressive enhancement: slightly lighten the darkest neutral step.
+     Fallback keeps original if `color-mix` isn't supported.
+  */
+  --color-slate-950: var(--base-zinc-950);
+  --color-slate-950: color-mix(in oklab, var(--base-zinc-950) 70%, var(--base-zinc-900) 30%);
+
+  --color-slate-50: var(--base-zinc-50);
+  --color-slate-100: var(--base-zinc-100);
+  --color-slate-200: var(--base-zinc-200);
+  --color-slate-300: var(--base-zinc-300);
+  --color-slate-400: var(--base-zinc-400);
+  --color-slate-500: var(--base-zinc-500);
+  --color-slate-600: var(--base-zinc-600);
+  --color-slate-700: var(--base-zinc-700);
+  --color-slate-800: var(--base-zinc-800);
+  --color-slate-900: var(--base-zinc-900);
+
+  /* App theme tokens (semantic) */
+  --app-canvas: var(--color-slate-950);
+  --app-panel: var(--color-slate-900);
+  --app-panel-2: var(--color-slate-800);
+  --app-border: var(--color-slate-700);
+  --app-fg: var(--color-slate-100);
+  --app-muted: var(--color-slate-400);
+}
+
+/* Light theme: invert the (neutral) scale so existing `bg-slate-*`, `text-slate-*`,
+   and `border-slate-*` utilities automatically switch.
+*/
+:root[data-theme='light'] body {
+  --color-slate-950: var(--base-zinc-50);
+  --color-slate-900: var(--base-zinc-100);
+  --color-slate-800: var(--base-zinc-200);
+  --color-slate-700: var(--base-zinc-300);
+  --color-slate-600: var(--base-zinc-400);
+  --color-slate-500: var(--base-zinc-500);
+  --color-slate-400: var(--base-zinc-600);
+  --color-slate-300: var(--base-zinc-700);
+  --color-slate-200: var(--base-zinc-800);
+  --color-slate-100: var(--base-zinc-900);
+  --color-slate-50: var(--base-zinc-950);
+
+  /* App theme tokens (semantic) */
+  --app-canvas: var(--color-slate-950);
+  --app-panel: var(--color-slate-900);
+  --app-panel-2: var(--color-slate-800);
+  --app-border: var(--color-slate-700);
+  --app-fg: var(--color-slate-100);
+  --app-muted: var(--color-slate-400);
+}
+
+@layer utilities {
+  .bg-canvas {
+    background-color: var(--app-canvas);
+  }
+
+  .bg-panel {
+    background-color: var(--app-panel);
+  }
+
+  .bg-panel-2 {
+    background-color: var(--app-panel-2);
+  }
+
+  .border-default {
+    border-color: var(--app-border);
+  }
+
+  .text-fg {
+    color: var(--app-fg);
+  }
+
+  .text-muted {
+    color: var(--app-muted);
+  }
+
+  .text-on-accent {
+    color: var(--app-on-accent);
+  }
+}

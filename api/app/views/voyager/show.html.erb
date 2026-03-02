@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>GraphQL Voyager</title>
+    <meta charset="utf-8" />
+
+    <link rel="stylesheet" href="/stylesheets/graphql/voyager/rails/voyager-1.0.0-rc.28.css" />
+    <style>
+      body {
+        height: 100%;
+        margin: 0;
+        width: 100%;
+        overflow: hidden;
+      }
+
+      #voyager {
+        height: 100vh;
+      }
+    </style>
+
+    <script src="/javascripts/graphql/voyager/rails/react-16.8.6.js"></script>
+    <script src="/javascripts/graphql/voyager/rails/react-dom-16.8.6.js"></script>
+    <script src="/javascripts/graphql/voyager/rails/fetch-3.0.0.js"></script>
+    <script src="/javascripts/graphql/voyager/rails/voyager-1.0.0-rc.28.js"></script>
+  </head>
+
+  <body>
+    <div id="voyager">Loading...</div>
+
+    <script>
+      function introspectionProvider(introspectionQuery) {
+        return fetch('/graphql', {
+          method: 'post',
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ query: introspectionQuery }),
+          credentials: 'include',
+        }).then(function (response) {
+          return response.text();
+        }).then(function (responseBody) {
+          try {
+            return JSON.parse(responseBody);
+          } catch (error) {
+            return responseBody;
+          }
+        });
+      }
+
+      GraphQLVoyager.init(document.getElementById('voyager'), {
+        introspection: introspectionProvider,
+        workerURI: '/javascripts/graphql/voyager/rails/voyager.worker-1.0.0-rc.28.js',
+      });
+    </script>
+  </body>
+</html>

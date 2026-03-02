@@ -1,0 +1,14 @@
+<p>Hello <%= @booking.client.name.presence || 'there' %>,</p>
+
+<p>This is a reminder that payment is still due for your class booking:</p>
+
+<ul>
+  <li><strong>Class:</strong> <%= @booking.class_session.class_template.title %></li>
+  <li><strong>When:</strong> <%= @booking.class_session.start_time.strftime('%b %d, %Y %l:%M %p') %></li>
+</ul>
+
+<p>
+  <a href="<%= @checkout_url %>">Pay now with secure checkout</a>
+</p>
+
+<p>If you already paid, you can ignore this email.</p>
