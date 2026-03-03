@@ -15,6 +15,7 @@ import SignIn from './pages/SignIn'
 import SignUp from './pages/SignUp'
 import SignUpPortal from './pages/SignUpPortal'
 import Landing from './pages/Landing'
+import NotFound from './pages/NotFound'
 import ProtectedRoute from './auth/ProtectedRoute'
 import RoleGate from './auth/RoleGate'
 import { useAuth } from './auth/AuthProvider'
@@ -626,6 +627,7 @@ function App() {
             )}
           />
         </Route>
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   )
