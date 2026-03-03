@@ -136,7 +136,7 @@ export default function Profile() {
   const myBookings = myBookingsData?.myBookings || []
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+    <div className="flex w-full flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-50">Profile</h1>
         <p className="text-sm text-slate-400">
@@ -235,40 +235,41 @@ export default function Profile() {
           <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Billing</h2>
         </div>
 
-        <div className="mt-4">
-          <h3 className="text-sm font-semibold text-slate-100">Saved card</h3>
+        <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-1">
+            <h3 className="text-sm font-semibold text-slate-100">Saved card</h3>
 
-          {(myClientLoading || creatingSetupIntent) && (
-            <p className="mt-2 text-sm text-slate-400">Loading…</p>
-          )}
+            {(myClientLoading || creatingSetupIntent) && (
+              <p className="mt-2 text-sm text-slate-400">Loading…</p>
+            )}
 
-          {!myClientLoading && !stripePublishableKey && (
-            <p className="mt-2 text-sm text-amber-400">
-              Payments aren’t configured yet. Please ask the studio owner to enable Stripe.
-            </p>
-          )}
+            {!myClientLoading && !stripePublishableKey && (
+              <p className="mt-2 text-sm text-amber-400">
+                Payments aren’t configured yet. Please ask the studio owner to enable Stripe.
+              </p>
+            )}
 
-          {!myClientLoading && stripePublishableKey && stripePromise && (
-            <Elements stripe={stripePromise}>
-              <SavedCardEditor
-                user={user}
-                myClient={myClient}
-                creatingSetupIntent={creatingSetupIntent}
-                savingCard={savingCard}
-                removingCard={removingCard}
-                settingDefaultCard={settingDefaultCard}
-                createSetupIntent={createSetupIntent}
-                saveMyPaymentMethod={saveMyPaymentMethod}
-                removeMyPaymentMethod={removeMyPaymentMethod}
-                setMyDefaultPaymentMethod={setMyDefaultPaymentMethod}
-                onUpdated={() => refetchMyClient?.()}
-                addToast={addToast}
-              />
-            </Elements>
-          )}
+            {!myClientLoading && stripePublishableKey && stripePromise && (
+              <Elements stripe={stripePromise}>
+                <SavedCardEditor
+                  user={user}
+                  myClient={myClient}
+                  creatingSetupIntent={creatingSetupIntent}
+                  savingCard={savingCard}
+                  removingCard={removingCard}
+                  settingDefaultCard={settingDefaultCard}
+                  createSetupIntent={createSetupIntent}
+                  saveMyPaymentMethod={saveMyPaymentMethod}
+                  removeMyPaymentMethod={removeMyPaymentMethod}
+                  setMyDefaultPaymentMethod={setMyDefaultPaymentMethod}
+                  onUpdated={() => refetchMyClient?.()}
+                  addToast={addToast}
+                />
+              </Elements>
+            )}
+          </div>
 
-
-          <div className="mt-6">
+          <div className="lg:col-span-2">
             <h3 className="text-sm font-semibold text-slate-100">Transaction history</h3>
             <p className="mt-1 text-sm text-slate-400">Recent charges from your bookings.</p>
 

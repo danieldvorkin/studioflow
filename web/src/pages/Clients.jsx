@@ -104,7 +104,7 @@ export default function ClientsPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-4">
+    <div className="flex w-full flex-col gap-4">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-50">Clients</h1>
         <p className="text-sm text-slate-400">

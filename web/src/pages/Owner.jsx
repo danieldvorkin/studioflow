@@ -117,7 +117,7 @@ export default function Owner() {
     })
 
     return (
-      <div className="mx-auto flex max-w-6xl flex-col gap-6">
+      <div className="flex w-full flex-col gap-6">
         <header className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold tracking-tight text-slate-50">Godmode</h1>
           <p className="text-sm text-slate-400">Select a studio owner to open their owner workspace.</p>
@@ -267,7 +267,7 @@ export default function Owner() {
   }
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6">
+    <div className="flex w-full flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-50">Owner workspace</h1>
         <p className="text-sm text-slate-400">

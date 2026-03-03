@@ -56,7 +56,7 @@ export default function Sessions() {
   const favoriteIds = new Set((favoritesData?.myFavoriteClassSessions || []).map((s) => s.id))
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-4">
+    <div className="flex w-full flex-col gap-4">
       <header className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
         <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">

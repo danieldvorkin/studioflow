@@ -11,6 +11,25 @@ body {
 }
 
 :root {
+
+  @keyframes hashTargetFlash {
+    0% {
+      border-color: color-mix(in oklab, var(--color-sky-500) 55%, var(--color-slate-800));
+      box-shadow: 0 0 0 6px color-mix(in oklab, var(--color-sky-500) 20%, transparent);
+    }
+    70% {
+      border-color: color-mix(in oklab, var(--color-sky-500) 40%, var(--color-slate-800));
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-sky-500) 12%, transparent);
+    }
+    100% {
+      border-color: var(--color-slate-800);
+      box-shadow: none;
+    }
+  }
+
+  .hash-target:target {
+    animation: hashTargetFlash 1.1s ease-out;
+  }
   /* Base palettes from Tailwind v4 CSS variables.
      We keep these as stable sources of truth, and then remap `--color-slate-*`
      per theme on the BODY so all existing `bg-slate-*` utilities reskin cleanly.
@@ -36,11 +55,15 @@ body {
 */
 :root:not([data-theme]) body,
 :root[data-theme='dark'] body {
-  /* Progressive enhancement: slightly lighten the darkest neutral step.
-     Fallback keeps original if `color-mix` isn't supported.
+  /* Progressive enhancement: make the "dark" theme feel slate/charcoal instead of near-black.
+    Fallback keeps a reasonable dark gray if `color-mix` isn't supported.
   */
-  --color-slate-950: var(--base-zinc-950);
-  --color-slate-950: color-mix(in oklab, var(--base-zinc-950) 70%, var(--base-zinc-900) 30%);
+  /* “Slate” variant: one step lighter than the prior mapping */
+  --color-slate-950: var(--base-zinc-800);
+  --color-slate-950: color-mix(in oklab, var(--base-zinc-800) 90%, var(--base-zinc-700) 10%);
+
+  --color-slate-900: var(--base-zinc-700);
+  --color-slate-900: color-mix(in oklab, var(--base-zinc-700) 92%, var(--base-zinc-600) 8%);
 
   --color-slate-50: var(--base-zinc-50);
   --color-slate-100: var(--base-zinc-100);
@@ -50,8 +73,8 @@ body {
   --color-slate-500: var(--base-zinc-500);
   --color-slate-600: var(--base-zinc-600);
   --color-slate-700: var(--base-zinc-700);
-  --color-slate-800: var(--base-zinc-800);
-  --color-slate-900: var(--base-zinc-900);
+  --color-slate-800: var(--base-zinc-600);
+  --color-slate-800: color-mix(in oklab, var(--base-zinc-600) 92%, var(--base-zinc-500) 8%);
 
   /* App theme tokens (semantic) */
   --app-canvas: var(--color-slate-950);

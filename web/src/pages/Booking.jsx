@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from '@apollo/client'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { loadStripe } from '@stripe/stripe-js'
 import {
@@ -606,7 +606,7 @@ export default function Booking() {
 
   const studioIdForBooking = location?.state?.studioId || selectedStudioId
 
-  const { data: myBookingsData } = useQuery(MY_BOOKINGS, {
+  const { data: myBookingsData, loading: myBookingsLoading } = useQuery(MY_BOOKINGS, {
     skip: !isClientUser,
     fetchPolicy: 'cache-and-network',
     nextFetchPolicy: 'cache-first',
@@ -622,14 +622,23 @@ export default function Booking() {
 
   const redirectingToExistingBooking = !!existingBookingForRoute?.id
 
+  const shouldHoldQueriesForRedirectCheck = isClientUser && myBookingsLoading
+
+  const hasRedirectedRef = useRef(false)
+
   useEffect(() => {
-    if (existingBookingForRoute?.id) {
-      navigate(`/bookings/${existingBookingForRoute.id}`, { replace: true })
-    }
-  }, [existingBookingForRoute?.id, navigate])
+    if (!existingBookingForRoute?.id) return
+    if (hasRedirectedRef.current) return
+
+    const target = `/bookings/${existingBookingForRoute.id}`
+    if (location?.pathname === target) return
+
+    hasRedirectedRef.current = true
+    navigate(target, { replace: true })
+  }, [existingBookingForRoute?.id, navigate, location?.pathname])
 
   const { data: sessionsData } = useQuery(CLASS_SESSIONS, {
-    skip: redirectingToExistingBooking,
+    skip: redirectingToExistingBooking || shouldHoldQueriesForRedirectCheck,
     variables: isClientUser
       ? studioIdForBooking
         ? { from: null, to: null, studioId: studioIdForBooking }
@@ -638,7 +647,7 @@ export default function Booking() {
   })
 
   const { data: paymentPublicSettingsData } = useQuery(PAYMENT_PUBLIC_SETTINGS, {
-    skip: redirectingToExistingBooking,
+    skip: redirectingToExistingBooking || shouldHoldQueriesForRedirectCheck,
     variables: isClientUser
       ? studioIdForBooking
         ? { studioId: studioIdForBooking }
@@ -655,6 +664,8 @@ export default function Booking() {
   ), [stripePublishableKey])
 
   if (redirectingToExistingBooking) return <div>Opening your booking…</div>
+
+  if (shouldHoldQueriesForRedirectCheck) return <div>Loading booking…</div>
 
   if (!session) return <div>Loading session...</div>
 

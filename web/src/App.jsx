@@ -22,6 +22,7 @@ import Templates from './pages/Templates'
 import Sessions from './pages/Sessions'
 import Booking from './pages/Booking'
 import Dashboard from './pages/Dashboard'
+import Analytics from './pages/Analytics'
 import Schedule from './pages/Schedule'
 import Owner from './pages/Owner'
 import GodmodeStudio from './pages/GodmodeStudio'
@@ -195,7 +196,7 @@ function AppShell() {
         >
           <button
             type="button"
-            className="absolute inset-0 bg-black/60"
+            className="absolute inset-0 bg-slate-950/60"
             aria-label="Close navigation"
             onClick={() => setMobileNavOpen(false)}
           />
@@ -444,7 +445,9 @@ function AppShell() {
           </div>
         )}
         <div className="flex-1 min-h-0 overflow-y-auto px-4 py-6 md:px-8">
-          <Outlet />
+          <div className="mx-auto w-full max-w-screen-2xl">
+            <Outlet />
+          </div>
         </div>
       </main>
     </div>
@@ -478,6 +481,14 @@ function App() {
               <ProtectedRoute>
                 <Dashboard />
               </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/analytics"
+            element={(
+              <RoleGate allow={["owner", "staff"]}>
+                <Analytics />
+              </RoleGate>
             )}
           />
           <Route

@@ -599,7 +599,7 @@ export default function BookingShow() {
       </div>
 
       {showRebookModal && stripePromise && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/70 p-4">
           <Elements stripe={stripePromise}>
             <RebookCheckoutForm
               booking={booking}
