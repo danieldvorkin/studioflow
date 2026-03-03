@@ -25,6 +25,8 @@
 /api/config/*.key
 
 ## Web (Vite/React)
+/web/.env*
+!/web/.env.example
 /web/logs/
 /web/*.log
 /web/npm-debug.log*
