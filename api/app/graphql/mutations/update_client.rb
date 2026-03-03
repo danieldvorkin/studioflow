@@ -19,7 +19,7 @@ module Mutations
         taught = Booking.joins(:class_session)
           .where(client_id: client.id, archived: false, class_sessions: { instructor_id: user.id })
           .exists?
-        raise GraphQL::ExecutionError, 'Not authorized' unless taught
+        raise GraphQL::ExecutionError, "Not authorized" unless taught
       end
 
       if client.update(attrs.compact)

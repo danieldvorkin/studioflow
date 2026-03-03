@@ -73,5 +73,5 @@ group :development do
 end
 
 group :test do
-  gem 'rspec-watcher'
+  gem "rspec-watcher"
 end

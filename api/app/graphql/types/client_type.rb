@@ -6,23 +6,23 @@ module Types
     field :phone, String, null: true
 
     field :characteristic_scores, GraphQL::Types::JSON, null: false,
-      description: 'Instructor-facing characteristics scoring for this client'
+      description: "Instructor-facing characteristics scoring for this client"
 
     field :client_notes, [ Types::ClientNoteType ], null: false,
-      description: 'Private notes about the client (visible to owners/staff, and to instructors who have taught the client)'
+      description: "Private notes about the client (visible to owners/staff, and to instructors who have taught the client)"
 
     def client_notes
       object.client_notes.includes(:author).order(created_at: :desc).limit(100)
     end
 
     field :bookings, [ Types::BookingType ], null: false,
-      description: 'Booking history for this client (role-scoped)' do
+      description: "Booking history for this client (role-scoped)" do
       argument :limit, Integer, required: false
     end
 
     def bookings(limit: 200)
       user = context[:current_user]
-      raise GraphQL::ExecutionError, 'Not authorized' unless user
+      raise GraphQL::ExecutionError, "Not authorized" unless user
 
       limit = [[limit.to_i, 1].max, 500].min
 

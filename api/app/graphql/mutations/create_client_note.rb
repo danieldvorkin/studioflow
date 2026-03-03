@@ -8,17 +8,17 @@ module Mutations
 
     def resolve(client_id:, body:)
       user = context[:current_user]
-      return { note: nil, errors: [ 'Not authenticated' ] } unless user
+      return { note: nil, errors: [ "Not authenticated" ] } unless user
 
       unless user.godmode? || user.owner? || user.staff? || user.instructor?
-        raise GraphQL::ExecutionError, 'Not authorized'
+        raise GraphQL::ExecutionError, "Not authorized"
       end
 
       client = Client.where(studio_id: user.studio_id).find(client_id)
 
       if user.instructor? && !user.godmode?
         taught = Booking.joins(:class_session).where(client_id: client.id, class_sessions: { instructor_id: user.id }, archived: false).exists?
-        raise GraphQL::ExecutionError, 'Not authorized' unless taught
+        raise GraphQL::ExecutionError, "Not authorized" unless taught
       end
 
       note = client.client_notes.build(author: user, body: body.to_s.strip)

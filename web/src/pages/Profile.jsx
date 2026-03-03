@@ -167,16 +167,16 @@ export default function Profile() {
     fetchPolicy: 'cache-and-network',
   })
 
-  const [createOwnerSetupIntent] = useMutation(CREATE_OWNER_SETUP_INTENT)
-  const [saveOwnerPaymentMethod] = useMutation(SAVE_OWNER_PAYMENT_METHOD)
+  const [_createOwnerSetupIntent] = useMutation(CREATE_OWNER_SETUP_INTENT)
+  const [_saveOwnerPaymentMethod] = useMutation(SAVE_OWNER_PAYMENT_METHOD)
 
   const platformPublishableKey = platformSettingsData?.platformPaymentSettings?.stripePublishableKey
-  const platformStripePromise = useMemo(
+  const _platformStripePromise = useMemo(
     () => (platformPublishableKey ? loadStripe(platformPublishableKey) : null),
     [platformPublishableKey],
   )
   const ownerSub = ownerSubData?.myStudioSubscription
-  const ownerHasActiveSub = ownerSub?.status && ['active', 'trialing', 'past_due'].includes(ownerSub.status)
+  const _ownerHasActiveSub = ownerSub?.status && ['active', 'trialing', 'past_due'].includes(ownerSub.status)
 
   if (!user) return <Navigate to="/signin" replace />
 
