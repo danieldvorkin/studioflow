@@ -806,3 +806,88 @@ export const UPDATE_PAYMENT_SETTINGS = gql`
     }
   }
 `
+
+export const UPSERT_STUDIO_SUBSCRIPTION = gql`
+  mutation UpsertStudioSubscription(
+    $studioId: ID!
+    $tier: String
+    $status: String
+    $stripeCustomerId: String
+    $stripeSubscriptionId: String
+    $currentPeriodEnd: ISO8601DateTime
+    $notes: String
+  ) {
+    upsertStudioSubscription(input: {
+      studioId: $studioId
+      tier: $tier
+      status: $status
+      stripeCustomerId: $stripeCustomerId
+      stripeSubscriptionId: $stripeSubscriptionId
+      currentPeriodEnd: $currentPeriodEnd
+      notes: $notes
+    }) {
+      studioSubscription {
+        id
+        studioId
+        tier
+        status
+        stripeCustomerId
+        stripeSubscriptionId
+        currentPeriodEnd
+        cancelledAt
+        notes
+        priceCad
+        active
+        updatedAt
+        studio { id name slug }
+      }
+      errors
+    }
+  }
+`
+
+export const CREATE_PLATFORM_SUBSCRIPTION_CHECKOUT = gql`
+  mutation CreatePlatformSubscriptionCheckout($tier: String!) {
+    createPlatformSubscriptionCheckout(input: { tier: $tier }) {
+      checkoutUrl
+      errors
+    }
+  }
+`
+
+export const UPDATE_STUDIO = gql`
+  mutation UpdateStudio($name: String, $slug: String) {
+    updateStudio(input: { name: $name, slug: $slug }) {
+      studio { id name slug onboardingCompleted }
+      errors
+    }
+  }
+`
+
+export const COMPLETE_ONBOARDING = gql`
+  mutation CompleteOnboarding {
+    completeOnboarding(input: {}) {
+      studio { id name slug onboardingCompleted }
+      errors
+    }
+  }
+`
+
+export const INVITE_CLIENT = gql`
+  mutation InviteClient($email: String!, $name: String) {
+    inviteClient(input: { email: $email, name: $name }) {
+      invitation {
+        id
+        email
+        name
+        token
+        status
+        expiresAt
+        createdAt
+        invitedByName
+      }
+      signupUrl
+      errors
+    }
+  }
+`

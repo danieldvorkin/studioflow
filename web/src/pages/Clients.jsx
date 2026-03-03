@@ -5,6 +5,7 @@ import { CURRENT_USER, CLIENTS } from '../apollo/queries'
 import { UPDATE_CLIENT, DELETE_CLIENT, TOGGLE_CLIENT_BLOCK, START_IMPERSONATION } from '../apollo/mutations'
 import { useToast } from '../components/ToastProvider'
 import { useAuth } from '../auth/AuthProvider'
+import InviteClientModal from '../components/InviteClientModal'
 
 export default function ClientsPage() {
   const { data: userData } = useQuery(CURRENT_USER)
@@ -28,6 +29,7 @@ export default function ClientsPage() {
   const auth = useAuth()
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState({ name: '', email: '', phone: '' })
+  const [showInviteModal, setShowInviteModal] = useState(false)
 
   if (!user) {
     return <p className="text-sm text-slate-400">Sign in to view clients.</p>
@@ -108,12 +110,25 @@ export default function ClientsPage() {
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-50">Clients</h1>
-        <p className="text-sm text-slate-400">
-          View the people who attend your classes.
-        </p>
+      <header className="flex items-start justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-50">Clients</h1>
+          <p className="text-sm text-slate-400">
+            View the people who attend your classes.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowInviteModal(true)}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-sky-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-sky-500 transition"
+        >
+          <svg className="h-3.5 w-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M7 2v10M2 7h10" strokeLinecap="round" />
+          </svg>
+          Invite client
+        </button>
       </header>
+      {showInviteModal && <InviteClientModal onClose={() => setShowInviteModal(false)} />}
 
       {loading && <p className="text-sm text-slate-400">Loading clients…</p>}
 

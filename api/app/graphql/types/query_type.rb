@@ -36,6 +36,15 @@ module Types
       Studio.order(:name)
     end
 
+    field :my_studio, Types::StudioType, null: true,
+      description: "Returns the current owner's studio with onboarding status"
+    def my_studio
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authorized" unless user&.owner?
+
+      user.studio
+    end
+
     # List available class templates
     field :class_templates, [ Types::ClassTemplateType ], null: false do
     argument :instructor_id, ID, required: false
@@ -670,6 +679,44 @@ module Types
       scope = scope.where(studio_id: studio_id) if studio_id.present?
 
       scope.includes(:bundle_product).order(created_at: :desc)
+    end
+
+    # Platform subscriptions (godmode: all studios; owner: own studio)
+    field :studio_subscriptions, [ Types::StudioSubscriptionType ], null: false,
+      description: "All studio platform subscriptions (godmode only)"
+    def studio_subscriptions
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authorized" unless user&.godmode?
+
+      StudioSubscription.includes(:studio).order("studios.name")
+    end
+
+    field :my_studio_subscription, Types::StudioSubscriptionType, null: true,
+      description: "Current studio's platform subscription (owner view)"
+    def my_studio_subscription
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authorized" unless user
+
+      StudioSubscription.find_by(studio_id: user.studio_id)
+    end
+
+    field :client_invitations, [ Types::ClientInvitationType ], null: false,
+      description: "All invitations sent by this studio (owner/staff/instructor)"
+    def client_invitations
+      user = context[:current_user]
+      unless user&.owner? || user&.staff? || user&.instructor?
+        raise GraphQL::ExecutionError, "Not authorized"
+      end
+
+      ClientInvitation.where(studio_id: user.studio_id).order(created_at: :desc)
+    end
+
+    field :client_invitation_by_token, Types::ClientInvitationType, null: true,
+      description: "Look up a client invitation by its token (public — used on signup page)" do
+      argument :token, String, required: true
+    end
+    def client_invitation_by_token(token:)
+      ClientInvitation.find_by(token: token.to_s.strip)
     end
 
     # TODO: remove me

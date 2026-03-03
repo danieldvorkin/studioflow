@@ -1,7 +1,7 @@
-import { useMutation, gql } from '@apollo/client'
+import { useMutation, useQuery, gql } from '@apollo/client'
 import { useForm, useWatch } from 'react-hook-form'
-import { useState } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import client from '../apollo/client'
 import { useAuth } from '../auth/AuthProvider'
 import DevSeedLoginButtons from '../auth/DevSeedLoginButtons'
@@ -9,8 +9,8 @@ import DevSeedLoginButtons from '../auth/DevSeedLoginButtons'
 const fakerModulePromise = import.meta.env.DEV ? import('@faker-js/faker') : null
 
 const SIGN_UP = gql`
-  mutation SignUp($email: String!, $password: String!, $name: String, $accountType: AccountTypeEnum!, $studioInviteCode: String) {
-    signUp(input: { email: $email, password: $password, name: $name, accountType: $accountType, studioInviteCode: $studioInviteCode }) {
+  mutation SignUp($email: String!, $password: String!, $name: String, $accountType: AccountTypeEnum!, $studioInviteCode: String, $invitationToken: String) {
+    signUp(input: { email: $email, password: $password, name: $name, accountType: $accountType, studioInviteCode: $studioInviteCode, invitationToken: $invitationToken }) {
       user { id email name role roleName active availableForSessions }
       errors
     }
@@ -27,11 +27,37 @@ const SIGN_IN = gql`
   }
 `
 
+const CLIENT_INVITATION_BY_TOKEN = gql`
+  query ClientInvitationByToken($token: String!) {
+    clientInvitationByToken(token: $token) {
+      id email name status invitedByName
+    }
+  }
+`
+
 export default function SignUpPortal({ accountType }) {
   const auth = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const invitationToken = accountType === 'CLIENT' ? (searchParams.get('token') || null) : null
+
   const { register, handleSubmit, control, setValue } = useForm()
   const [error, setError] = useState(null)
+
+  // Look up the invitation so we can show a friendly banner
+  const { data: invitationData } = useQuery(CLIENT_INVITATION_BY_TOKEN, {
+    variables: { token: invitationToken || '' },
+    skip: !invitationToken,
+    fetchPolicy: 'network-only',
+  })
+  const invitation = invitationData?.clientInvitationByToken
+
+  // Pre-fill email + name from invitation
+  useEffect(() => {
+    if (!invitation) return
+    if (invitation.email) setValue('email', invitation.email, { shouldDirty: true })
+    if (invitation.name)  setValue('name',  invitation.name,  { shouldDirty: true })
+  }, [invitation, setValue])
 
   const [signUp, { loading: signingUp }] = useMutation(SIGN_UP)
   const [signIn, { loading: signingIn }] = useMutation(SIGN_IN)
@@ -67,6 +93,7 @@ export default function SignUpPortal({ accountType }) {
           name: data.name || null,
           accountType,
           studioInviteCode: showStudioJoin ? (data.studioInviteCode || null) : null,
+          invitationToken: invitationToken || null,
         },
       })
 
@@ -151,6 +178,30 @@ export default function SignUpPortal({ accountType }) {
                   <p className="mt-1 text-xs text-slate-400">{subtitle}</p>
                 </div>
 
+                {invitation && invitation.status === 'pending' && (
+                  <div className="mb-5 rounded-xl border border-sky-700/50 bg-sky-900/20 px-4 py-3 text-sm">
+                    <div className="font-semibold text-sky-300 mb-0.5">
+                      You&apos;ve been invited! 🎉
+                    </div>
+                    <p className="text-xs text-slate-400">
+                      <span className="text-slate-200">{invitation.invitedByName}</span> has invited you to join their studio.
+                      Your email has been pre-filled — just set a password to get started.
+                    </p>
+                  </div>
+                )}
+
+                {invitationToken && invitation && invitation.status === 'accepted' && (
+                  <div className="mb-5 rounded-xl border border-amber-700/40 bg-amber-900/20 px-4 py-3 text-sm text-amber-300">
+                    This invitation has already been used. You can still create an account below.
+                  </div>
+                )}
+
+                {invitationToken && invitation && invitation.status === 'expired' && (
+                  <div className="mb-5 rounded-xl border border-rose-700/40 bg-rose-900/20 px-4 py-3 text-sm text-rose-300">
+                    This invitation has expired. Ask your studio to send a new one.
+                  </div>
+                )}
+
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 text-sm">
                   <div className="space-y-1">
                     <label className="block text-xs font-medium text-slate-300">Name</label>
@@ -186,8 +237,12 @@ export default function SignUpPortal({ accountType }) {
                       {...register('email')}
                       type="email"
                       required
-                      className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none ring-0 focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                      readOnly={!!(invitation && invitation.status === 'pending')}
+                      className={`w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none ring-0 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 ${invitation && invitation.status === 'pending' ? 'opacity-70 cursor-default' : ''}`}
                     />
+                    {invitation && invitation.status === 'pending' && (
+                      <p className="text-[11px] text-slate-500">Email pre-filled from your invitation.</p>
+                    )}
                   </div>
 
                   <div className="space-y-1">

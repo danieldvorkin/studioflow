@@ -48,6 +48,14 @@ module Types
     field :confirm_booking_checkout_payment, mutation: Mutations::ConfirmBookingCheckoutPayment, null: true
     field :send_booking_payment_reminder, mutation: Mutations::SendBookingPaymentReminder, null: true
 
+    field :upsert_studio_subscription, mutation: Mutations::UpsertStudioSubscription, null: true
+    field :create_platform_subscription_checkout, mutation: Mutations::CreatePlatformSubscriptionCheckout, null: true
+
+    field :update_studio, mutation: Mutations::UpdateStudio, null: true
+    field :complete_onboarding, mutation: Mutations::CompleteOnboarding, null: true
+
+    field :invite_client, mutation: Mutations::InviteClient, null: true
+
     field :create_bundle_product, mutation: Mutations::CreateBundleProduct, null: true
     field :update_bundle_product, mutation: Mutations::UpdateBundleProduct, null: true
     field :delete_bundle_product, mutation: Mutations::DeleteBundleProduct, null: true

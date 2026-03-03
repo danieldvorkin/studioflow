@@ -1,0 +1,324 @@
+import { useEffect, useState } from 'react'
+import { Navigate, useSearchParams } from 'react-router-dom'
+import { useQuery, useMutation } from '@apollo/client'
+import { useAuth } from '../auth/AuthProvider'
+import { MY_STUDIO_SUBSCRIPTION } from '../apollo/queries'
+import { CREATE_PLATFORM_SUBSCRIPTION_CHECKOUT } from '../apollo/mutations'
+
+const STATUS_COLORS = {
+  active: 'bg-green-900/60 text-green-300 border border-green-700',
+  trialing: 'bg-sky-900/60 text-sky-300 border border-sky-700',
+  past_due: 'bg-amber-900/60 text-amber-300 border border-amber-700',
+  cancelled: 'bg-red-900/60 text-red-300 border border-red-700',
+  suspended: 'bg-slate-800 text-slate-400 border border-slate-600',
+}
+
+function Feature({ included, children }) {
+  return (
+    <li className="flex items-start gap-2">
+      <span className={`mt-0.5 flex-shrink-0 text-sm ${included ? 'text-green-400' : 'text-slate-600'}`}>
+        {included ? '✓' : '✗'}
+      </span>
+      <span className={`text-sm ${included ? 'text-slate-200' : 'text-slate-500 line-through'}`}>
+        {children}
+      </span>
+    </li>
+  )
+}
+
+const TIERS = [
+  {
+    id: 'basic',
+    name: 'Basic',
+    price: 150,
+    description: 'Everything you need to run your studio',
+    features: [
+      { label: 'Unlimited bookings & class sessions', included: true },
+      { label: 'Client management', included: true },
+      { label: 'Bundle products & purchases', included: true },
+      { label: 'Staff & instructor accounts', included: true },
+      { label: 'Email booking reminders', included: true },
+      { label: 'Basic analytics (booking counts, revenue)', included: true },
+      { label: 'Custom subdomain (studio.studioflow.app)', included: true },
+      { label: 'Full analytics & trends', included: false },
+      { label: 'Instructor payout management', included: false },
+      { label: 'Stripe Connect for instructors', included: false },
+      { label: 'Priority support', included: false },
+    ],
+  },
+  {
+    id: 'premium',
+    name: 'Premium',
+    price: 300,
+    description: 'Advanced tools for growing studios',
+    features: [
+      { label: 'Unlimited bookings & class sessions', included: true },
+      { label: 'Client management', included: true },
+      { label: 'Bundle products & purchases', included: true },
+      { label: 'Staff & instructor accounts', included: true },
+      { label: 'Email booking reminders', included: true },
+      { label: 'Basic analytics (booking counts, revenue)', included: true },
+      { label: 'Custom subdomain (studio.studioflow.app)', included: true },
+      { label: 'Full analytics & trends', included: true },
+      { label: 'Instructor payout management', included: true },
+      { label: 'Stripe Connect for instructors', included: true },
+      { label: 'Priority support', included: true },
+    ],
+  },
+]
+
+function CurrentPlanBanner({ sub }) {
+  const tierInfo = TIERS.find((t) => t.id === sub.tier) || TIERS[0]
+  const statusLabel = sub.status.replace('_', ' ')
+  const statusColor = STATUS_COLORS[sub.status] || STATUS_COLORS.active
+
+  return (
+    <div className="rounded-xl border border-slate-700 bg-slate-900 p-5 space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Your current plan</p>
+          <h2 className="mt-1 text-2xl font-bold text-white">{tierInfo.name}</h2>
+          <p className="mt-1 text-sm text-slate-400">{tierInfo.description}</p>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ${statusColor}`}>
+            {statusLabel}
+          </span>
+          <div className="text-right">
+            <span className="text-2xl font-bold text-white">${tierInfo.price}</span>
+            <span className="text-sm text-slate-400"> CAD / month</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 border-t border-slate-800 pt-4">
+        {sub.studio?.slug && (
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Subdomain</p>
+            <p className="mt-1 font-mono text-sm text-sky-400">{sub.studio.slug}.studioflow.app</p>
+          </div>
+        )}
+        {sub.currentPeriodEnd && (
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Next billing date</p>
+            <p className="mt-1 text-sm text-white">{new Date(sub.currentPeriodEnd).toLocaleDateString()}</p>
+          </div>
+        )}
+        {sub.stripeSubscriptionId && (
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Subscription ID</p>
+            <p className="mt-1 font-mono text-xs text-slate-400 truncate">{sub.stripeSubscriptionId}</p>
+          </div>
+        )}
+      </div>
+
+      {sub.status === 'past_due' && (
+        <div className="rounded-lg border border-amber-700 bg-amber-900/30 px-4 py-3 text-sm text-amber-200">
+          Your subscription payment is past due. Please contact us at{' '}
+          <a href="mailto:billing@studioflow.app" className="underline">billing@studioflow.app</a>{' '}
+          to update your billing information.
+        </div>
+      )}
+      {sub.status === 'cancelled' && (
+        <div className="rounded-lg border border-red-700 bg-red-900/30 px-4 py-3 text-sm text-red-200">
+          Your subscription has been cancelled. Select a plan below to resubscribe.
+        </div>
+      )}
+      {sub.status === 'suspended' && (
+        <div className="rounded-lg border border-slate-600 bg-slate-800 px-4 py-3 text-sm text-slate-300">
+          Your account is currently suspended. Please contact{' '}
+          <a href="mailto:billing@studioflow.app" className="text-sky-400 underline">billing@studioflow.app</a>.
+        </div>
+      )}
+    </div>
+  )
+}
+
+function TierCard({ tier, isCurrent, isActive, onSubscribe, loading }) {
+  return (
+    <div
+      className={`relative rounded-xl border p-5 transition ${
+        isCurrent && isActive
+          ? 'border-sky-600 bg-sky-950/30 ring-1 ring-sky-600'
+          : 'border-slate-700 bg-slate-900'
+      }`}
+    >
+      {isCurrent && isActive && (
+        <span className="absolute right-4 top-4 rounded-full bg-sky-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white">
+          Current
+        </span>
+      )}
+      {tier.id === 'premium' && !(isCurrent && isActive) && (
+        <span className="absolute right-4 top-4 rounded-full bg-purple-700 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white">
+          Best value
+        </span>
+      )}
+      <h3 className="text-base font-bold text-white">{tier.name}</h3>
+      <p className="mt-0.5 text-xs text-slate-400">{tier.description}</p>
+      <div className="mt-3 mb-4">
+        <span className="text-3xl font-bold text-white">${tier.price}</span>
+        <span className="text-sm text-slate-400"> CAD / month</span>
+      </div>
+      <ul className="space-y-2">
+        {tier.features.map((f) => (
+          <Feature key={f.label} included={f.included}>{f.label}</Feature>
+        ))}
+      </ul>
+      <div className="mt-5">
+        {isCurrent && isActive ? (
+          <p className="text-center text-xs text-slate-500">
+            To cancel or change plans, contact{' '}
+            <a href="mailto:billing@studioflow.app" className="text-sky-400 hover:underline">billing@studioflow.app</a>
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onSubscribe(tier.id)}
+            disabled={loading === tier.id}
+            className={`inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition disabled:opacity-60 ${
+              tier.id === 'premium'
+                ? 'bg-purple-600 text-white hover:bg-purple-500'
+                : 'bg-sky-600 text-white hover:bg-sky-500'
+            }`}
+          >
+            {loading === tier.id ? (
+              <>
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Redirecting to Stripe…
+              </>
+            ) : (
+              `Subscribe to ${tier.name} — $${tier.price} CAD/mo`
+            )}
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default function OwnerSubscription() {
+  const auth = useAuth()
+  const user = auth.user
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [checkoutError, setCheckoutError] = useState(null)
+  const [loadingTier, setLoadingTier] = useState(null)
+
+  const roleRaw = (user?.roleName || '').toString().toLowerCase()
+  const isGodmode = user?.godmode === true || roleRaw === 'godmode'
+  const isOwner = isGodmode || roleRaw === 'owner' || user?.role === 0
+
+  // Latch the initial URL param values at mount so the banners persist after
+  // useEffect cleans the params from the URL (prevents re-derive as false).
+  const [checkoutSuccess] = useState(() => searchParams.get('checkout_success') === '1')
+  const [checkoutCancelled] = useState(() => searchParams.get('checkout_cancelled') === '1')
+
+  const { data, loading, refetch } = useQuery(MY_STUDIO_SUBSCRIPTION, {
+    skip: !user || !isOwner || isGodmode,
+    fetchPolicy: 'cache-and-network',
+  })
+
+  const [createCheckout] = useMutation(CREATE_PLATFORM_SUBSCRIPTION_CHECKOUT)
+
+  useEffect(() => {
+    if (checkoutSuccess || checkoutCancelled) {
+      if (checkoutSuccess) refetch()
+      const next = new URLSearchParams(searchParams)
+      next.delete('checkout_success')
+      next.delete('checkout_cancelled')
+      next.delete('session_id')
+      setSearchParams(next, { replace: true })
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!user || !isOwner) return <Navigate to="/dashboard" replace />
+
+  const sub = data?.myStudioSubscription
+  const currentTierId = sub?.tier || null
+  const isSubActive = sub?.active === true
+
+  const handleSubscribe = async (tier) => {
+    setCheckoutError(null)
+    setLoadingTier(tier)
+    try {
+      const { data: result } = await createCheckout({ variables: { tier } })
+      const errs = result?.createPlatformSubscriptionCheckout?.errors || []
+      const url = result?.createPlatformSubscriptionCheckout?.checkoutUrl
+      if (errs.length > 0) {
+        setCheckoutError(errs.join(', '))
+        setLoadingTier(null)
+        return
+      }
+      if (url) {
+        window.location.href = url
+      } else {
+        setCheckoutError('Something went wrong. Please try again.')
+        setLoadingTier(null)
+      }
+    } catch (e) {
+      setCheckoutError(e.message)
+      setLoadingTier(null)
+    }
+  }
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-lg font-semibold text-white">Subscription</h1>
+        <p className="mt-1 text-sm text-slate-400">Your StudioFlow plan and billing information.</p>
+      </div>
+
+      {checkoutSuccess && (
+        <div className="flex items-start gap-3 rounded-xl border border-green-700 bg-green-900/30 px-5 py-4 text-sm text-green-200">
+          <span className="text-lg leading-none">🎉</span>
+          <div>
+            <p className="font-semibold">Payment successful — welcome to StudioFlow!</p>
+            <p className="mt-0.5 text-green-300/80">Your subscription is now active. It may take a few seconds to reflect below.</p>
+          </div>
+        </div>
+      )}
+      {checkoutCancelled && (
+        <div className="rounded-xl border border-slate-700 bg-slate-900 px-5 py-4 text-sm text-slate-400">
+          Checkout was cancelled. No charge was made. Select a plan below to try again.
+        </div>
+      )}
+      {checkoutError && (
+        <div className="rounded-xl border border-red-700 bg-red-900/30 px-5 py-4 text-sm text-red-200">
+          {checkoutError}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="text-sm text-slate-500">Loading subscription…</div>
+      ) : sub ? (
+        <CurrentPlanBanner sub={sub} />
+      ) : (
+        <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900 px-5 py-6 text-center">
+          <p className="text-sm font-medium text-slate-300">No active subscription yet</p>
+          <p className="mt-1 text-sm text-slate-500">Choose a plan below to get started. You’ll be taken to Stripe to complete payment.</p>
+        </div>
+      )}
+
+      <div>
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-slate-500">Choose a plan</h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {TIERS.map((tier) => (
+            <TierCard
+              key={tier.id}
+              tier={tier}
+              isCurrent={currentTierId === tier.id}
+              isActive={isSubActive}
+              onSubscribe={handleSubscribe}
+              loading={loadingTier}
+            />
+          ))}
+        </div>
+      </div>
+
+      <p className="text-xs text-slate-500">
+        Payments are processed securely by Stripe. By subscribing you agree to monthly recurring billing until cancelled.
+        To cancel, contact{' '}
+        <a href="mailto:billing@studioflow.app" className="text-sky-400 hover:underline">billing@studioflow.app</a>.
+      </p>
+    </div>
+  )
+}

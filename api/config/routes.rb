@@ -3,6 +3,8 @@ Rails.application.routes.draw do
   match "/graphql", to: ->(env) { [ 200, { "Content-Type" => "text/plain" }, [ "OK" ] ] }, via: :options
   post "/graphql", to: "graphql#execute"
 
+  post "/stripe/platform-webhook", to: "platform_webhooks#receive"
+
   if Rails.env.development?
     mount GraphiQL::Rails::Engine, at: "/graphiql", graphql_path: "/graphql"
     get "/voyager", to: "voyager#show"

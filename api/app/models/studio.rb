@@ -7,6 +7,8 @@ class Studio < ApplicationRecord
   has_many :bookings, dependent: :destroy
   has_many :payments, dependent: :destroy
   has_many :instructor_payouts, dependent: :destroy
+  has_one :studio_subscription, dependent: :destroy
+  has_many :client_invitations, dependent: :destroy
 
   validates :name, presence: true
 

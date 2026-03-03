@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_03_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_03_182129) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -107,6 +107,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_000000) do
     t.index ["instructor_id"], name: "index_class_templates_on_instructor_id"
     t.index ["studio_id"], name: "index_class_templates_on_studio_id"
     t.index ["studio_location_id"], name: "index_class_templates_on_studio_location_id"
+  end
+
+  create_table "client_invitations", force: :cascade do |t|
+    t.datetime "accepted_at"
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.datetime "expires_at", null: false
+    t.bigint "invited_by_id", null: false
+    t.string "name"
+    t.bigint "studio_id", null: false
+    t.string "token", null: false
+    t.datetime "updated_at", null: false
+    t.index ["invited_by_id"], name: "index_client_invitations_on_invited_by_id"
+    t.index ["studio_id", "email"], name: "index_client_invitations_on_studio_id_and_email"
+    t.index ["studio_id"], name: "index_client_invitations_on_studio_id"
+    t.index ["token"], name: "index_client_invitations_on_token", unique: true
   end
 
   create_table "client_notes", force: :cascade do |t|
@@ -259,10 +275,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_000000) do
     t.index ["studio_id"], name: "index_studio_locations_on_studio_id"
   end
 
+  create_table "studio_subscriptions", force: :cascade do |t|
+    t.datetime "cancelled_at"
+    t.datetime "created_at", null: false
+    t.datetime "current_period_end"
+    t.text "notes"
+    t.string "status", default: "trialing", null: false
+    t.string "stripe_customer_id"
+    t.string "stripe_subscription_id"
+    t.bigint "studio_id", null: false
+    t.string "tier", default: "basic", null: false
+    t.datetime "updated_at", null: false
+    t.index ["studio_id"], name: "index_studio_subscriptions_on_studio_id", unique: true
+  end
+
   create_table "studios", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "invite_code", null: false
     t.string "name", null: false
+    t.datetime "onboarding_completed_at"
     t.string "slug"
     t.datetime "updated_at", null: false
     t.index ["invite_code"], name: "index_studios_on_invite_code", unique: true
@@ -310,6 +341,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_000000) do
   add_foreign_key "class_templates", "studio_locations"
   add_foreign_key "class_templates", "studios"
   add_foreign_key "class_templates", "users", column: "instructor_id"
+  add_foreign_key "client_invitations", "studios"
+  add_foreign_key "client_invitations", "users", column: "invited_by_id"
   add_foreign_key "client_notes", "clients"
   add_foreign_key "client_notes", "users", column: "author_id"
   add_foreign_key "client_payment_methods", "clients"
@@ -330,5 +363,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_000000) do
   add_foreign_key "payments", "clients"
   add_foreign_key "payments", "studios"
   add_foreign_key "studio_locations", "studios"
+  add_foreign_key "studio_subscriptions", "studios"
   add_foreign_key "users", "studios"
 end

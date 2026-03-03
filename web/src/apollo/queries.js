@@ -433,3 +433,78 @@ export const STUDIO_LOCATIONS = gql`
     }
   }
 `
+
+const SUBSCRIPTION_FRAGMENT = gql`
+  fragment SubscriptionFields on StudioSubscription {
+    id
+    studioId
+    tier
+    status
+    stripeCustomerId
+    stripeSubscriptionId
+    currentPeriodEnd
+    cancelledAt
+    notes
+    priceCad
+    active
+    createdAt
+    updatedAt
+    studio { id name slug }
+  }
+`
+
+export const STUDIO_SUBSCRIPTIONS = gql`
+  ${SUBSCRIPTION_FRAGMENT}
+  query StudioSubscriptions {
+    studioSubscriptions {
+      ...SubscriptionFields
+    }
+  }
+`
+
+export const MY_STUDIO_SUBSCRIPTION = gql`
+  ${SUBSCRIPTION_FRAGMENT}
+  query MyStudioSubscription {
+    myStudioSubscription {
+      ...SubscriptionFields
+    }
+  }
+`
+
+export const MY_STUDIO = gql`
+  query MyStudio {
+    myStudio {
+      id
+      name
+      slug
+      onboardingCompleted
+    }
+  }
+`
+
+export const CLIENT_INVITATIONS = gql`
+  query ClientInvitations {
+    clientInvitations {
+      id
+      email
+      name
+      token
+      status
+      expiresAt
+      createdAt
+      invitedByName
+    }
+  }
+`
+
+export const CLIENT_INVITATION_BY_TOKEN = gql`
+  query ClientInvitationByToken($token: String!) {
+    clientInvitationByToken(token: $token) {
+      id
+      email
+      name
+      status
+      invitedByName
+    }
+  }
+`

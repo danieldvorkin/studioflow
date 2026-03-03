@@ -1,2 +1,3 @@
 backend: cd api && bin/rails server -p 3000
 frontend: cd web && npm run dev
+stripe: stripe listen --api-key $PLATFORM_STRIPE_SECRET_KEY --forward-to http://localhost:3000/stripe/platform-webhook

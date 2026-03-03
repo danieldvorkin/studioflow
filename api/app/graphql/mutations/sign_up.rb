@@ -5,15 +5,21 @@ module Mutations
     argument :name, String, required: false
     argument :account_type, Types::AccountTypeEnum, required: true
     argument :studio_invite_code, String, required: false
+    argument :invitation_token, String, required: false
 
     field :user, Types::UserType, null: true
     field :errors, [ String ], null: false
 
-    def resolve(email:, password:, name: nil, account_type:, studio_invite_code: nil)
+    def resolve(email:, password:, name: nil, account_type:, studio_invite_code: nil, invitation_token: nil)
       role = case account_type
       when "OWNER" then ::User::ROLES[:owner]
       when "CLIENT" then ::User::ROLES[:client]
       else nil
+      end
+
+      # Look up invitation for client signups
+      invitation = if account_type == "CLIENT" && invitation_token.present?
+        ClientInvitation.find_by(token: invitation_token.to_s.strip)
       end
 
       studio = case account_type
@@ -27,7 +33,11 @@ module Mutations
           )
         end
       when "CLIENT"
-        Studio.find_by(slug: "demo") || Studio.first || Studio.create!(name: "Demo Studio", slug: "demo")
+        if invitation&.pending?
+          invitation.studio
+        else
+          Studio.find_by(slug: "demo") || Studio.first || Studio.create!(name: "Demo Studio", slug: "demo")
+        end
       end
 
       if account_type == "OWNER" && studio.nil?
@@ -38,7 +48,7 @@ module Mutations
         email: email,
         password: password,
         password_confirmation: password,
-        name: name,
+        name: name.presence || invitation&.name,
         role: role,
         studio: studio,
       )
@@ -50,6 +60,8 @@ module Mutations
           client.email ||= user.email
           client.name ||= user.name.presence || user.email.to_s.split("@").first
           client.save!
+
+          invitation&.accept! if invitation&.pending?
         end
 
         { user: user, errors: [] }

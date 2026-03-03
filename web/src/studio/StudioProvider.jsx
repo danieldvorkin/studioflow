@@ -22,9 +22,10 @@ export function StudioProvider({ children }) {
   const { user } = useAuth()
   const role = (user?.roleName || '').toString().toLowerCase()
   const isClient = role === 'client' || user?.role === 2 || user?.role === 'client'
+  const isGodmode = user?.godmode === true || role === 'godmode'
 
   const { data, loading } = useQuery(STUDIOS, {
-    skip: !user || !isClient,
+    skip: !user || (!isClient && !isGodmode),
     fetchPolicy: 'cache-and-network',
     nextFetchPolicy: 'cache-first',
   })
@@ -40,14 +41,15 @@ export function StudioProvider({ children }) {
     }
   })
 
-  // If role changes away from client, clear selection (it should not affect staff/owners).
+  // If role changes away from client/godmode, clear selection.
   useEffect(() => {
-    if (isClient) return
+    if (isClient || isGodmode) return
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedStudioIdState(null)
-  }, [isClient])
+  }, [isClient, isGodmode])
 
   // Choose a default studio for clients if none selected.
+  // Godmode intentionally starts at null ("All studios") and only picks one when the user explicitly chooses.
   useEffect(() => {
     if (!isClient) return
     if (loading) return

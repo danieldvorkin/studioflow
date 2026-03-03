@@ -1,0 +1,11 @@
+You're invited to <%= @studio.name %>
+
+<%= @invited_by.name.presence || @invited_by.email %> has invited you to join <%= @studio.name %> on StudioFlow.
+
+Accept your invitation and create your account here:
+<%= @signup_url %>
+
+This invitation expires in 7 days.
+
+---
+If you weren't expecting this invitation, you can safely ignore this email.

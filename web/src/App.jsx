@@ -27,6 +27,8 @@ import Analytics from './pages/Analytics'
 import Schedule from './pages/Schedule'
 import Owner from './pages/Owner'
 import GodmodeStudio from './pages/GodmodeStudio'
+import GodmodeSubscriptions from './pages/GodmodeSubscriptions'
+import OwnerSubscription from './pages/OwnerSubscription'
 import LocationsPage from './pages/Locations'
 import BookingsPage from './pages/Bookings'
 import BookingShow from './pages/BookingShow'
@@ -41,6 +43,7 @@ import { useTheme } from './theme/ThemeProvider'
 import { useLocationContext } from './location/LocationProvider'
 import { STUDIO_SETTINGS } from './apollo/queries'
 import { useStudio } from './studio/StudioProvider'
+import OnboardingModal from './components/OnboardingModal'
 
 function NavItem({ to, onNavigate, children, variant = 'sidebar', end = true }) {
   const base = variant === 'mobile'
@@ -173,6 +176,7 @@ function AppShell() {
           {showGodmodeNav && (
             <NavFolder label="Godmode" defaultOpen>
               <NavItem to="/owner">Owners</NavItem>
+              <NavItem to="/godmode/subscriptions">Subscriptions</NavItem>
             </NavFolder>
           )}
           {showOwnerNav && (
@@ -180,6 +184,7 @@ function AppShell() {
               <NavItem to="/owner">Owner</NavItem>
               <NavItem to="/owner/instructor-payouts">Instructor payouts</NavItem>
               <NavItem to="/locations">Locations</NavItem>
+              <NavItem to="/subscription">Subscription</NavItem>
             </NavFolder>
           )}
         </nav>
@@ -215,37 +220,52 @@ function AppShell() {
               </button>
             </div>
 
-            {(isClient && studios.length > 0) && (
+            {(isClient && studios.length > 0 || showGodmodeNav && studios.length > 0) && (
               <div className="space-y-1">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Studio</div>
-                <select
-                  className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-                  value={selectedStudioId || ''}
-                  onChange={(e) => setSelectedStudioId(e.target.value || null)}
-                >
-                  {studios.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    className="appearance-none w-full rounded-md border border-slate-700 bg-slate-900 pl-2.5 pr-7 py-1.5 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                    value={selectedStudioId || ''}
+                    onChange={(e) => setSelectedStudioId(e.target.value || null)}
+                  >
+                    {showGodmodeNav && <option value="">All studios</option>}
+                    {studios.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-slate-400">
+                    <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M2 4l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                </div>
               </div>
             )}
 
             {locations.length > 0 && (
               <div className="space-y-1">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Location</div>
-                <select
-                  className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-                  value={locationId || ''}
-                  onChange={(e) => setLocationId(e.target.value || null)}
-                >
-                  {locations.map((loc) => (
-                    <option key={loc.id} value={loc.id}>
-                      {loc.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    className="appearance-none w-full rounded-md border border-slate-700 bg-slate-900 pl-2.5 pr-7 py-1.5 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                    value={locationId || ''}
+                    onChange={(e) => setLocationId(e.target.value || null)}
+                  >
+                    {locations.map((loc) => (
+                      <option key={loc.id} value={loc.id}>
+                        {loc.name}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-slate-400">
+                    <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M2 4l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                </div>
               </div>
             )}
 
@@ -282,6 +302,7 @@ function AppShell() {
                 {showGodmodeNav && (
                   <NavFolder label="Godmode" defaultOpen variant="mobile">
                     <NavItem to="/owner" variant="mobile" onNavigate={closeMobileNav}>Owners</NavItem>
+                    <NavItem to="/godmode/subscriptions" variant="mobile" onNavigate={closeMobileNav}>Subscriptions</NavItem>
                   </NavFolder>
                 )}
                 {showOwnerNav && (
@@ -289,6 +310,7 @@ function AppShell() {
                     <NavItem to="/owner" variant="mobile" onNavigate={closeMobileNav}>Owner</NavItem>
                     <NavItem to="/owner/instructor-payouts" variant="mobile" onNavigate={closeMobileNav}>Instructor payouts</NavItem>
                     <NavItem to="/locations" variant="mobile" onNavigate={closeMobileNav}>Locations</NavItem>
+                    <NavItem to="/subscription" variant="mobile" onNavigate={closeMobileNav}>Subscription</NavItem>
                   </NavFolder>
                 )}
               </div>
@@ -343,36 +365,53 @@ function AppShell() {
             <span className="min-w-0 truncate">{dashboardTitle}</span>
           </div>
           <div className="flex shrink-0 items-center gap-3 text-sm">
-            {isClient && studios.length > 0 && (
+            {(isClient || showGodmodeNav) && studios.length > 0 && (
               <div className="flex items-center gap-2 text-xs text-slate-300">
                 <span className="uppercase tracking-[0.18em] text-slate-500">Studio</span>
-                <select
-                  className="rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-                  value={selectedStudioId || ''}
-                  onChange={(e) => setSelectedStudioId(e.target.value || null)}
-                >
-                  {studios.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    className="appearance-none rounded-md border border-slate-700 bg-slate-900 pl-2.5 pr-7 py-1.5 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                    value={selectedStudioId || ''}
+                    onChange={(e) => setSelectedStudioId(e.target.value || null)}
+                  >
+                    {showGodmodeNav && (
+                      <option value="">All studios</option>
+                    )}
+                    {studios.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-slate-400">
+                    <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M2 4l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                </div>
               </div>
             )}
             {locations.length > 0 && (
               <div className="hidden sm:flex items-center gap-2 text-xs text-slate-300">
                 <span className="uppercase tracking-[0.18em] text-slate-500">Location</span>
-                <select
-                  className="rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-                  value={locationId || ''}
-                  onChange={(e) => setLocationId(e.target.value || null)}
-                >
-                  {locations.map((loc) => (
-                    <option key={loc.id} value={loc.id}>
-                      {loc.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    className="appearance-none rounded-md border border-slate-700 bg-slate-900 pl-2.5 pr-7 py-1.5 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                    value={locationId || ''}
+                    onChange={(e) => setLocationId(e.target.value || null)}
+                  >
+                    {locations.map((loc) => (
+                      <option key={loc.id} value={loc.id}>
+                        {loc.name}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-slate-400">
+                    <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M2 4l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                </div>
               </div>
             )}
             <button
@@ -451,6 +490,7 @@ function AppShell() {
           </div>
         </div>
       </main>
+      {showOwnerNav && !isImpersonating && <OnboardingModal />}
     </div>
   )
 }
@@ -524,6 +564,22 @@ function App() {
             element={(
               <ProtectedRoute>
                 <GodmodeStudio />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/godmode/subscriptions"
+            element={(
+              <ProtectedRoute>
+                <GodmodeSubscriptions />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/subscription"
+            element={(
+              <ProtectedRoute>
+                <OwnerSubscription />
               </ProtectedRoute>
             )}
           />
