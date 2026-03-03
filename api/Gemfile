@@ -69,3 +69,7 @@ group :development do
   gem "graphiql-rails"
   gem "graphql-voyager-rails"
 end
+
+group :test do
+  gem 'rspec-watcher'
+end
