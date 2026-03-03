@@ -56,7 +56,7 @@ RSpec.describe MembershipPlan, type: :model do
     end
 
     it "accepts private_session_discount_percent of 0–100" do
-      [0, 10, 100].each do |pct|
+      [ 0, 10, 100 ].each do |pct|
         plan.private_session_discount_percent = pct
         expect(plan).to be_valid
       end

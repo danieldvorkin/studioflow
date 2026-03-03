@@ -249,13 +249,13 @@ module Types
     end
 
     field :client, Types::ClientType, null: true,
-      description: 'Fetch a single client (owner/staff: any in studio; instructor: only clients they have taught)' do
+      description: "Fetch a single client (owner/staff: any in studio; instructor: only clients they have taught)" do
       argument :id, ID, required: true
     end
 
     def client(id:)
       user = context[:current_user]
-      raise GraphQL::ExecutionError, 'Not authorized' unless user
+      raise GraphQL::ExecutionError, "Not authorized" unless user
 
       if user.godmode?
         Client.find(id)
@@ -266,10 +266,10 @@ module Types
         taught = Booking.joins(:class_session)
           .where(client_id: candidate.id, archived: false, class_sessions: { instructor_id: user.id })
           .exists?
-        raise GraphQL::ExecutionError, 'Not authorized' unless taught
+        raise GraphQL::ExecutionError, "Not authorized" unless taught
         candidate
       else
-        raise GraphQL::ExecutionError, 'Not authorized'
+        raise GraphQL::ExecutionError, "Not authorized"
       end
     end
 

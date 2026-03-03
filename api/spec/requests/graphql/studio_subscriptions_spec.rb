@@ -43,7 +43,7 @@ RSpec.describe "Studio subscriptions GraphQL", type: :request do
 
       json = graphql_post(query: query)
       subs = json.dig("data", "studioSubscriptions")
-      prices = subs.map { |s| [s["tier"], s["priceCad"]] }.to_h
+      prices = subs.map { |s| [ s["tier"], s["priceCad"] ] }.to_h
 
       expect(prices["basic"]).to eq(150)
       expect(prices["premium"]).to eq(300)

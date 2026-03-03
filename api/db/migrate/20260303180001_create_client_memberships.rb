@@ -14,7 +14,7 @@ class CreateClientMemberships < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :client_memberships, [:client_id, :status]
-    add_index :client_memberships, [:studio_id, :status]
+    add_index :client_memberships, [ :client_id, :status ]
+    add_index :client_memberships, [ :studio_id, :status ]
   end
 end

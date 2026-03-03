@@ -24,19 +24,19 @@ module Types
       user = context[:current_user]
       raise GraphQL::ExecutionError, "Not authorized" unless user
 
-      limit = [[limit.to_i, 1].max, 500].min
+      limit = [ [ limit.to_i, 1 ].max, 500 ].min
 
       scope = Booking.where(client_id: object.id, archived: false)
 
       if user.godmode?
         scope
       elsif user.owner? || user.staff?
-        raise GraphQL::ExecutionError, 'Not authorized' unless object.studio_id == user.studio_id
+        raise GraphQL::ExecutionError, "Not authorized" unless object.studio_id == user.studio_id
       elsif user.instructor?
-        raise GraphQL::ExecutionError, 'Not authorized' unless object.studio_id == user.studio_id
+        raise GraphQL::ExecutionError, "Not authorized" unless object.studio_id == user.studio_id
         scope = scope.joins(class_session: :instructor).where(class_sessions: { instructor_id: user.id })
       else
-        raise GraphQL::ExecutionError, 'Not authorized'
+        raise GraphQL::ExecutionError, "Not authorized"
       end
 
       scope.includes(:client, :class_session, :payment).order(created_at: :desc).limit(limit)
@@ -70,4 +70,3 @@ module Types
     end
   end
 end
-
