@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_03_182129) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_03_190000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -125,6 +125,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_182129) do
     t.index ["token"], name: "index_client_invitations_on_token", unique: true
   end
 
+  create_table "client_memberships", force: :cascade do |t|
+    t.datetime "cancelled_at"
+    t.bigint "client_id", null: false
+    t.datetime "created_at", null: false
+    t.string "currency", default: "cad"
+    t.date "ends_at"
+    t.bigint "membership_plan_id", null: false
+    t.text "notes"
+    t.integer "price_cents"
+    t.date "started_at", null: false
+    t.string "status", default: "active", null: false
+    t.string "stripe_payment_intent_id"
+    t.bigint "studio_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["client_id", "status"], name: "index_client_memberships_on_client_id_and_status"
+    t.index ["client_id"], name: "index_client_memberships_on_client_id"
+    t.index ["membership_plan_id"], name: "index_client_memberships_on_membership_plan_id"
+    t.index ["studio_id", "status"], name: "index_client_memberships_on_studio_id_and_status"
+    t.index ["studio_id"], name: "index_client_memberships_on_studio_id"
+  end
+
   create_table "client_notes", force: :cascade do |t|
     t.bigint "author_id", null: false
     t.text "body", null: false
@@ -227,6 +248,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_182129) do
     t.string "jti", null: false
     t.datetime "updated_at", null: false
     t.index ["jti"], name: "index_jwt_denylists_on_jti"
+  end
+
+  create_table "membership_plans", force: :cascade do |t|
+    t.boolean "active", default: false, null: false
+    t.boolean "auto_renew", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "currency", default: "cad", null: false
+    t.text "description"
+    t.integer "guest_passes_per_month", default: 0, null: false
+    t.boolean "includes_early_booking", default: false, null: false
+    t.boolean "includes_priority_booking", default: false, null: false
+    t.boolean "includes_retail_discount", default: false, null: false
+    t.integer "mat_classes_per_month"
+    t.integer "min_commitment_months", default: 3, null: false
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.integer "price_cents", default: 0, null: false
+    t.integer "private_session_discount_percent", default: 0, null: false
+    t.integer "reformer_classes_per_month"
+    t.bigint "studio_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["studio_id", "position"], name: "index_membership_plans_on_studio_id_and_position"
+    t.index ["studio_id"], name: "index_membership_plans_on_studio_id"
   end
 
   create_table "payment_settings", force: :cascade do |t|
@@ -343,6 +387,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_182129) do
   add_foreign_key "class_templates", "users", column: "instructor_id"
   add_foreign_key "client_invitations", "studios"
   add_foreign_key "client_invitations", "users", column: "invited_by_id"
+  add_foreign_key "client_memberships", "clients"
+  add_foreign_key "client_memberships", "membership_plans"
+  add_foreign_key "client_memberships", "studios"
   add_foreign_key "client_notes", "clients"
   add_foreign_key "client_notes", "users", column: "author_id"
   add_foreign_key "client_payment_methods", "clients"
@@ -357,6 +404,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_182129) do
   add_foreign_key "instructor_payouts", "studios"
   add_foreign_key "instructor_payouts", "users", column: "created_by_id"
   add_foreign_key "instructor_payouts", "users", column: "instructor_id"
+  add_foreign_key "membership_plans", "studios"
   add_foreign_key "payment_settings", "studios"
   add_foreign_key "payments", "bookings"
   add_foreign_key "payments", "class_sessions"

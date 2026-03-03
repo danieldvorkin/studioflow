@@ -719,6 +719,52 @@ module Types
       ClientInvitation.find_by(token: token.to_s.strip)
     end
 
+    # ── Memberships ──────────────────────────────────────────────────────────────
+
+    field :membership_plans, [ Types::MembershipPlanType ], null: false,
+      description: "Plans defined for the studio. Owners see all; clients see only active plans." do
+      argument :studio_id, ID, required: false
+    end
+    def membership_plans(studio_id: nil)
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authorized" unless user
+
+      effective_studio_id =
+        if user.client?
+          studio_id.presence || user.studio_id
+        else
+          user.studio_id
+        end
+
+      scope = MembershipPlan.where(studio_id: effective_studio_id).ordered
+      user.client? ? scope.published : scope
+    end
+
+    field :client_memberships, [ Types::ClientMembershipType ], null: false,
+      description: "All client memberships for this studio (owner/staff). Clients see their own." do
+      argument :client_id,         ID,     required: false
+      argument :membership_plan_id, ID,    required: false
+      argument :status,            String, required: false
+    end
+    def client_memberships(client_id: nil, membership_plan_id: nil, status: nil)
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authorized" unless user
+
+      if user.client?
+        client = Client.find_by(user_id: user.id, studio_id: user.studio_id)
+        return [] unless client
+        scope = ClientMembership.where(client_id: client.id)
+      else
+        raise Pundit::NotAuthorizedError unless user.owner? || user.staff?
+        scope = ClientMembership.where(studio_id: user.studio_id)
+        scope = scope.where(client_id: client_id) if client_id.present?
+        scope = scope.where(membership_plan_id: membership_plan_id) if membership_plan_id.present?
+      end
+
+      scope = scope.where(status: status) if status.present?
+      scope.order(created_at: :desc)
+    end
+
     # TODO: remove me
     field :test_field, String, null: false,
       description: "An example field added by the generator"

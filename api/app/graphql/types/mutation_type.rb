@@ -62,5 +62,12 @@ module Types
     field :delete_bundle_product, mutation: Mutations::DeleteBundleProduct, null: true
     field :purchase_bundle_product, mutation: Mutations::PurchaseBundleProduct, null: true
     field :create_booking_with_bundle, mutation: Mutations::CreateBookingWithBundle, null: true
+
+    field :create_membership_plan, mutation: Mutations::CreateMembershipPlan, null: true
+    field :update_membership_plan, mutation: Mutations::UpdateMembershipPlan, null: true
+    field :delete_membership_plan, mutation: Mutations::DeleteMembershipPlan, null: true
+    field :enroll_client_membership, mutation: Mutations::EnrollClientMembership, null: true
+    field :update_client_membership, mutation: Mutations::UpdateClientMembership, null: true
+    field :purchase_client_membership, mutation: Mutations::PurchaseClientMembership, null: true
   end
 end

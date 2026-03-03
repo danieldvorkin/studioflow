@@ -10,6 +10,8 @@ class Client < ApplicationRecord
   has_many :instructor_client_blocks, dependent: :destroy
   has_many :blocking_instructors, through: :instructor_client_blocks, source: :instructor
 
+  has_many :client_memberships, dependent: :destroy
+
   validates :name, presence: true
   validates :email, presence: true
 end
