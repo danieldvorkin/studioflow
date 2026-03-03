@@ -8,7 +8,7 @@ import {
   NavLink,
   useLocation,
 } from 'react-router-dom'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery } from '@apollo/client'
 import './App.css'
 import SignIn from './pages/SignIn'
@@ -30,6 +30,7 @@ import LocationsPage from './pages/Locations'
 import BookingsPage from './pages/Bookings'
 import BookingShow from './pages/BookingShow'
 import ClientsPage from './pages/Clients'
+import ClientProfile from './pages/ClientProfile'
 import Profile from './pages/Profile'
 import InstructorPayoutsPage from './pages/InstructorPayouts'
 import Favorites from './pages/Favorites'
@@ -88,15 +89,23 @@ function AppShell() {
   const initials = user?.name?.split(' ').map((n) => n[0]).join('').slice(0, 2) ||
     (user?.email ? user.email[0].toUpperCase() : '?')
 
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const mobileNavOpenRef = useRef(mobileNavOpen)
   const routerLocation = useLocation()
+  const [mobileNavState, setMobileNavState] = useState({ open: false, openedAtPath: null })
   const { theme, toggleTheme } = useTheme()
+
+  const mobileNavOpen = mobileNavState.open && mobileNavState.openedAtPath === routerLocation.pathname
+  const closeMobileNav = () => setMobileNavState((s) => ({ ...s, open: false }))
+  const toggleMobileNav = () => {
+    setMobileNavState((s) => {
+      const isCurrentlyOpen = s.open && s.openedAtPath === routerLocation.pathname
+      return isCurrentlyOpen ? { ...s, open: false } : { open: true, openedAtPath: routerLocation.pathname }
+    })
+  }
 
   const { locations, locationId, setLocationId } = useLocationContext()
 
   const role = (user?.roleName || '').toString().toLowerCase()
-  const isClient = role === 'client' || user?.role === 2 || user?.role === 'client'
+  const isClient = role === 'client' || user?.role === 3 || user?.role === 'client'
   const { studios, selectedStudioId, setSelectedStudioId } = useStudio()
 
   const { data: studioSettingsData } = useQuery(STUDIO_SETTINGS, {
@@ -119,30 +128,21 @@ function AppShell() {
   const canManageStudio = isOwner || isStaff || isInstructor
 
   useEffect(() => {
-    mobileNavOpenRef.current = mobileNavOpen
-  }, [mobileNavOpen])
+    if (!mobileNavOpen) {
+      return undefined
+    }
 
-  useEffect(() => {
-    if (!mobileNavOpenRef.current) return undefined
-    const t = window.setTimeout(() => setMobileNavOpen(false), 0)
-    return () => window.clearTimeout(t)
-  }, [routerLocation.pathname])
-
-  useEffect(() => {
-    if (!mobileNavOpen) return undefined
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
 
     const onKeyDown = (e) => {
-      if (e.key === 'Escape') setMobileNavOpen(false)
+      if (e.key === 'Escape') closeMobileNav()
     }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [mobileNavOpen])
 
-  useEffect(() => {
-    const prev = document.body.style.overflow
-    if (mobileNavOpen) document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKeyDown)
     return () => {
-      document.body.style.overflow = prev
+      window.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = prevOverflow
     }
   }, [mobileNavOpen])
 
@@ -198,7 +198,7 @@ function AppShell() {
             type="button"
             className="absolute inset-0 bg-slate-950/60"
             aria-label="Close navigation"
-            onClick={() => setMobileNavOpen(false)}
+            onClick={closeMobileNav}
           />
           <div className="absolute inset-y-0 left-0 flex w-[min(85vw,20rem)] flex-col gap-4 border-r border-slate-800 bg-slate-950/95 px-4 py-4 text-slate-200">
             <div className="flex items-center justify-between gap-3">
@@ -207,7 +207,7 @@ function AppShell() {
               </div>
               <button
                 type="button"
-                onClick={() => setMobileNavOpen(false)}
+                onClick={closeMobileNav}
                 className="inline-flex items-center rounded-full border border-slate-700 px-3 py-1 text-[11px] font-semibold text-slate-200 hover:bg-slate-800"
               >
                 Close
@@ -251,43 +251,43 @@ function AppShell() {
             <nav className="min-h-0 flex-1 overflow-y-auto pr-1">
               <div className="flex flex-col gap-2">
                 <NavFolder label="General" defaultOpen variant="mobile">
-                  <NavItem to="/dashboard" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Dashboard</NavItem>
-                  <NavItem to="/profile" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Profile</NavItem>
+                  <NavItem to="/dashboard" variant="mobile" onNavigate={closeMobileNav}>Dashboard</NavItem>
+                  <NavItem to="/profile" variant="mobile" onNavigate={closeMobileNav}>Profile</NavItem>
                 </NavFolder>
 
                 <NavFolder label="Operations" defaultOpen variant="mobile">
-                  <NavItem to="/schedule" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Calendar</NavItem>
-                  <NavItem to="/bookings" end={false} variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Bookings</NavItem>
+                  <NavItem to="/schedule" variant="mobile" onNavigate={closeMobileNav}>Calendar</NavItem>
+                  <NavItem to="/bookings" end={false} variant="mobile" onNavigate={closeMobileNav}>Bookings</NavItem>
                   {!isClient && (
-                    <NavItem to="/my-bookings" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>My bookings</NavItem>
+                    <NavItem to="/my-bookings" variant="mobile" onNavigate={closeMobileNav}>My bookings</NavItem>
                   )}
                   {isClient && (
-                    <NavItem to="/saved" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Saved</NavItem>
+                    <NavItem to="/saved" variant="mobile" onNavigate={closeMobileNav}>Saved</NavItem>
                   )}
                   {isClient && (
-                    <NavItem to="/my-bundles" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Bundles</NavItem>
+                    <NavItem to="/my-bundles" variant="mobile" onNavigate={closeMobileNav}>Bundles</NavItem>
                   )}
                   {canManageStudio && clientsPageEnabled && (
-                    <NavItem to="/clients" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Clients</NavItem>
+                    <NavItem to="/clients" variant="mobile" onNavigate={closeMobileNav}>Clients</NavItem>
                   )}
                   {canManageStudio && (
-                    <NavItem to="/templates" end={false} variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Classes</NavItem>
+                    <NavItem to="/templates" end={false} variant="mobile" onNavigate={closeMobileNav}>Classes</NavItem>
                   )}
                   {showStudioAdminTools && (
-                    <NavItem to="/bundles" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Bundles</NavItem>
+                    <NavItem to="/bundles" variant="mobile" onNavigate={closeMobileNav}>Bundles</NavItem>
                   )}
                 </NavFolder>
 
                 {showGodmodeNav && (
                   <NavFolder label="Godmode" defaultOpen variant="mobile">
-                    <NavItem to="/owner" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Owners</NavItem>
+                    <NavItem to="/owner" variant="mobile" onNavigate={closeMobileNav}>Owners</NavItem>
                   </NavFolder>
                 )}
                 {showOwnerNav && (
                   <NavFolder label="Owner" defaultOpen variant="mobile">
-                    <NavItem to="/owner" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Owner</NavItem>
-                    <NavItem to="/owner/instructor-payouts" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Instructor payouts</NavItem>
-                    <NavItem to="/locations" variant="mobile" onNavigate={() => setMobileNavOpen(false)}>Locations</NavItem>
+                    <NavItem to="/owner" variant="mobile" onNavigate={closeMobileNav}>Owner</NavItem>
+                    <NavItem to="/owner/instructor-payouts" variant="mobile" onNavigate={closeMobileNav}>Instructor payouts</NavItem>
+                    <NavItem to="/locations" variant="mobile" onNavigate={closeMobileNav}>Locations</NavItem>
                   </NavFolder>
                 )}
               </div>
@@ -297,7 +297,7 @@ function AppShell() {
               <button
                 type="button"
                 onClick={() => {
-                  setMobileNavOpen(false)
+                  closeMobileNav()
                   stopImpersonation()
                 }}
                 className="inline-flex w-full items-center justify-center rounded-full border border-amber-400 px-3 py-2 text-xs font-semibold text-amber-50 hover:bg-amber-500/20"
@@ -310,7 +310,7 @@ function AppShell() {
               <button
                 type="button"
                 onClick={() => {
-                  setMobileNavOpen(false)
+                  closeMobileNav()
                   signOut()
                 }}
                 className="inline-flex w-full items-center justify-center rounded-full border border-slate-600 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800"
@@ -328,7 +328,7 @@ function AppShell() {
             <button
               type="button"
               className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 md:hidden"
-              onClick={() => setMobileNavOpen((v) => !v)}
+              onClick={toggleMobileNav}
               aria-expanded={mobileNavOpen}
             >
               <span className="sr-only">Toggle navigation</span>
@@ -463,6 +463,17 @@ function ClientsRouteGate() {
   }
 
   return <ClientsPage />
+}
+
+function ClientProfileRouteGate() {
+  const { data } = useQuery(STUDIO_SETTINGS)
+  const clientsPageEnabled = data?.studioSettings?.clientsPageEnabled !== false
+
+  if (!clientsPageEnabled) {
+    return <Navigate to="/dashboard" replace />
+  }
+
+  return <ClientProfile />
 }
 
 function App() {
@@ -603,6 +614,14 @@ function App() {
             element={(
               <ProtectedRoute>
                 <ClientsRouteGate />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/clients/:id"
+            element={(
+              <ProtectedRoute>
+                <ClientProfileRouteGate />
               </ProtectedRoute>
             )}
           />

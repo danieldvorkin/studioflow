@@ -575,9 +575,23 @@ export const DELETE_CLASS_SESSION = gql`
 `
 
 export const UPDATE_CLIENT = gql`
-  mutation UpdateClient($id: ID!, $name: String, $email: String, $phone: String) {
-    updateClient(input: { id: $id, name: $name, email: $email, phone: $phone }) {
-      client { id name email phone }
+  mutation UpdateClient($id: ID!, $name: String, $email: String, $phone: String, $characteristicScores: JSON) {
+    updateClient(input: { id: $id, name: $name, email: $email, phone: $phone, characteristicScores: $characteristicScores }) {
+      client { id name email phone characteristicScores }
+      errors
+    }
+  }
+`
+
+export const CREATE_CLIENT_NOTE = gql`
+  mutation CreateClientNote($clientId: ID!, $body: String!) {
+    createClientNote(input: { clientId: $clientId, body: $body }) {
+      note {
+        id
+        body
+        createdAt
+        author { id name email }
+      }
       errors
     }
   }

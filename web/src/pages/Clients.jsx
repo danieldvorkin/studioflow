@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from '@apollo/client'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { CURRENT_USER, CLIENTS } from '../apollo/queries'
 import { UPDATE_CLIENT, DELETE_CLIENT, TOGGLE_CLIENT_BLOCK, START_IMPERSONATION } from '../apollo/mutations'
 import { useToast } from '../components/ToastProvider'
@@ -13,8 +14,10 @@ export default function ClientsPage() {
   const isOwner = isGodmode || role === 'owner' || user?.role === 0
   const isInstructor = isGodmode || role === 'instructor'
 
-  const { data, loading } = useQuery(CLIENTS, {
+  const { data, loading, error } = useQuery(CLIENTS, {
     skip: !user,
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: 'cache-first',
   })
 
   const [updateClient] = useMutation(UPDATE_CLIENT)
@@ -114,7 +117,13 @@ export default function ClientsPage() {
 
       {loading && <p className="text-sm text-slate-400">Loading clients…</p>}
 
-      {!loading && clients.length === 0 && (
+      {!loading && error && (
+        <div className="rounded-2xl border border-rose-700/40 bg-rose-950/30 p-4 text-sm text-rose-200">
+          {error.message || 'Could not load clients.'}
+        </div>
+      )}
+
+      {!loading && !error && clients.length === 0 && (
         <p className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/70 p-4 text-sm text-slate-400">
           No clients yet.
         </p>
@@ -145,7 +154,12 @@ export default function ClientsPage() {
                           onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
                         />
                       ) : (
-                        c.name
+                        <Link
+                          to={`/clients/${c.id}`}
+                          className="font-medium text-slate-100 hover:text-sky-300"
+                        >
+                          {c.name}
+                        </Link>
                       )}
                     </td>
                     <td className="px-3 py-2 text-slate-300">

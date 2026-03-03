@@ -277,6 +277,43 @@ export const CLIENTS = gql`
   }
 `
 
+export const CLIENT_PROFILE = gql`
+  query ClientProfile($id: ID!) {
+    client(id: $id) {
+      id
+      name
+      email
+      phone
+      characteristicScores
+      clientNotes {
+        id
+        body
+        createdAt
+        author { id name email }
+      }
+      bookings(limit: 300) {
+        id
+        status
+        paid
+        archived
+        createdAt
+        payment {
+          id
+          amountCents
+          currency
+          status
+        }
+        classSession {
+          id
+          startTime
+          classTemplate { id title }
+          instructor { id name }
+        }
+      }
+    }
+  }
+`
+
 export const PAYMENT_SETTINGS = gql`
   query PaymentSettings {
     paymentSettings {

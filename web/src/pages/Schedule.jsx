@@ -158,11 +158,16 @@ export default function Schedule() {
   const monthGridStart = useMemo(() => startOfWeek(monthStart), [monthStart])
   const monthGridEnd = useMemo(() => startOfWeek(addDays(monthEnd, -1)), [monthEnd])
 
+  const monthRangeTo = useMemo(() => addDays(monthGridEnd, 7), [monthGridEnd])
+
   const todayWeekStart = useMemo(() => startOfWeek(new Date()), [])
   const todayWeekEnd = useMemo(() => addDays(todayWeekStart, 7), [todayWeekStart])
 
-  const rangeFrom = viewMode === 'month' ? monthGridStart : weekStart
-  const rangeTo = viewMode === 'month' ? addDays(monthGridEnd, 7) : weekEnd
+  const rangeFrom = useMemo(() => (viewMode === 'month' ? monthGridStart : weekStart), [monthGridStart, viewMode, weekStart])
+  const rangeTo = useMemo(() => (viewMode === 'month' ? monthRangeTo : weekEnd), [monthRangeTo, viewMode, weekEnd])
+
+  const rangeFromIso = useMemo(() => rangeFrom.toISOString(), [rangeFrom])
+  const rangeToIso = useMemo(() => rangeTo.toISOString(), [rangeTo])
 
   const { locationId } = useLocationContext()
   const { selectedStudioId } = useStudio()
@@ -174,14 +179,16 @@ export default function Schedule() {
     nextFetchPolicy: 'cache-first',
   })
 
-  const { data, loading, refetch } = useQuery(CLASS_SESSIONS, {
+  const { data, loading, previousData, refetch } = useQuery(CLASS_SESSIONS, {
     variables: {
-      from: rangeFrom.toISOString(),
-      to: rangeTo.toISOString(),
+      from: rangeFromIso,
+      to: rangeToIso,
       studioLocationId: locationId || null,
       studioId: userIsClient ? selectedStudioId : null,
     },
     skip: userIsClient && !selectedStudioId,
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: 'cache-first',
   })
 
   const { data: bookingsData } = useQuery(BOOKINGS, {
@@ -227,7 +234,7 @@ export default function Schedule() {
   })
   const { addToast } = useToast()
 
-  const sessions = data?.classSessions || EMPTY_SESSIONS
+  const sessions = data?.classSessions || previousData?.classSessions || EMPTY_SESSIONS
 
   const myActiveBookings = useMemo(() => {
     const raw = myBookingsData?.myBookings || []
@@ -362,14 +369,29 @@ export default function Schedule() {
 
   const templates = templatesData?.classTemplates || []
 
-  const [form, setForm] = useState({
-    classTemplateId: '',
-    startTime: '',
-    capacity: '',
-    room: '',
-    bundleEnabled: false,
-    bundleSpots: '',
-  })
+  const defaultNewEventDayKey = useMemo(() => {
+    if (viewMode === 'month') return selectedMonthDayKey
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const weekEnd = addDays(weekStart, 7)
+    const inRange = today >= weekStart && today < weekEnd
+    const chosen = inRange ? today : new Date(weekStart)
+    return localDayKey(chosen)
+  }, [selectedMonthDayKey, viewMode, weekStart])
+
+  const defaultTimeHHMM = () => {
+    const now = new Date()
+    const h = now.getHours()
+    const m = now.getMinutes()
+
+    const rounded = Math.ceil(m / 30) * 30
+    const nextH = rounded === 60 ? (h + 1) % 24 : h
+    const nextM = rounded === 60 ? 0 : rounded
+
+    const pad2 = (n) => String(n).padStart(2, '0')
+    return `${pad2(nextH)}:${pad2(nextM)}`
+  }
 
   const [editingSessionId, setEditingSessionId] = useState(null)
   const [timeForm, setTimeForm] = useState({ startTime: '', durationMinutes: '' })
@@ -384,13 +406,14 @@ export default function Schedule() {
   }
 
   const openNewEventModal = (dayKey) => {
-    setSelectedMonthDayKey(dayKey)
+    const effectiveDayKey = dayKey || defaultNewEventDayKey || localDayKey(new Date())
+    setSelectedMonthDayKey(effectiveDayKey)
     setMonthExpandedSessionId(null)
-    setNewEventDayKey(dayKey)
+    setNewEventDayKey(effectiveDayKey)
     setNewEventForm((prev) => ({
       ...prev,
       classTemplateId: prev.classTemplateId || templates[0]?.id || '',
-      time: prev.time || '09:00',
+      time: prev.time || defaultTimeHHMM(),
     }))
     setShowNewEventModal(true)
   }
@@ -436,37 +459,6 @@ export default function Schedule() {
     setHoveredSession(session)
     if (e?.clientX != null && e?.clientY != null) {
       setTooltipPos({ x: e.clientX, y: e.clientY })
-    }
-  }
-
-  const handleCreateSession = async (e) => {
-    e.preventDefault()
-    if (!form.classTemplateId || !form.startTime) return
-    try {
-      const variables = {
-        classTemplateId: form.classTemplateId,
-        startTime: new Date(form.startTime).toISOString(),
-        endTime: null,
-        capacity: form.capacity ? Number(form.capacity) : null,
-        room: form.room || null,
-      }
-
-      if (userIsOwner || userIsStaff || userIsInstructor) {
-        variables.bundleEnabled = form.bundleEnabled === true
-        variables.bundleSpots = form.bundleEnabled ? (form.bundleSpots ? Number(form.bundleSpots) : null) : null
-      }
-
-      const res = await createClassSession({ variables })
-      const payload = res.data?.createClassSession
-      const errors = payload?.errors || []
-      if (errors.length || !payload?.classSession) {
-        throw new Error(errors.join(', ') || 'Could not create session')
-      }
-      addToast({ message: 'Session created', type: 'success' })
-      setForm({ classTemplateId: '', startTime: '', capacity: '', room: '', bundleEnabled: false, bundleSpots: '' })
-      await refetch()
-    } catch (err) {
-      addToast({ message: err.message || 'Failed to create session', type: 'error' })
     }
   }
 
@@ -581,90 +573,18 @@ export default function Schedule() {
           >
             {viewMode === 'month' ? 'Next month' : 'Next week'}
           </button>
+          {canCreateSessions && templates.length > 0 && (
+            <button
+              type="button"
+              onClick={() => openNewEventModal(defaultNewEventDayKey)}
+              className="ml-2 rounded-full bg-sky-500 px-3 py-1 text-xs font-semibold text-on-accent hover:bg-sky-400"
+            >
+              Add session
+            </button>
+          )}
           <span className="ml-2 text-xs text-slate-400">{rangeLabel}</span>
         </div>
       </header>
-
-      {canCreateSessions && templates.length > 0 && (
-        <form
-          onSubmit={handleCreateSession}
-          className="flex flex-col gap-2 rounded-2xl border border-slate-800 bg-slate-900/80 p-4 text-sm md:flex-row md:items-end"
-        >
-          <div className="flex-1 space-y-1">
-            <label className="text-xs font-medium text-slate-300">Class template</label>
-            <select
-              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-              value={form.classTemplateId}
-              onChange={(e) => setForm((f) => ({ ...f, classTemplateId: e.target.value }))}
-            >
-              <option value="">Select template</option>
-              {templates.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.title}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-300">Start</label>
-            <input
-              type="datetime-local"
-              className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-              value={form.startTime}
-              onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-300">Capacity</label>
-            <input
-              type="number"
-              min="1"
-              className="w-24 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-              value={form.capacity}
-              onChange={(e) => setForm((f) => ({ ...f, capacity: e.target.value }))}
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-300">Room</label>
-            <input
-              type="text"
-              className="w-28 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-              value={form.room}
-              onChange={(e) => setForm((f) => ({ ...f, room: e.target.value }))}
-            />
-          </div>
-
-          {(userIsOwner || userIsStaff || userIsInstructor) && (
-            <div className="flex flex-col gap-2 rounded-xl border border-slate-800 bg-slate-950/30 p-3 md:flex-row md:items-end">
-              <label className="flex items-center gap-2 text-xs font-medium text-slate-200">
-                <input
-                  type="checkbox"
-                  checked={form.bundleEnabled}
-                  onChange={(e) => setForm((f) => ({ ...f, bundleEnabled: e.target.checked }))}
-                />
-                Allow bundle credits
-              </label>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-300">Bundle spots</label>
-                <input
-                  type="number"
-                  min="1"
-                  disabled={!form.bundleEnabled}
-                  className="w-28 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 disabled:opacity-60"
-                  value={form.bundleSpots}
-                  onChange={(e) => setForm((f) => ({ ...f, bundleSpots: e.target.value }))}
-                />
-              </div>
-            </div>
-          )}
-          <button
-            type="submit"
-            className="mt-2 inline-flex items-center justify-center rounded-lg bg-sky-500 px-4 py-2 text-sm font-semibold text-on-accent hover:bg-sky-400 md:mt-0"
-          >
-            Add session
-          </button>
-        </form>
-      )}
 
       {instructors.length > 1 && (
         <div className="flex flex-wrap items-center gap-3 text-sm">
@@ -685,7 +605,11 @@ export default function Schedule() {
         </div>
       )}
 
-      {loading && <p className="text-sm text-slate-400">Loading schedule…</p>}
+      {loading && (
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 px-4 py-2 text-sm text-slate-300">
+          Loading schedule…
+        </div>
+      )}
 
       {viewMode === 'month' ? (
         <div className="mt-2 space-y-2">
@@ -1421,7 +1345,7 @@ export default function Schedule() {
         </div>
       )}
 
-      {showNewEventModal && viewMode === 'month' && (
+      {showNewEventModal && (
         <div
           className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/70 p-4"
           role="dialog"
@@ -1450,6 +1374,28 @@ export default function Schedule() {
             </div>
 
             <div className="mt-4 space-y-3 text-sm">
+              {viewMode === 'week' && (
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-300">Date</label>
+                  <input
+                    type="date"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                    value={newEventDayKey || ''}
+                    onChange={(e) => {
+                      const next = e.target.value
+                      if (!next) return
+                      setNewEventDayKey(next)
+                    }}
+                  />
+                </div>
+              )}
+
+              {newEventDayKey && (
+                <div className="text-xs text-slate-400">
+                  {dateFromLocalDayKey(newEventDayKey)?.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                </div>
+              )}
+
               <div className="space-y-1">
                 <label className="text-xs font-medium text-slate-300">Class template</label>
                 <select

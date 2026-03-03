@@ -58,9 +58,17 @@ module Types
 
     scope = ClassTemplate.all
     scope = scope.where(studio_id: effective_studio_id) if effective_studio_id
-    scope = scope.where(instructor_id: instructor_id) if instructor_id
+    scope = scope.where(instructor_id: instructor_id) if instructor_id && !user&.instructor?
     if user&.instructor?
-      scope = scope.where(instructor_id: user.id)
+      taught_template_ids =
+        ClassSession
+          .where(studio_id: effective_studio_id, instructor_id: user.id)
+          .distinct
+          .pluck(:class_template_id)
+
+      assigned = scope.where(instructor_id: user.id)
+      taught = scope.where(id: taught_template_ids)
+      scope = assigned.or(taught)
     end
 
     # Treat templates with NULL location as "global" and include them when filtering by location.
@@ -200,24 +208,49 @@ module Types
     end
 
     field :clients, [ Types::ClientType ], null: false,
-    description: "List clients visible to the current user (owner/staff: all, instructor: their clients)"
+      description: "List clients visible to the current user (owner/staff: all, instructor: their clients)"
     def clients
-    user = context[:current_user]
-    raise GraphQL::ExecutionError, "Not authorized" unless user
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authorized" unless user
 
-    if user.godmode?
-      Client.order(:name)
-    elsif user.owner? || user.staff?
-      Client.where(studio_id: user.studio_id).order(:name)
-    elsif user.instructor?
-      Client.where(studio_id: user.studio_id)
+      if user.godmode?
+        Client.order(:name)
+      elsif user.owner? || user.staff?
+        Client.where(studio_id: user.studio_id).order(:name)
+      elsif user.instructor?
+        Client.where(studio_id: user.studio_id)
           .joins(bookings: { class_session: :instructor })
           .where(class_sessions: { instructor_id: user.id })
           .distinct
           .order(:name)
-    else
-      raise GraphQL::ExecutionError, "Not authorized"
+      else
+        raise GraphQL::ExecutionError, "Not authorized"
+      end
     end
+
+    field :client, Types::ClientType, null: true,
+      description: 'Fetch a single client (owner/staff: any in studio; instructor: only clients they have taught)' do
+      argument :id, ID, required: true
+    end
+
+    def client(id:)
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, 'Not authorized' unless user
+
+      if user.godmode?
+        Client.find(id)
+      elsif user.owner? || user.staff?
+        Client.where(studio_id: user.studio_id).find(id)
+      elsif user.instructor?
+        candidate = Client.where(studio_id: user.studio_id).find(id)
+        taught = Booking.joins(:class_session)
+          .where(client_id: candidate.id, archived: false, class_sessions: { instructor_id: user.id })
+          .exists?
+        raise GraphQL::ExecutionError, 'Not authorized' unless taught
+        candidate
+      else
+        raise GraphQL::ExecutionError, 'Not authorized'
+      end
     end
 
     field :users, [ Types::UserType ], null: false,

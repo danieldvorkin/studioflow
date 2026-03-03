@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_02_000100) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_03_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -109,6 +109,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_000100) do
     t.index ["studio_location_id"], name: "index_class_templates_on_studio_location_id"
   end
 
+  create_table "client_notes", force: :cascade do |t|
+    t.bigint "author_id", null: false
+    t.text "body", null: false
+    t.bigint "client_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["author_id"], name: "index_client_notes_on_author_id"
+    t.index ["client_id", "created_at"], name: "index_client_notes_on_client_id_and_created_at"
+    t.index ["client_id"], name: "index_client_notes_on_client_id"
+  end
+
   create_table "client_payment_methods", force: :cascade do |t|
     t.string "brand"
     t.bigint "client_id", null: false
@@ -126,6 +137,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_000100) do
   end
 
   create_table "clients", force: :cascade do |t|
+    t.jsonb "characteristic_scores", default: [], null: false
     t.datetime "created_at", null: false
     t.string "email"
     t.string "name"
@@ -298,6 +310,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_000100) do
   add_foreign_key "class_templates", "studio_locations"
   add_foreign_key "class_templates", "studios"
   add_foreign_key "class_templates", "users", column: "instructor_id"
+  add_foreign_key "client_notes", "clients"
+  add_foreign_key "client_notes", "users", column: "author_id"
   add_foreign_key "client_payment_methods", "clients"
   add_foreign_key "client_payment_methods", "studios"
   add_foreign_key "clients", "studios"

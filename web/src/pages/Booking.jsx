@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from '@apollo/client'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { Navigate, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { loadStripe } from '@stripe/stripe-js'
 import {
@@ -144,12 +144,6 @@ function BookingForm({ session, studioIdForBooking, stripeConfigured }) {
   const existingBookingId = existingBookingForRoute?.id || existingBooking?.id
 
   useEffect(() => {
-    if (existingBookingId) {
-      navigate(`/bookings/${existingBookingId}`, { replace: true })
-    }
-  }, [existingBookingId, navigate])
-
-  useEffect(() => {
     if (!selectedSavedPaymentMethodId && defaultSavedMethodId) {
       setSelectedSavedPaymentMethodId(defaultSavedMethodId)
     }
@@ -163,6 +157,10 @@ function BookingForm({ session, studioIdForBooking, stripeConfigured }) {
       setValue('email', user.email || '')
     }
   }, [id, user, setValue])
+
+  if (existingBookingId) {
+    return <Navigate to={`/bookings/${existingBookingId}`} replace />
+  }
 
   const onSubmit = async (form) => {
     try {
@@ -597,7 +595,6 @@ function BookingForm({ session, studioIdForBooking, stripeConfigured }) {
 
 export default function Booking() {
   const { id } = useParams()
-  const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuth()
   const roleName = (user?.roleName || '').toString().toLowerCase()
@@ -620,22 +617,11 @@ export default function Booking() {
         )
       : null
 
-  const redirectingToExistingBooking = !!existingBookingForRoute?.id
+  const redirectTarget = existingBookingForRoute?.id ? `/bookings/${existingBookingForRoute.id}` : null
+  const shouldRedirectNow = !!(redirectTarget && location?.pathname !== redirectTarget)
+  const redirectingToExistingBooking = !!redirectTarget
 
   const shouldHoldQueriesForRedirectCheck = isClientUser && myBookingsLoading
-
-  const hasRedirectedRef = useRef(false)
-
-  useEffect(() => {
-    if (!existingBookingForRoute?.id) return
-    if (hasRedirectedRef.current) return
-
-    const target = `/bookings/${existingBookingForRoute.id}`
-    if (location?.pathname === target) return
-
-    hasRedirectedRef.current = true
-    navigate(target, { replace: true })
-  }, [existingBookingForRoute?.id, navigate, location?.pathname])
 
   const { data: sessionsData } = useQuery(CLASS_SESSIONS, {
     skip: redirectingToExistingBooking || shouldHoldQueriesForRedirectCheck,
@@ -663,7 +649,9 @@ export default function Booking() {
     stripePublishableKey ? loadStripe(stripePublishableKey) : null
   ), [stripePublishableKey])
 
-  if (redirectingToExistingBooking) return <div>Opening your booking…</div>
+  if (shouldRedirectNow) {
+    return <Navigate to={redirectTarget} replace />
+  }
 
   if (shouldHoldQueriesForRedirectCheck) return <div>Loading booking…</div>
 

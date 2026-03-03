@@ -18,6 +18,7 @@ module Types
     field :create_client, mutation: Mutations::CreateClient, null: true
     field :update_client, mutation: Mutations::UpdateClient, null: true
     field :delete_client, mutation: Mutations::DeleteClient, null: true
+    field :create_client_note, mutation: Mutations::CreateClientNote, null: true
     field :sign_in_with_google, mutation: Mutations::SignInWithGoogle, null: true
     field :update_user, mutation: Mutations::UpdateUser, null: true
     field :update_profile, mutation: Mutations::UpdateProfile, null: true

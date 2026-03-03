@@ -16,11 +16,19 @@ module Mutations
       ct = ClassTemplate.where(studio_id: user&.studio_id).find(class_template_id)
       raise Pundit::NotAuthorizedError unless Pundit.policy!(user, ClassSession).create?
 
-      if user&.instructor? && ct.instructor_id != user.id
-        raise Pundit::NotAuthorizedError
-      end
-
       instructor_id = ct.instructor_id
+      if user&.instructor?
+        taught_before =
+          ClassSession
+            .where(studio_id: user.studio_id, instructor_id: user.id, class_template_id: ct.id)
+            .exists?
+
+        allowed = (ct.instructor_id == user.id) || taught_before
+        raise Pundit::NotAuthorizedError unless allowed
+
+        # Instructors can only create sessions for themselves.
+        instructor_id = user.id
+      end
       if instructor_id
         instructor = User.find_by(id: instructor_id)
         if instructor.nil? || !instructor.active? || !instructor.available_for_sessions?
@@ -34,7 +42,7 @@ module Mutations
         end_time: end_time,
         capacity: capacity,
         room: room,
-        instructor_id: ct.instructor_id
+        instructor_id: instructor_id
       }
       cs_attrs[:bundle_enabled] = bundle_enabled unless bundle_enabled.nil?
       cs_attrs[:bundle_spots] = bundle_spots unless bundle_spots.nil?
