@@ -3,6 +3,7 @@ class Studio < ApplicationRecord
   has_many :studio_locations, dependent: :destroy
   has_many :class_templates, dependent: :destroy
   has_many :class_sessions, dependent: :destroy
+  has_many :membership_plans, dependent: :destroy
   has_many :clients, dependent: :destroy
   has_many :bookings, dependent: :destroy
   has_many :payments, dependent: :destroy

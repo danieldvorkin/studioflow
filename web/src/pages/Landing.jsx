@@ -70,15 +70,15 @@ export default function Landing() {
 
               <div className="mt-7 grid gap-3 text-sm text-slate-200 sm:grid-cols-3">
                 <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Bookings</div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-400">Bookings</div>
                   <div className="mt-1 font-medium">Less back-and-forth</div>
                 </div>
                 <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Payments</div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-400">Payments</div>
                   <div className="mt-1 font-medium">Cards on file</div>
                 </div>
                 <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Payouts</div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-400">Payouts</div>
                   <div className="mt-1 font-medium">Clear instructor splits</div>
                 </div>
               </div>
@@ -88,7 +88,7 @@ export default function Landing() {
               <div className="absolute -inset-6 rounded-3xl bg-gradient-to-br from-sky-500/20 via-fuchsia-500/10 to-emerald-500/10 blur-2xl" />
               <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/60 p-6">
                 <div className="flex items-center justify-between">
-                  <div className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Live studio view</div>
+                  <div className="text-sm font-semibold uppercase tracking-[0.22em] text-sky-400">Live studio view</div>
                   <div className="flex items-center gap-2 text-[11px] text-slate-300">
                     <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400" />
                     All systems ready
@@ -98,7 +98,7 @@ export default function Landing() {
                   <div className="rounded-2xl border border-slate-800 bg-slate-950/30 p-4">
                     <div className="flex items-center justify-between">
                       <div className="text-sm font-semibold text-slate-100">Today’s schedule</div>
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">2 locations</div>
+                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-400">2 locations</div>
                     </div>
                     <div className="mt-3 grid gap-2">
                       <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2">
@@ -127,7 +127,7 @@ export default function Landing() {
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="rounded-2xl border border-slate-800 bg-slate-950/30 p-4">
-                      <div className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Payments</div>
+                      <div className="text-sm font-semibold uppercase tracking-[0.22em] text-sky-400">Payments</div>
                       <div className="mt-2 text-sm text-slate-200">Saved methods + fast checkout</div>
                       <div className="mt-3 flex items-center gap-2 text-[11px] text-slate-400">
                         <span className="inline-flex h-1.5 w-1.5 rounded-full bg-sky-400" />
@@ -135,7 +135,7 @@ export default function Landing() {
                       </div>
                     </div>
                     <div className="rounded-2xl border border-slate-800 bg-slate-950/30 p-4">
-                      <div className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Payouts</div>
+                      <div className="text-sm font-semibold uppercase tracking-[0.22em] text-sky-400">Payouts</div>
                       <div className="mt-2 text-sm text-slate-200">Instructor splits you can trust</div>
                       <div className="mt-3 flex items-center gap-2 text-[11px] text-slate-400">
                         <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
@@ -151,7 +151,7 @@ export default function Landing() {
           <section id="features" className="mt-16 scroll-mt-24">
             <div className="flex items-end justify-between gap-6">
               <div>
-                <div className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Features</div>
+                <div className="text-sm font-semibold uppercase tracking-[0.22em] text-sky-400">Features</div>
                 <h2 className="mt-2 text-2xl font-semibold text-slate-50">Everything you need to run the floor.</h2>
                 <p className="mt-2 max-w-2xl text-sm text-slate-300">
                   Built for studios that care about client experience and operational clarity.
@@ -194,7 +194,7 @@ export default function Landing() {
           </section>
 
           <section id="roles" className="mt-16 scroll-mt-24">
-            <div className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">For teams</div>
+            <div className="text-sm font-semibold uppercase tracking-[0.22em] text-sky-400">For teams</div>
             <h2 className="mt-2 text-2xl font-semibold text-slate-50">Built for owners, staff, instructors, and clients.</h2>
             <div className="mt-6 grid gap-4 md:grid-cols-3">
               <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
@@ -228,7 +228,7 @@ export default function Landing() {
           </section>
 
           <section id="faq" className="mt-16 scroll-mt-24">
-            <div className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">FAQ</div>
+            <div className="text-sm font-semibold uppercase tracking-[0.22em] text-sky-400">FAQ</div>
             <h2 className="mt-2 text-2xl font-semibold text-slate-50">Questions, answered.</h2>
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -255,7 +255,7 @@ export default function Landing() {
             <div className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900/70 via-slate-900/60 to-slate-950/60 p-7 md:p-10">
               <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
                 <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Ready?</div>
+                  <div className="text-sm font-semibold uppercase tracking-[0.22em] text-sky-400">Ready?</div>
                   <h2 className="mt-2 text-2xl font-semibold text-slate-50">Turn scheduling into sales — not stress.</h2>
                   <p className="mt-2 max-w-2xl text-sm text-slate-300">Create an account and start organizing sessions, bookings, and payments in minutes.</p>
                 </div>

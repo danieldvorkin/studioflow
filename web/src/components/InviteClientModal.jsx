@@ -175,7 +175,7 @@ export default function InviteClientModal({ onClose }) {
           {/* Invitations history */}
           {invitations.length > 0 && (
             <div className="space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Sent invitations</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-widest text-sky-400">Sent invitations</h3>
               <ul className="space-y-1.5">
                 {invitations.map((inv) => (
                   <li

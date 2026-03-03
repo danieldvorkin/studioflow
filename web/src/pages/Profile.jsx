@@ -169,7 +169,7 @@ export default function Profile() {
       </header>
 
       <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-xl shadow-black/50">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Profile details</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">Profile details</h2>
         <form onSubmit={saveProfile} className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
           <div className="space-y-1">
             <label className="text-[11px] font-medium text-slate-300">Name</label>
@@ -257,7 +257,7 @@ export default function Profile() {
       {isClient && (
         <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-xl shadow-black/50">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Memberships</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">Memberships</h2>
             <a
               href="/my-memberships"
               className="text-xs font-semibold text-sky-400 hover:text-sky-300"
@@ -318,7 +318,7 @@ export default function Profile() {
 
       <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-xl shadow-black/50">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Billing</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">Billing</h2>
         </div>
 
         <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-3">

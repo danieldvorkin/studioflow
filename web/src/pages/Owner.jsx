@@ -125,7 +125,7 @@ export default function Owner() {
 
         <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-sm shadow-black/20">
           <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Owners</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">Owners</h2>
             <div className="text-xs text-slate-500">
               {studiosLoading || loading ? 'Loading…' : `${owners.length} owner${owners.length === 1 ? '' : 's'}`}
             </div>
@@ -135,7 +135,7 @@ export default function Owner() {
             <div className="text-sm text-slate-300">No owners found.</div>
           ) : (
             <div className="overflow-hidden rounded-xl border border-slate-800">
-              <div className="grid grid-cols-12 gap-0 bg-slate-950/60 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+              <div className="grid grid-cols-12 gap-0 bg-slate-950/60 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-400/70">
                 <div className="col-span-5">Studio</div>
                 <div className="col-span-4">Owner</div>
                 <div className="col-span-3 text-right">Actions</div>
@@ -394,7 +394,7 @@ function OwnerModules({
             return (
               <>
                 <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">People</h2>
+                  <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">People</h2>
                   <span className="text-[11px] text-slate-500">
                     Users: {filteredUsers.length}/{users.length} · Clients: {filteredClients.length}/{clients.length}
                   </span>
@@ -412,7 +412,7 @@ function OwnerModules({
                 <div className="flex min-h-0 flex-1 flex-col gap-3">
             <div className="flex min-h-0 flex-col rounded-xl border border-slate-800">
               <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900/70 px-3 py-2">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-400">Users</div>
+                <div className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400">Users</div>
                 <div className="flex items-center gap-3">
                   <span className="text-[11px] text-slate-500">{filteredUsers.length}</span>
                   <button
@@ -583,7 +583,7 @@ function OwnerModules({
 
             <div className="flex min-h-0 flex-col rounded-xl border border-slate-800">
               <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900/70 px-3 py-2">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-400">Clients</div>
+                <div className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400">Clients</div>
                 <div className="flex items-center gap-3">
                   <label className="inline-flex items-center gap-2 text-[11px] text-slate-400">
                     <input
@@ -706,7 +706,7 @@ function OwnerModules({
       render: () => (
         <div className="flex h-full min-h-0 flex-col rounded-2xl border border-slate-800 bg-slate-900/80 p-3 text-xs text-slate-200">
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-400">Bookings</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400">Bookings</h2>
             <span className="text-[11px] text-slate-500">{bookings.length}</span>
           </div>
           <div className="min-h-0 flex-1">
@@ -747,7 +747,7 @@ function OwnerModules({
       render: () => (
         <div className="flex h-full min-h-0 flex-col rounded-2xl border border-slate-800 bg-slate-900/80 p-3 text-xs text-slate-200">
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-400">Recent payments</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400">Recent payments</h2>
             <span className="text-[11px] text-slate-500">{payments.length}</span>
           </div>
           <div className="min-h-0 flex-1">
@@ -1054,7 +1054,7 @@ function OwnerModules({
         <DragOverlay>
           {activeId ? (
             <div className="rounded-2xl border border-slate-700 bg-slate-900/90 p-4 shadow-sm shadow-black/20">
-              <div className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+              <div className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">
                 {modulesById?.[activeId]?.title || 'Module'}
               </div>
               <div className="mt-2 text-sm text-slate-200">Moving…</div>
@@ -1230,7 +1230,7 @@ function StripePaymentsModule({ paymentSettings, updatePaymentSettings, addToast
     <div className="flex h-full min-h-0 flex-col rounded-2xl border border-slate-800 bg-slate-900/80 p-3 text-xs text-slate-200">
       <div className="mb-2 flex items-center justify-between gap-2">
         <div className="flex min-w-0 flex-col">
-          <h2 className="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-400">Stripe payments</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400">Stripe payments</h2>
           <p className="text-[10px] text-slate-500">
             {unlocked ? 'Editing enabled' : 'Locked to prevent accidental changes'}
           </p>
@@ -1395,7 +1395,7 @@ function StudioAppearanceModule({
   return (
     <div className="flex h-full min-h-0 flex-col rounded-2xl border border-slate-800 bg-slate-900/80 p-3 text-xs text-slate-200">
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-400">Studio appearance</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400">Studio appearance</h2>
       </div>
 
       <form

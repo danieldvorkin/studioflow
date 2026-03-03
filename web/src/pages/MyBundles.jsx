@@ -148,7 +148,7 @@ function PurchaseBundleCard({ bundleProduct, myClient, stripeConfigured, stripeA
       {expanded && (
         <form onSubmit={onBuy} className="mt-4 space-y-3">
           <div className="space-y-1">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Payment</div>
+            <div className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-400">Payment</div>
             <div className="flex flex-wrap gap-2">
               <label className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-950/40 px-3 py-1.5 text-xs text-slate-200">
                 <input
@@ -318,7 +318,7 @@ export default function MyBundlesPage() {
 
       <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">My credits</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">My credits</h2>
           {(purchasesLoading || myClientLoading) && <span className="text-[11px] text-slate-500">Loading…</span>}
         </div>
 
@@ -343,7 +343,7 @@ export default function MyBundlesPage() {
       <section className="space-y-3">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Buy a bundle</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">Buy a bundle</h2>
             <p className="mt-1 text-sm text-slate-500">Choose a bundle for this studio.</p>
           </div>
           {paymentSettingsLoading && <span className="text-[11px] text-slate-500">Loading payments…</span>}

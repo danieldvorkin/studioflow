@@ -79,7 +79,7 @@ function Section({ id, title, subtitle, children }) {
       className="hash-target rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-sm shadow-black/20"
     >
       <div className="flex flex-col gap-1">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">{title}</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">{title}</h2>
         {subtitle && <p className="text-sm text-slate-400">{subtitle}</p>}
       </div>
       <div className="mt-4">{children}</div>

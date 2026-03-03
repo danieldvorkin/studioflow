@@ -7,8 +7,9 @@ export default {
   theme: {
     extend: {
       fontSize: {
-        xs: ['0.8rem', { lineHeight: '1.25rem' }],
-        sm: ['0.95rem', { lineHeight: '1.5rem' }],
+        xs: ['0.85rem', { lineHeight: '1.35rem' }],
+        sm: ['1rem', { lineHeight: '1.55rem' }],
+        base: ['1.0625rem', { lineHeight: '1.65rem' }],
       },
     },
   },

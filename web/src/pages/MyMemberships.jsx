@@ -191,7 +191,7 @@ function PurchaseMembershipCard({ plan, myClient, stripeConfigured, stripeAvaila
         <form onSubmit={onSubscribe} className="mt-2 space-y-3 border-t border-slate-800 pt-3">
           {!isFree && (
             <>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Payment</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-400">Payment</div>
               <div className="flex flex-wrap gap-2">
                 <label className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-950/40 px-3 py-1.5 text-xs text-slate-200">
                   <input
@@ -352,7 +352,7 @@ export default function MyMembershipsPage() {
       {/* Current memberships */}
       {(membershipsLoading || myMemberships.length > 0) && (
         <section>
-          <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-500 mb-3">My Memberships</h2>
+          <h2 className="text-base font-semibold uppercase tracking-widest text-sky-400 mb-3">My Memberships</h2>
           {membershipsLoading && <p className="text-sm text-slate-400">Loading…</p>}
           <div className="flex flex-col gap-3">
             {myMemberships.map((m) => (
@@ -392,7 +392,7 @@ export default function MyMembershipsPage() {
 
       {/* Available plans */}
       <section>
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-500 mb-3">Available Plans</h2>
+        <h2 className="text-base font-semibold uppercase tracking-widest text-sky-400 mb-3">Available Plans</h2>
         {(plansLoading || paymentSettingsLoading || myClientLoading) && (
           <p className="text-sm text-slate-400">Loading…</p>
         )}

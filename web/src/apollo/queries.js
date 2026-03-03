@@ -116,6 +116,52 @@ export const STUDIOS = gql`
     studios {
       id
       name
+      studioLocations { id name }
+    }
+  }
+`
+
+export const STUDIO_SHOW = gql`
+  query StudioShow($id: ID!) {
+    studio(id: $id) {
+      id
+      name
+      studioLocations { id name }
+      instructors {
+        id
+        name
+        email
+        avatarUrl
+        availableForSessions
+      }
+      membershipPlans {
+        id
+        name
+        description
+        priceCents
+        currency
+        reformerClassesPerMonth
+        matClassesPerMonth
+        includesPriorityBooking
+        includesEarlyBooking
+        privateSessionDiscountPercent
+        guestPassesPerMonth
+        includesRetailDiscount
+        minCommitmentMonths
+        autoRenew
+        active
+      }
+      upcomingClassSessions(limit: 30) {
+        id
+        startTime
+        endTime
+        capacity
+        seatsAvailable
+        room
+        bundleEnabled
+        instructor { id name }
+        classTemplate { id title durationMinutes priceCents currency }
+      }
     }
   }
 `

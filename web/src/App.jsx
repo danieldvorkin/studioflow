@@ -41,11 +41,14 @@ import BundlesPage from './pages/Bundles'
 import MyBundlesPage from './pages/MyBundles'
 import OwnerMembershipsPage from './pages/OwnerMemberships'
 import MyMembershipsPage from './pages/MyMemberships'
+import StudiosPage from './pages/StudiosPage'
+import StudioShowPage from './pages/StudioShowPage'
 import { useTheme } from './theme/ThemeProvider'
 import { useLocationContext } from './location/LocationProvider'
 import { STUDIO_SETTINGS } from './apollo/queries'
 import { useStudio } from './studio/StudioProvider'
 import OnboardingModal from './components/OnboardingModal'
+import QuickGlancePanel from './components/QuickGlancePanel'
 
 function NavItem({ to, onNavigate, children, variant = 'sidebar', end = true }) {
   const base = variant === 'mobile'
@@ -97,6 +100,7 @@ function AppShell() {
 
   const routerLocation = useLocation()
   const [mobileNavState, setMobileNavState] = useState({ open: false, openedAtPath: null })
+  const [quickGlanceOpen, setQuickGlanceOpen] = useState(false)
   const { theme, toggleTheme } = useTheme()
 
   const mobileNavOpen = mobileNavState.open && mobileNavState.openedAtPath === routerLocation.pathname
@@ -162,6 +166,7 @@ function AppShell() {
           <NavFolder label="General" defaultOpen>
             <NavItem to="/dashboard">Dashboard</NavItem>
             <NavItem to="/profile">Profile</NavItem>
+            {isClient && <NavItem to="/studios" end={false}>Studios</NavItem>}
           </NavFolder>
 
           <NavFolder label="Operations" defaultOpen>
@@ -224,7 +229,7 @@ function AppShell() {
               </button>
             </div>
 
-            {(isClient && studios.length > 0 || showGodmodeNav && studios.length > 0) && (
+            {(showGodmodeNav && studios.length > 0) && (
               <div className="space-y-1">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Studio</div>
                 <div className="relative">
@@ -278,6 +283,9 @@ function AppShell() {
                 <NavFolder label="General" defaultOpen variant="mobile">
                   <NavItem to="/dashboard" variant="mobile" onNavigate={closeMobileNav}>Dashboard</NavItem>
                   <NavItem to="/profile" variant="mobile" onNavigate={closeMobileNav}>Profile</NavItem>
+                  {isClient && (
+                    <NavItem to="/studios" end={false} variant="mobile" onNavigate={closeMobileNav}>Studios</NavItem>
+                  )}
                 </NavFolder>
 
                 <NavFolder label="Operations" defaultOpen variant="mobile">
@@ -356,7 +364,7 @@ function AppShell() {
       )}
 
       <main className="flex min-h-0 h-dvh min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="flex items-center justify-between gap-3 border-b border-slate-800 bg-slate-900/80 px-4 py-3 backdrop-blur">
+        <header className="relative flex items-center justify-between gap-3 border-b border-slate-800 bg-slate-900/80 px-4 py-3 backdrop-blur">
           <div className="flex min-w-0 flex-1 items-center gap-2 text-xs uppercase tracking-[0.25em] text-slate-400">
             <button
               type="button"
@@ -377,28 +385,40 @@ function AppShell() {
           <div className="flex shrink-0 items-center gap-3 text-sm">
             {(isClient || showGodmodeNav) && studios.length > 0 && (
               <div className="flex items-center gap-2 text-xs text-slate-300">
-                <span className="uppercase tracking-[0.18em] text-slate-500">Studio</span>
-                <div className="relative">
-                  <select
-                    className="appearance-none rounded-md border border-slate-700 bg-slate-900 pl-2.5 pr-7 py-1.5 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-                    value={selectedStudioId || ''}
-                    onChange={(e) => setSelectedStudioId(e.target.value || null)}
-                  >
-                    {showGodmodeNav && (
-                      <option value="">All studios</option>
-                    )}
-                    {studios.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-slate-400">
-                    <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M2 4l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </span>
-                </div>
+                {showGodmodeNav ? (
+                  <>
+                    <span className="uppercase tracking-[0.18em] text-slate-500">Studio</span>
+                    <div className="relative">
+                      <select
+                        className="appearance-none rounded-md border border-slate-700 bg-slate-900 pl-2.5 pr-7 py-1.5 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                        value={selectedStudioId || ''}
+                        onChange={(e) => setSelectedStudioId(e.target.value || null)}
+                      >
+                        <option value="">All studios</option>
+                        {studios.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.name}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-slate-400">
+                        <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M2 4l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  selectedStudioId && (
+                    <Link
+                      to={`/studios/${selectedStudioId}`}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-800"
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                      {studios.find((s) => s.id === selectedStudioId)?.name || 'My Studio'}
+                    </Link>
+                  )
+                )}
               </div>
             )}
             {locations.length > 0 && (
@@ -422,6 +442,25 @@ function AppShell() {
                     </svg>
                   </span>
                 </div>
+              </div>
+            )}
+            {showOwnerNav && (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setQuickGlanceOpen((v) => !v)}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                    quickGlanceOpen
+                      ? 'border-sky-500/60 bg-sky-500/10 text-sky-300'
+                      : 'border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800'
+                  }`}
+                  aria-label="Quick glance"
+                  aria-expanded={quickGlanceOpen}
+                >
+                  <span className={`inline-block h-1.5 w-1.5 rounded-full ${quickGlanceOpen ? 'bg-sky-400' : 'bg-emerald-400'}`} />
+                  Quick Glance
+                </button>
+                <QuickGlancePanel open={quickGlanceOpen} onClose={() => setQuickGlanceOpen(false)} />
               </div>
             )}
             <button
@@ -648,6 +687,22 @@ function App() {
             element={(
               <ProtectedRoute>
                 <MyBundlesPage />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/studios"
+            element={(
+              <ProtectedRoute>
+                <StudiosPage />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/studios/:id"
+            element={(
+              <ProtectedRoute>
+                <StudioShowPage />
               </ProtectedRoute>
             )}
           />

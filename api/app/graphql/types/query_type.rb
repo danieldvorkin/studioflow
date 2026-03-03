@@ -36,6 +36,17 @@ module Types
       Studio.order(:name)
     end
 
+    field :studio, Types::StudioType, null: true,
+      description: "Fetch a single studio by ID (for studio show page)" do
+      argument :id, ID, required: true
+    end
+    def studio(id:)
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authorized" unless user
+
+      Studio.find_by(id: id)
+    end
+
     field :my_studio, Types::StudioType, null: true,
       description: "Returns the current owner's studio with onboarding status"
     def my_studio

@@ -248,7 +248,7 @@ export default function GodmodeSubscriptions() {
       <div className="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900">
         <table className="min-w-full divide-y divide-slate-800 text-sm">
           <thead>
-            <tr className="text-left text-xs font-semibold uppercase tracking-widest text-slate-500">
+            <tr className="text-left text-sm font-semibold uppercase tracking-widest text-sky-400">
               <th className="px-4 py-3">Studio</th>
               <th className="px-4 py-3">Subdomain</th>
               <th className="px-4 py-3">Tier</th>

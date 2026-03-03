@@ -93,7 +93,7 @@ export default function Favorites() {
 
       <section className="grid gap-3 rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-sm md:grid-cols-2">
         <div className="space-y-1">
-          <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Studio</label>
+          <label className="block text-xs font-semibold uppercase tracking-[0.18em] text-sky-400/70">Studio</label>
           <select
             value={studioIdFilter}
             onChange={(e) => {
@@ -110,7 +110,7 @@ export default function Favorites() {
         </div>
 
         <div className="space-y-1">
-          <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Location</label>
+          <label className="block text-xs font-semibold uppercase tracking-[0.18em] text-sky-400/70">Location</label>
           <select
             value={studioLocationIdFilter}
             onChange={(e) => setStudioLocationIdFilter(e.target.value)}

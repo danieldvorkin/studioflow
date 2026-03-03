@@ -78,9 +78,9 @@ function formatCents(cents, currency) {
 function StatCard({ label, value, helper, to, onClick }) {
   const content = (
     <>
-      <div className="text-[11px] uppercase tracking-[0.25em] text-slate-400">{label}</div>
+      <div className="text-xs uppercase tracking-[0.25em] text-slate-400">{label}</div>
       <div className="mt-1 text-xl font-semibold text-slate-50">{value}</div>
-      {helper && <div className="mt-1 text-[11px] text-slate-500">{helper}</div>}
+      {helper && <div className="mt-1 text-xs text-slate-500">{helper}</div>}
     </>
   )
 
@@ -625,7 +625,7 @@ export default function Dashboard() {
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,2.4fr)_minmax(0,1fr)]">
         <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-sm shadow-black/20">
           <div className="mb-3 flex items-baseline justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">
               {isClient ? 'Your bookings' : (isInstructor ? 'Your upcoming classes' : 'Location performance')}
             </h2>
             <span className="text-[11px] text-slate-500">
@@ -661,7 +661,7 @@ export default function Dashboard() {
               </div>
 
               <div className="mt-4">
-                <div className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">Top classes (30d)</div>
+                <div className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400/70">Top classes (30d)</div>
                 {analytics.topTemplates.length === 0 ? (
                   <p className="mt-2 rounded-lg border border-dashed border-slate-700 bg-slate-900/60 p-3 text-sm text-slate-400">
                     No paid bookings in the last 30 days.
@@ -689,7 +689,7 @@ export default function Dashboard() {
               {ownerAnalytics && (
                 <div className="mt-6">
                   <div className="flex items-baseline justify-between gap-3">
-                    <div className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">Analytics</div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400/70">Analytics</div>
                     <Link
                       to="/analytics"
                       className="text-[11px] font-medium text-slate-400 hover:text-slate-200"
@@ -721,7 +721,7 @@ export default function Dashboard() {
 
                   <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
-                      <div className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">Week-to-week (12w)</div>
+                      <div className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400/70">Week-to-week (12w)</div>
                       <button
                         type="button"
                         onClick={() => setOpenSheet('revenue')}
@@ -786,7 +786,7 @@ export default function Dashboard() {
                     </div>
 
                     <div>
-                      <div className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">Client retention</div>
+                      <div className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400/70">Client retention</div>
                       <button
                         type="button"
                         onClick={() => setOpenSheet('retention')}
@@ -847,7 +847,7 @@ export default function Dashboard() {
 
                   <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
                     <div>
-                      <div className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">Top instructors (30d)</div>
+                      <div className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400/70">Top instructors (30d)</div>
                       {ownerAnalytics.topInstructorsLast30.length === 0 ? (
                         <p className="mt-2 rounded-lg border border-dashed border-slate-700 bg-slate-900/60 p-3 text-sm text-slate-400">
                           No paid bookings in the last 30 days.
@@ -869,7 +869,7 @@ export default function Dashboard() {
                     </div>
 
                     <div>
-                      <div className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">Classes (30d)</div>
+                      <div className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400/70">Classes (30d)</div>
                       <div className="mt-2 grid grid-cols-1 gap-3">
                         <div>
                           <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Highest earning</div>
@@ -1024,7 +1024,7 @@ export default function Dashboard() {
               </div>
 
               <div className="mt-4">
-                <div className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">Book a class</div>
+                <div className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400/70">Book a class</div>
                 {!selectedStudioId ? (
                   <p className="mt-2 rounded-lg border border-dashed border-slate-700 bg-slate-900/60 p-3 text-sm text-slate-400">
                     Select a studio from the studio picker to browse and book sessions.
@@ -1067,7 +1067,7 @@ export default function Dashboard() {
               </div>
 
               <div className="mt-4">
-                <div className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">Your upcoming bookings</div>
+                <div className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400/70">Your upcoming bookings</div>
                 {upcomingBookings.length === 0 ? (
                   <p className="mt-2 rounded-lg border border-dashed border-slate-700 bg-slate-900/60 p-3 text-sm text-slate-400">
                     Your next booking will show up here.
@@ -1109,7 +1109,7 @@ export default function Dashboard() {
         <div className="flex flex-col gap-4">
           <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-sm shadow-black/20">
             <div className="mb-3 flex items-baseline justify-between">
-              <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">
                 {isClient ? 'Studio' : 'Overview'}
               </h2>
             </div>
@@ -1128,7 +1128,7 @@ export default function Dashboard() {
 
             {isClient && (
               <div className="mt-4">
-                <div className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">Instructors</div>
+                <div className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400/70">Instructors</div>
                 {instructorsByLocation.length === 0 ? (
                   <p className="mt-2 rounded-lg border border-dashed border-slate-700 bg-slate-900/60 p-3 text-sm text-slate-400">
                     No instructors are listed for this location yet.
@@ -1196,7 +1196,7 @@ export default function Dashboard() {
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-sm shadow-black/20">
-            <h2 className="mb-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+            <h2 className="mb-2 text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">
               Quick links
             </h2>
             <ul className="flex flex-col gap-1 text-sm">

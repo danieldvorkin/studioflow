@@ -145,7 +145,7 @@ function EarningsCard({
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <section className="rounded-xl border border-slate-800 bg-slate-950/20 p-3">
               <div className="mb-2 flex items-center justify-between">
-                <h4 className="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-400">Payout</h4>
+                <h4 className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400">Payout</h4>
                 {payout?.paidAt && (
                   <span className="text-[10px] text-slate-500">paid {new Date(payout.paidAt).toLocaleString()}</span>
                 )}
@@ -297,7 +297,7 @@ function EarningsCard({
 
             <section className="rounded-xl border border-slate-800 bg-slate-950/20 p-3">
               <div className="mb-2 flex items-center justify-between">
-                <h4 className="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-400">Stripe Connect</h4>
+                <h4 className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400">Stripe Connect</h4>
                 <div className="flex items-center gap-2">
                   {connectId ? (
                     <StatusPill tone={connectOk ? 'emerald' : 'amber'}>{connectOk ? 'Connected' : 'Incomplete'}</StatusPill>
@@ -391,7 +391,7 @@ function EarningsCard({
 
           {Array.isArray(row.templateBreakdown) && row.templateBreakdown.length > 0 && (
             <section className="rounded-xl border border-slate-800 bg-slate-950/20 p-3">
-              <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-400">Breakdown</div>
+              <div className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-sky-400">Breakdown</div>
               <div className="overflow-auto rounded-xl border border-slate-800">
                 <table className="min-w-full text-left text-xs text-slate-300">
                   <thead className="bg-slate-900/80 text-[11px] uppercase tracking-[0.15em] text-slate-500">
@@ -486,7 +486,7 @@ export default function InstructorPayoutsModule({ addToast }) {
     <div className="flex h-full min-h-0 flex-col rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Instructor payouts</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">Instructor payouts</h2>
           <p className="mt-1 text-[11px] text-slate-500">
             Weekly earnings + payout tracking (owner only).
           </p>
@@ -568,7 +568,7 @@ export default function InstructorPayoutsModule({ addToast }) {
       </div>
 
       <details className="mt-4 rounded-xl border border-slate-800 bg-slate-900/60 p-3">
-        <summary className="cursor-pointer select-none text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+        <summary className="cursor-pointer select-none text-xs font-semibold uppercase tracking-[0.25em] text-sky-400">
           Compensation settings
           <span className="ml-2 text-[10px] normal-case tracking-normal text-slate-500">(instructor defaults + template overrides)</span>
         </summary>
@@ -576,7 +576,7 @@ export default function InstructorPayoutsModule({ addToast }) {
         <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
           <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
             <div className="mb-2 flex items-center justify-between">
-              <h3 className="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-400">Instructor defaults</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400">Instructor defaults</h3>
               <span className="text-[11px] text-slate-500">applies when template overrides are blank</span>
             </div>
 
@@ -673,7 +673,7 @@ export default function InstructorPayoutsModule({ addToast }) {
 
           <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
             <div className="mb-2 flex items-center justify-between">
-              <h3 className="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-400">Template overrides</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400">Template overrides</h3>
               <button
                 type="button"
                 onClick={() => refetchTemplates()}

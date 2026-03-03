@@ -111,15 +111,15 @@ export default function ClientProfile() {
         {client && (
           <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
             <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Email</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-400">Email</div>
               <div className="mt-1 text-sm text-slate-200">{client.email || '—'}</div>
             </div>
             <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Phone</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-400">Phone</div>
               <div className="mt-1 text-sm text-slate-200">{client.phone || '—'}</div>
             </div>
             <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Bookings</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-400">Bookings</div>
               <div className="mt-1 text-sm text-slate-200">{bookings.length}</div>
             </div>
           </div>
@@ -147,7 +147,7 @@ export default function ClientProfile() {
           <div className="flex flex-col gap-4">
             <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
               <div className="flex items-baseline justify-between gap-3">
-                <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Characteristics</h2>
+                <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">Characteristics</h2>
                 <button
                   type="button"
                   onClick={() => setScoresDraft((rows) => ([...rows, { label: '', score: 3, note: '' }]))}
@@ -243,7 +243,7 @@ export default function ClientProfile() {
 
             <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
               <div className="flex items-baseline justify-between gap-3">
-                <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Notes</h2>
+                <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">Notes</h2>
                 <span className="text-[11px] text-slate-500">Visible to your team</span>
               </div>
 
@@ -305,7 +305,7 @@ export default function ClientProfile() {
 
           <div className="flex flex-col gap-4">
             <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
-              <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Classes</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">Classes</h2>
               <div className="mt-3">
                 {classesSummary.length === 0 ? (
                   <p className="text-sm text-slate-400">No booking history yet.</p>
@@ -336,7 +336,7 @@ export default function ClientProfile() {
 
             <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
               <div className="flex items-baseline justify-between gap-3">
-                <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">History</h2>
+                <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">History</h2>
                 <span className="text-[11px] text-slate-500">Most recent first</span>
               </div>
               <div className="mt-3">

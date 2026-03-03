@@ -275,7 +275,7 @@ export default function BookingsPage({ scope = 'visible' }) {
                         </summary>
 
                         <div className="mt-3 flex flex-col gap-2">
-                          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                          <div className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-400">
                             Attendees
                           </div>
                           <ul className="flex flex-col gap-1">

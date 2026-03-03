@@ -420,7 +420,7 @@ export default function BookingShow() {
           </div>
 
           <div className="mt-3 border-t border-slate-800 pt-3 text-xs text-slate-300">
-            <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Client</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-400/70">Client</h3>
             <div className="mt-1 space-y-0.5">
               <div>{booking.client.name}</div>
               {booking.client.email && (

@@ -613,7 +613,7 @@ export default function Schedule() {
 
       {viewMode === 'month' ? (
         <div className="mt-2 space-y-2">
-          <div className="grid grid-cols-7 gap-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+          <div className="grid grid-cols-7 gap-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-400">
             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
               <div key={d} className="px-2">
                 {d}

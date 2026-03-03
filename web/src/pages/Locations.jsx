@@ -131,7 +131,7 @@ export default function LocationsPage() {
       </header>
 
       <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-sm shadow-black/20">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Add location</h2>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">Add location</h2>
         <form className="grid grid-cols-1 gap-3 md:grid-cols-2" onSubmit={submitCreate}>
           <div className="space-y-1">
             <label className="text-[11px] font-medium text-slate-300">Name</label>
@@ -192,7 +192,7 @@ export default function LocationsPage() {
 
       <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-sm shadow-black/20">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">All locations</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">All locations</h2>
           <span className="text-[11px] text-slate-500">{locations.length} total</span>
         </div>
 
