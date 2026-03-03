@@ -5,6 +5,14 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
 
+# Load api/.env so PLATFORM_STRIPE_SECRET_KEY and friends are in the environment
+if [[ -f "api/.env" ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source api/.env
+  set +a
+fi
+
 if command -v overmind >/dev/null 2>&1; then
   exec overmind start -f Procfile.dev
 elif command -v foreman >/dev/null 2>&1; then

@@ -1067,3 +1067,21 @@ export const PURCHASE_CLIENT_MEMBERSHIP = gql`
     }
   }
 `
+
+export const CREATE_OWNER_SETUP_INTENT = gql`
+  mutation CreateOwnerSetupIntent {
+    createOwnerSetupIntent(input: {}) {
+      clientSecret
+      errors
+    }
+  }
+`
+
+export const SAVE_OWNER_PAYMENT_METHOD = gql`
+  mutation SaveOwnerPaymentMethod($paymentMethodId: String!) {
+    saveOwnerPaymentMethod(input: { paymentMethodId: $paymentMethodId }) {
+      stripeCustomerId
+      errors
+    }
+  }
+`

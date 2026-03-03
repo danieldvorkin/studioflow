@@ -616,3 +616,12 @@ export const CLIENT_MEMBERSHIPS = gql`
     }
   }
 `
+
+export const PLATFORM_PAYMENT_SETTINGS = gql`
+  query PlatformPaymentSettings {
+    platformPaymentSettings {
+      stripePublishableKey
+      configured
+    }
+  }
+`

@@ -1,9 +1,9 @@
 import { useMutation, useQuery } from '@apollo/client'
 import { useEffect, useMemo, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { CardElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js'
 import { loadStripe } from '@stripe/stripe-js'
-import { MY_BOOKINGS, MY_CLIENT, PAYMENT_PUBLIC_SETTINGS, CLIENT_MEMBERSHIPS } from '../apollo/queries'
+import { MY_BOOKINGS, MY_CLIENT, PAYMENT_PUBLIC_SETTINGS, CLIENT_MEMBERSHIPS, PLATFORM_PAYMENT_SETTINGS, MY_STUDIO_SUBSCRIPTION } from '../apollo/queries'
 import {
   CREATE_SETUP_INTENT,
   REMOVE_MY_PAYMENT_METHOD,
@@ -11,6 +11,8 @@ import {
   SET_MY_DEFAULT_PAYMENT_METHOD,
   UPDATE_PROFILE,
   UPDATE_CLIENT_MEMBERSHIP,
+  CREATE_OWNER_SETUP_INTENT,
+  SAVE_OWNER_PAYMENT_METHOD,
 } from '../apollo/mutations'
 import { useToast } from '../components/ToastProvider'
 import { useAuth } from '../auth/AuthProvider'
@@ -154,6 +156,27 @@ export default function Profile() {
   const [setMyDefaultPaymentMethod, { loading: settingDefaultCard }] = useMutation(
     SET_MY_DEFAULT_PAYMENT_METHOD,
   )
+
+  const isOwner = role === 'owner'
+
+  const { data: platformSettingsData } = useQuery(PLATFORM_PAYMENT_SETTINGS, {
+    skip: !user || !isOwner,
+  })
+  const { data: ownerSubData } = useQuery(MY_STUDIO_SUBSCRIPTION, {
+    skip: !user || !isOwner,
+    fetchPolicy: 'cache-and-network',
+  })
+
+  const [createOwnerSetupIntent] = useMutation(CREATE_OWNER_SETUP_INTENT)
+  const [saveOwnerPaymentMethod] = useMutation(SAVE_OWNER_PAYMENT_METHOD)
+
+  const platformPublishableKey = platformSettingsData?.platformPaymentSettings?.stripePublishableKey
+  const platformStripePromise = useMemo(
+    () => (platformPublishableKey ? loadStripe(platformPublishableKey) : null),
+    [platformPublishableKey],
+  )
+  const ownerSub = ownerSubData?.myStudioSubscription
+  const ownerHasActiveSub = ownerSub?.status && ['active', 'trialing', 'past_due'].includes(ownerSub.status)
 
   if (!user) return <Navigate to="/signin" replace />
 
@@ -321,7 +344,7 @@ export default function Profile() {
           <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">Billing</h2>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div className="lg:col-span-1">
             <h3 className="text-sm font-semibold text-slate-100">Saved card</h3>
 
@@ -335,7 +358,13 @@ export default function Profile() {
               </p>
             )}
 
-            {!myClientLoading && stripePublishableKey && stripePromise && (
+            {!myClientLoading && stripePublishableKey && !myClient && (
+              <p className="mt-2 text-sm text-slate-400">
+                No billing profile found for your account.
+              </p>
+            )}
+
+            {!myClientLoading && stripePublishableKey && stripePromise && myClient && (
               <Elements stripe={stripePromise}>
                 <SavedCardEditor
                   user={user}
@@ -355,7 +384,7 @@ export default function Profile() {
             )}
           </div>
 
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-1">
             <h3 className="text-sm font-semibold text-slate-100">Transaction history</h3>
             <p className="mt-1 text-sm text-slate-400">Recent charges from your bookings.</p>
 

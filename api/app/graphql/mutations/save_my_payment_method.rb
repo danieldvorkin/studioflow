@@ -51,29 +51,33 @@ module Mutations
         return { client: nil, errors: [ e.message ] }
       end
 
-      Client.transaction do
-        record = client.client_payment_methods.find_or_initialize_by(
-          stripe_payment_method_id: payment_method_id
-        )
-        record.studio_id ||= effective_studio_id
-        record.assign_attributes(
-          brand: card&.brand,
-          last4: card&.last4,
-          exp_month: card&.exp_month,
-          exp_year: card&.exp_year,
-          default: true
-        )
-        record.save!
+      begin
+        Client.transaction do
+          record = client.client_payment_methods.find_or_initialize_by(
+            stripe_payment_method_id: payment_method_id
+          )
+          record.studio_id ||= effective_studio_id
+          record.assign_attributes(
+            brand: card&.brand,
+            last4: card&.last4,
+            exp_month: card&.exp_month,
+            exp_year: card&.exp_year,
+            default: true
+          )
+          record.save!
 
-        client.client_payment_methods.where.not(id: record.id).update_all(default: false)
+          client.client_payment_methods.where.not(id: record.id).update_all(default: false)
 
-        client.update!(
-          stripe_default_payment_method_id: payment_method_id,
-          stripe_default_payment_method_brand: card&.brand,
-          stripe_default_payment_method_last4: card&.last4,
-          stripe_default_payment_method_exp_month: card&.exp_month,
-          stripe_default_payment_method_exp_year: card&.exp_year
-        )
+          client.update!(
+            stripe_default_payment_method_id: payment_method_id,
+            stripe_default_payment_method_brand: card&.brand,
+            stripe_default_payment_method_last4: card&.last4,
+            stripe_default_payment_method_exp_month: card&.exp_month,
+            stripe_default_payment_method_exp_year: card&.exp_year
+          )
+        end
+      rescue ActiveRecord::RecordInvalid => e
+        return { client: nil, errors: e.record.errors.full_messages }
       end
 
       { client: client, errors: [] }

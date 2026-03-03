@@ -711,6 +711,16 @@ module Types
       StudioSubscription.find_by(studio_id: user.studio_id)
     end
 
+    field :platform_payment_settings, Types::PlatformPaymentSettingType, null: false,
+      description: "Platform-level Stripe publishable key (owner only)"
+    def platform_payment_settings
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authorized" unless user&.owner? && !user.godmode?
+
+      pk = ENV["PLATFORM_STRIPE_PUBLISHABLE_KEY"].presence
+      { stripe_publishable_key: pk, configured: pk.present? }
+    end
+
     field :client_invitations, [ Types::ClientInvitationType ], null: false,
       description: "All invitations sent by this studio (owner/staff/instructor)"
     def client_invitations

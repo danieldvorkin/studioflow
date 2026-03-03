@@ -51,6 +51,8 @@ module Types
     field :upsert_studio_subscription, mutation: Mutations::UpsertStudioSubscription, null: true
     field :create_platform_subscription_checkout, mutation: Mutations::CreatePlatformSubscriptionCheckout, null: true
     field :create_billing_portal_session, mutation: Mutations::CreateBillingPortalSession, null: true
+    field :create_owner_setup_intent, mutation: Mutations::CreateOwnerSetupIntent, null: true
+    field :save_owner_payment_method, mutation: Mutations::SaveOwnerPaymentMethod, null: true
 
     field :update_studio, mutation: Mutations::UpdateStudio, null: true
     field :complete_onboarding, mutation: Mutations::CompleteOnboarding, null: true

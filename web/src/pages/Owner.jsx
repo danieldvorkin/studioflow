@@ -23,6 +23,7 @@ import { UPDATE_USER, CANCEL_BOOKING, UPDATE_PAYMENT_SETTINGS, START_IMPERSONATI
 import { useToast } from '../components/ToastProvider'
 import { useAuth } from '../auth/AuthProvider'
 import { useTheme } from '../theme/ThemeProvider'
+import InstructorOnboardingWizard from '../components/InstructorOnboardingWizard'
 
 const OWNER_PAGE_LAYOUT_STORAGE_PREFIX = 'owner.pageLayout.v1'
 const DEFAULT_MODULE_MIN_HEIGHT = 240
@@ -332,6 +333,7 @@ function OwnerModules({
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteName, setInviteName] = useState('')
   const [inviteRole, setInviteRole] = useState(1)
+  const [instructorWizardOpen, setInstructorWizardOpen] = useState(false)
 
   const [layoutInitialized, setLayoutInitialized] = useState(false)
   const [layoutTemplate, setLayoutTemplate] = useState('default')
@@ -413,8 +415,15 @@ function OwnerModules({
             <div className="flex min-h-0 flex-col rounded-xl border border-slate-800">
               <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900/70 px-3 py-2">
                 <div className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400">Users</div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <span className="text-[11px] text-slate-500">{filteredUsers.length}</span>
+                  <button
+                    type="button"
+                    onClick={() => setInstructorWizardOpen(true)}
+                    className="inline-flex items-center gap-1 rounded-full border border-sky-500/50 bg-sky-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-sky-300 hover:border-sky-400 hover:bg-sky-500/15 transition"
+                  >
+                    + Add instructor
+                  </button>
                   <button
                     type="button"
                     onClick={() => setInviteOpen((v) => !v)}
@@ -940,6 +949,11 @@ function OwnerModules({
 
   return (
     <div className="flex flex-col gap-3">
+      <InstructorOnboardingWizard
+        open={instructorWizardOpen}
+        onClose={() => setInstructorWizardOpen(false)}
+        onDone={() => { refetch() }}
+      />
       <div className="flex items-center justify-between">
         <div className="text-xs text-slate-400">
           Layout template: <span className="text-slate-200">{layoutTemplate === 'custom' ? 'Saved' : 'Default'}</span>
