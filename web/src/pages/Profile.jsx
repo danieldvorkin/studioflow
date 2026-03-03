@@ -3,13 +3,14 @@ import { useEffect, useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { CardElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js'
 import { loadStripe } from '@stripe/stripe-js'
-import { MY_BOOKINGS, MY_CLIENT, PAYMENT_PUBLIC_SETTINGS } from '../apollo/queries'
+import { MY_BOOKINGS, MY_CLIENT, PAYMENT_PUBLIC_SETTINGS, CLIENT_MEMBERSHIPS } from '../apollo/queries'
 import {
   CREATE_SETUP_INTENT,
   REMOVE_MY_PAYMENT_METHOD,
   SAVE_MY_PAYMENT_METHOD,
   SET_MY_DEFAULT_PAYMENT_METHOD,
   UPDATE_PROFILE,
+  UPDATE_CLIENT_MEMBERSHIP,
 } from '../apollo/mutations'
 import { useToast } from '../components/ToastProvider'
 import { useAuth } from '../auth/AuthProvider'
@@ -124,6 +125,29 @@ export default function Profile() {
     stripePublishableKey ? loadStripe(stripePublishableKey) : null
   ), [stripePublishableKey])
 
+  const { data: clientMembershipsData, loading: membershipsLoading, refetch: refetchMemberships } = useQuery(CLIENT_MEMBERSHIPS, {
+    skip: !user || !isClient,
+    fetchPolicy: 'cache-and-network',
+  })
+  const clientMemberships = clientMembershipsData?.clientMemberships || []
+  const activeMemberships = clientMemberships.filter((m) => m.status === 'active')
+
+  const [updateClientMembership, { loading: cancellingMembership }] = useMutation(UPDATE_CLIENT_MEMBERSHIP)
+
+  const cancelMembership = async (id) => {
+    if (!window.confirm('Cancel this membership? This cannot be undone.')) return
+    try {
+      const res = await updateClientMembership({ variables: { id, status: 'cancelled' } })
+      const payload = res.data?.updateClientMembership
+      const errors = payload?.errors || []
+      if (errors.length) throw new Error(errors.join(', '))
+      addToast({ message: 'Membership cancelled', type: 'success' })
+      refetchMemberships?.()
+    } catch (err) {
+      addToast({ message: err.message || 'Could not cancel membership', type: 'error' })
+    }
+  }
+
   const [createSetupIntent, { loading: creatingSetupIntent }] = useMutation(CREATE_SETUP_INTENT)
   const [saveMyPaymentMethod, { loading: savingCard }] = useMutation(SAVE_MY_PAYMENT_METHOD)
   const [removeMyPaymentMethod, { loading: removingCard }] = useMutation(REMOVE_MY_PAYMENT_METHOD)
@@ -229,6 +253,68 @@ export default function Profile() {
           </div>
         </form>
       </section>
+
+      {isClient && (
+        <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-xl shadow-black/50">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Memberships</h2>
+            <a
+              href="/my-memberships"
+              className="text-xs font-semibold text-sky-400 hover:text-sky-300"
+            >
+              Browse plans →
+            </a>
+          </div>
+
+          {membershipsLoading && <p className="mt-2 text-sm text-slate-400">Loading…</p>}
+
+          {!membershipsLoading && activeMemberships.length === 0 && (
+            <p className="mt-3 rounded-xl border border-dashed border-slate-700 bg-slate-900/60 p-4 text-sm text-slate-400">
+              No active memberships.{' '}
+              <a href="/my-memberships" className="text-sky-400 hover:underline">Browse available plans →</a>
+            </p>
+          )}
+
+          {!membershipsLoading && activeMemberships.length > 0 && (
+            <div className="mt-3 flex flex-col gap-3">
+              {activeMemberships.map((m) => (
+                <div
+                  key={m.id}
+                  className="flex items-start justify-between gap-4 rounded-xl border border-emerald-500/20 bg-emerald-900/10 p-4"
+                >
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-slate-100">{m.membershipPlan?.name}</span>
+                      <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-400 border border-emerald-500/30">
+                        {m.status}
+                      </span>
+                    </div>
+                    <div className="text-base font-bold text-sky-400">
+                      ${((m.membershipPlan?.priceCents || 0) / 100).toFixed(2)}
+                      <span className="text-xs font-normal text-slate-500 ml-1">
+                        /{m.membershipPlan?.currency?.toUpperCase()}/mo
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      Started {m.startedAt ? new Date(m.startedAt).toLocaleDateString() : '—'}
+                      {m.endsAt && <> · Ends {new Date(m.endsAt).toLocaleDateString()}</>}
+                      {m.membershipPlan?.autoRenew && <> · Auto-renews monthly</>}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={cancellingMembership}
+                    onClick={() => cancelMembership(m.id)}
+                    className="shrink-0 rounded-full border border-rose-500/40 px-3 py-1 text-xs font-semibold text-rose-300 hover:bg-rose-500/10 disabled:opacity-60"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-xl shadow-black/50">
         <div className="flex items-center justify-between gap-3">

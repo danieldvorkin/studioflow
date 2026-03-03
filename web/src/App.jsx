@@ -39,6 +39,8 @@ import InstructorPayoutsPage from './pages/InstructorPayouts'
 import Favorites from './pages/Favorites'
 import BundlesPage from './pages/Bundles'
 import MyBundlesPage from './pages/MyBundles'
+import OwnerMembershipsPage from './pages/OwnerMemberships'
+import MyMembershipsPage from './pages/MyMemberships'
 import { useTheme } from './theme/ThemeProvider'
 import { useLocationContext } from './location/LocationProvider'
 import { STUDIO_SETTINGS } from './apollo/queries'
@@ -171,6 +173,8 @@ function AppShell() {
             {canManageStudio && clientsPageEnabled && <NavItem to="/clients">Clients</NavItem>}
             {canManageStudio && <NavItem to="/templates" end={false}>Classes</NavItem>}
             {showStudioAdminTools && <NavItem to="/bundles">Bundles</NavItem>}
+            {showStudioAdminTools && <NavItem to="/memberships">Memberships</NavItem>}
+            {isClient && <NavItem to="/my-memberships">Memberships</NavItem>}
           </NavFolder>
 
           {showGodmodeNav && (
@@ -296,6 +300,12 @@ function AppShell() {
                   )}
                   {showStudioAdminTools && (
                     <NavItem to="/bundles" variant="mobile" onNavigate={closeMobileNav}>Bundles</NavItem>
+                  )}
+                  {showStudioAdminTools && (
+                    <NavItem to="/memberships" variant="mobile" onNavigate={closeMobileNav}>Memberships</NavItem>
+                  )}
+                  {isClient && (
+                    <NavItem to="/my-memberships" variant="mobile" onNavigate={closeMobileNav}>Memberships</NavItem>
                   )}
                 </NavFolder>
 
@@ -638,6 +648,22 @@ function App() {
             element={(
               <ProtectedRoute>
                 <MyBundlesPage />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/memberships"
+            element={(
+              <ProtectedRoute>
+                <OwnerMembershipsPage />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/my-memberships"
+            element={(
+              <ProtectedRoute>
+                <MyMembershipsPage />
               </ProtectedRoute>
             )}
           />

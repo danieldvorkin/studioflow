@@ -900,3 +900,170 @@ export const INVITE_CLIENT = gql`
     }
   }
 `
+
+export const CREATE_MEMBERSHIP_PLAN = gql`
+  mutation CreateMembershipPlan(
+    $name: String!
+    $description: String
+    $priceCents: Int!
+    $currency: String
+    $reformerClassesPerMonth: Int
+    $matClassesPerMonth: Int
+    $includesPriorityBooking: Boolean
+    $includesEarlyBooking: Boolean
+    $privateSessionDiscountPercent: Int
+    $guestPassesPerMonth: Int
+    $includesRetailDiscount: Boolean
+    $minCommitmentMonths: Int
+    $autoRenew: Boolean
+    $active: Boolean
+    $position: Int
+  ) {
+    createMembershipPlan(input: {
+      name: $name
+      description: $description
+      priceCents: $priceCents
+      currency: $currency
+      reformerClassesPerMonth: $reformerClassesPerMonth
+      matClassesPerMonth: $matClassesPerMonth
+      includesPriorityBooking: $includesPriorityBooking
+      includesEarlyBooking: $includesEarlyBooking
+      privateSessionDiscountPercent: $privateSessionDiscountPercent
+      guestPassesPerMonth: $guestPassesPerMonth
+      includesRetailDiscount: $includesRetailDiscount
+      minCommitmentMonths: $minCommitmentMonths
+      autoRenew: $autoRenew
+      active: $active
+      position: $position
+    }) {
+      membershipPlan { id name active priceCents enrolledCount }
+      errors
+    }
+  }
+`
+
+export const UPDATE_MEMBERSHIP_PLAN = gql`
+  mutation UpdateMembershipPlan(
+    $id: ID!
+    $name: String
+    $description: String
+    $priceCents: Int
+    $currency: String
+    $reformerClassesPerMonth: Int
+    $matClassesPerMonth: Int
+    $includesPriorityBooking: Boolean
+    $includesEarlyBooking: Boolean
+    $privateSessionDiscountPercent: Int
+    $guestPassesPerMonth: Int
+    $includesRetailDiscount: Boolean
+    $minCommitmentMonths: Int
+    $autoRenew: Boolean
+    $active: Boolean
+    $position: Int
+  ) {
+    updateMembershipPlan(input: {
+      id: $id
+      name: $name
+      description: $description
+      priceCents: $priceCents
+      currency: $currency
+      reformerClassesPerMonth: $reformerClassesPerMonth
+      matClassesPerMonth: $matClassesPerMonth
+      includesPriorityBooking: $includesPriorityBooking
+      includesEarlyBooking: $includesEarlyBooking
+      privateSessionDiscountPercent: $privateSessionDiscountPercent
+      guestPassesPerMonth: $guestPassesPerMonth
+      includesRetailDiscount: $includesRetailDiscount
+      minCommitmentMonths: $minCommitmentMonths
+      autoRenew: $autoRenew
+      active: $active
+      position: $position
+    }) {
+      membershipPlan { id name active priceCents enrolledCount }
+      errors
+    }
+  }
+`
+
+export const DELETE_MEMBERSHIP_PLAN = gql`
+  mutation DeleteMembershipPlan($id: ID!) {
+    deleteMembershipPlan(input: { id: $id }) {
+      success
+      errors
+    }
+  }
+`
+
+export const ENROLL_CLIENT_MEMBERSHIP = gql`
+  mutation EnrollClientMembership(
+    $clientId: ID!
+    $membershipPlanId: ID!
+    $startedAt: ISO8601Date
+    $notes: String
+  ) {
+    enrollClientMembership(input: {
+      clientId: $clientId
+      membershipPlanId: $membershipPlanId
+      startedAt: $startedAt
+      notes: $notes
+    }) {
+      clientMembership {
+        id
+        status
+        startedAt
+        client { id name email }
+        membershipPlan { id name priceCents currency }
+      }
+      errors
+    }
+  }
+`
+
+export const UPDATE_CLIENT_MEMBERSHIP = gql`
+  mutation UpdateClientMembership(
+    $id: ID!
+    $status: String
+    $endsAt: ISO8601Date
+    $notes: String
+    $membershipPlanId: ID
+  ) {
+    updateClientMembership(input: {
+      id: $id
+      status: $status
+      endsAt: $endsAt
+      notes: $notes
+      membershipPlanId: $membershipPlanId
+    }) {
+      clientMembership {
+        id
+        status
+        startedAt
+        endsAt
+        cancelledAt
+        notes
+        client { id name email }
+        membershipPlan { id name priceCents currency }
+      }
+      errors
+    }
+  }
+`
+export const PURCHASE_CLIENT_MEMBERSHIP = gql`
+  mutation PurchaseClientMembership($membershipPlanId: ID!, $paymentMethodId: String) {
+    purchaseClientMembership(input: {
+      membershipPlanId: $membershipPlanId
+      paymentMethodId: $paymentMethodId
+    }) {
+      clientMembership {
+        id
+        status
+        startedAt
+        endsAt
+        priceCents
+        currency
+        membershipPlan { id name priceCents currency }
+      }
+      errors
+    }
+  }
+`

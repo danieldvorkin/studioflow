@@ -508,3 +508,65 @@ export const CLIENT_INVITATION_BY_TOKEN = gql`
     }
   }
 `
+
+export const MEMBERSHIP_PLANS = gql`
+  query MembershipPlans($studioId: ID) {
+    membershipPlans(studioId: $studioId) {
+      id
+      studioId
+      name
+      description
+      priceCents
+      currency
+      reformerClassesPerMonth
+      matClassesPerMonth
+      includesPriorityBooking
+      includesEarlyBooking
+      privateSessionDiscountPercent
+      guestPassesPerMonth
+      includesRetailDiscount
+      minCommitmentMonths
+      autoRenew
+      active
+      position
+      enrolledCount
+      createdAt
+      updatedAt
+    }
+  }
+`
+
+export const CLIENT_MEMBERSHIPS = gql`
+  query ClientMemberships($clientId: ID, $membershipPlanId: ID, $status: String) {
+    clientMemberships(clientId: $clientId, membershipPlanId: $membershipPlanId, status: $status) {
+      id
+      studioId
+      status
+      startedAt
+      endsAt
+      cancelledAt
+      notes
+      createdAt
+      client {
+        id
+        name
+        email
+      }
+      membershipPlan {
+        id
+        name
+        priceCents
+        currency
+        reformerClassesPerMonth
+        matClassesPerMonth
+        includesPriorityBooking
+        includesEarlyBooking
+        privateSessionDiscountPercent
+        guestPassesPerMonth
+        includesRetailDiscount
+        minCommitmentMonths
+        autoRenew
+      }
+    }
+  }
+`
