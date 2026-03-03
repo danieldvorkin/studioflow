@@ -855,6 +855,15 @@ export const CREATE_PLATFORM_SUBSCRIPTION_CHECKOUT = gql`
   }
 `
 
+export const CREATE_BILLING_PORTAL_SESSION = gql`
+  mutation CreateBillingPortalSession {
+    createBillingPortalSession(input: {}) {
+      portalUrl
+      errors
+    }
+  }
+`
+
 export const UPDATE_STUDIO = gql`
   mutation UpdateStudio($name: String, $slug: String) {
     updateStudio(input: { name: $name, slug: $slug }) {

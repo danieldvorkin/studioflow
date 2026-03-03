@@ -3,7 +3,7 @@ import { Navigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation } from '@apollo/client'
 import { useAuth } from '../auth/AuthProvider'
 import { MY_STUDIO_SUBSCRIPTION } from '../apollo/queries'
-import { CREATE_PLATFORM_SUBSCRIPTION_CHECKOUT } from '../apollo/mutations'
+import { CREATE_PLATFORM_SUBSCRIPTION_CHECKOUT, CREATE_BILLING_PORTAL_SESSION } from '../apollo/mutations'
 
 const STATUS_COLORS = {
   active: 'bg-green-900/60 text-green-300 border border-green-700',
@@ -67,10 +67,12 @@ const TIERS = [
   },
 ]
 
-function CurrentPlanBanner({ sub }) {
+function CurrentPlanBanner({ sub, onManageBilling, portalLoading, portalError }) {
   const tierInfo = TIERS.find((t) => t.id === sub.tier) || TIERS[0]
   const statusLabel = sub.status.replace('_', ' ')
   const statusColor = STATUS_COLORS[sub.status] || STATUS_COLORS.active
+
+  const fmt = (iso) => iso ? new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '—'
 
   return (
     <div className="rounded-xl border border-slate-700 bg-slate-900 p-5 space-y-4">
@@ -91,32 +93,81 @@ function CurrentPlanBanner({ sub }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 border-t border-slate-800 pt-4">
+      {/* Key dates & identifiers */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 border-t border-slate-800 pt-4">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Subscribed</p>
+          <p className="mt-1 text-sm text-white">{fmt(sub.createdAt)}</p>
+        </div>
+        {sub.currentPeriodEnd && (
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+              {sub.status === 'trialing' ? 'Trial ends' : 'Next billing date'}
+            </p>
+            <p className="mt-1 text-sm text-white">{fmt(sub.currentPeriodEnd)}</p>
+          </div>
+        )}
+        {sub.cancelledAt && (
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Cancelled on</p>
+            <p className="mt-1 text-sm text-red-400">{fmt(sub.cancelledAt)}</p>
+          </div>
+        )}
         {sub.studio?.slug && (
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Subdomain</p>
             <p className="mt-1 font-mono text-sm text-sky-400">{sub.studio.slug}.studioflow.app</p>
           </div>
         )}
-        {sub.currentPeriodEnd && (
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Next billing date</p>
-            <p className="mt-1 text-sm text-white">{new Date(sub.currentPeriodEnd).toLocaleDateString()}</p>
-          </div>
-        )}
         {sub.stripeSubscriptionId && (
-          <div>
+          <div className="col-span-2 sm:col-span-2">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Subscription ID</p>
             <p className="mt-1 font-mono text-xs text-slate-400 truncate">{sub.stripeSubscriptionId}</p>
           </div>
         )}
       </div>
 
+      {/* Trial callout */}
+      {sub.status === 'trialing' && (
+        <div className="rounded-lg border border-sky-700 bg-sky-900/30 px-4 py-3 text-sm text-sky-200">
+          <span className="font-semibold">You're on a free trial.</span>{' '}
+          {sub.currentPeriodEnd
+            ? <>Your trial ends on <span className="font-semibold">{fmt(sub.currentPeriodEnd)}</span>. No charge until then — manage your payment method below.</>
+            : <>No charge until the trial ends. Add a payment method via Manage Billing below.</>}
+        </div>
+      )}
+
+      {/* Billing management */}
+      <div className="flex flex-col gap-3 border-t border-slate-800 pt-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-medium text-slate-300">Payment method &amp; billing</p>
+          <p className="text-xs text-slate-500 mt-0.5">Update your card, view invoices, or cancel your subscription via Stripe's secure portal.</p>
+        </div>
+        <button
+          type="button"
+          onClick={onManageBilling}
+          disabled={portalLoading}
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-600 bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-slate-700 disabled:opacity-60"
+        >
+          {portalLoading ? (
+            <>
+              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-400 border-t-transparent" />
+              Opening…
+            </>
+          ) : (
+            'Manage Billing →'
+          )}
+        </button>
+      </div>
+
+      {portalError && (
+        <div className="rounded-lg border border-red-700 bg-red-900/30 px-4 py-3 text-sm text-red-200">{portalError}</div>
+      )}
+
       {sub.status === 'past_due' && (
         <div className="rounded-lg border border-amber-700 bg-amber-900/30 px-4 py-3 text-sm text-amber-200">
-          Your subscription payment is past due. Please contact us at{' '}
-          <a href="mailto:billing@studioflow.app" className="underline">billing@studioflow.app</a>{' '}
-          to update your billing information.
+          Your subscription payment is past due. Use <span className="font-semibold">Manage Billing</span> above to update your card, or contact{' '}
+          <a href="mailto:billing@studioflow.app" className="underline">billing@studioflow.app</a>.
         </div>
       )}
       {sub.status === 'cancelled' && (
@@ -202,6 +253,8 @@ export default function OwnerSubscription() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [checkoutError, setCheckoutError] = useState(null)
   const [loadingTier, setLoadingTier] = useState(null)
+  const [portalLoading, setPortalLoading] = useState(false)
+  const [portalError, setPortalError] = useState(null)
 
   const roleRaw = (user?.roleName || '').toString().toLowerCase()
   const isGodmode = user?.godmode === true || roleRaw === 'godmode'
@@ -218,6 +271,7 @@ export default function OwnerSubscription() {
   })
 
   const [createCheckout] = useMutation(CREATE_PLATFORM_SUBSCRIPTION_CHECKOUT)
+  const [createBillingPortal] = useMutation(CREATE_BILLING_PORTAL_SESSION)
 
   useEffect(() => {
     if (checkoutSuccess || checkoutCancelled) {
@@ -235,6 +289,30 @@ export default function OwnerSubscription() {
   const sub = data?.myStudioSubscription
   const currentTierId = sub?.tier || null
   const isSubActive = sub?.active === true
+
+  const handleManageBilling = async () => {
+    setPortalError(null)
+    setPortalLoading(true)
+    try {
+      const { data: result } = await createBillingPortal()
+      const errs = result?.createBillingPortalSession?.errors || []
+      const url = result?.createBillingPortalSession?.portalUrl
+      if (errs.length > 0) {
+        setPortalError(errs.join(', '))
+        setPortalLoading(false)
+        return
+      }
+      if (url) {
+        window.location.href = url
+      } else {
+        setPortalError('Could not open billing portal. Please try again.')
+        setPortalLoading(false)
+      }
+    } catch (e) {
+      setPortalError(e.message)
+      setPortalLoading(false)
+    }
+  }
 
   const handleSubscribe = async (tier) => {
     setCheckoutError(null)
@@ -290,7 +368,7 @@ export default function OwnerSubscription() {
       {loading ? (
         <div className="text-sm text-slate-500">Loading subscription…</div>
       ) : sub ? (
-        <CurrentPlanBanner sub={sub} />
+        <CurrentPlanBanner sub={sub} onManageBilling={handleManageBilling} portalLoading={portalLoading} portalError={portalError} />
       ) : (
         <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900 px-5 py-6 text-center">
           <p className="text-sm font-medium text-slate-300">No active subscription yet</p>

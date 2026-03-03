@@ -1010,6 +1010,7 @@
           null,
           1,
           1,
+          1,
           null,
           1,
           1,
@@ -4058,6 +4059,44 @@
           null
         ]
       },
+      "/Users/danieldvorkin/Projects/pilates-studio/api/app/graphql/mutations/create_billing_portal_session.rb": {
+        "lines": [
+          null,
+          null,
+          1,
+          1,
+          1,
+          1,
+          null,
+          1,
+          0,
+          0,
+          0,
+          null,
+          0,
+          0,
+          null,
+          0,
+          0,
+          0,
+          0,
+          null,
+          0,
+          0,
+          null,
+          0,
+          null,
+          null,
+          null,
+          null,
+          0,
+          null,
+          0,
+          null,
+          null,
+          null
+        ]
+      },
       "/Users/danieldvorkin/Projects/pilates-studio/api/app/graphql/mutations/update_studio.rb": {
         "lines": [
           null,
@@ -6011,6 +6050,6 @@
         "branches": {}
       }
     },
-    "timestamp": 1772563102
+    "timestamp": 1772566998
   }
 }
