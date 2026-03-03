@@ -7,8 +7,14 @@
 
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    # In development allow the Vite dev server origin. Adjust for production.
-    origins "http://localhost:5173", "http://127.0.0.1:5173"
+    extra = ENV.fetch("ALLOWED_ORIGINS", "").split(",").map(&:strip).reject(&:empty?)
+
+    origins(
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+      /\Ahttps:\/\/.*\.netlify\.app\z/,
+      *extra
+    )
 
     resource "*",
       headers: :any,
