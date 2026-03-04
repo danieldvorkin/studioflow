@@ -59,7 +59,9 @@ export default function Owner() {
 
   const roleName = (user?.roleName || "").toString().toLowerCase();
   const isGodmode = user?.godmode === true || roleName === "godmode";
-  const showGodmodeOwnerPicker = isGodmode && !auth.isImpersonating;
+  const isModerator = roleName === "moderator" || user?.role === 4;
+  const isPlatformStaff = isGodmode || isModerator;
+  const showGodmodeOwnerPicker = isPlatformStaff && !auth.isImpersonating;
 
   const { data: studiosData, loading: studiosLoading } = useQuery(STUDIOS, {
     skip: !showGodmodeOwnerPicker,
@@ -255,10 +257,9 @@ export default function Owner() {
     );
   }
 
-  const isOwner = isGodmode || roleName === "owner" || user.role === 0;
-  const isModerator = isGodmode || roleName === "moderator" || user.role === 4;
+  const isOwner = isPlatformStaff || roleName === "owner" || user.role === 0;
 
-  if (!isOwner && !isModerator) {
+  if (!isOwner) {
     return (
       <div className="mx-auto max-w-xl rounded-2xl border border-slate-800 bg-slate-900/80 p-6 text-sm text-slate-200">
         <h1 className="mb-2 text-lg font-semibold text-slate-50">

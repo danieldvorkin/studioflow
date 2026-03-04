@@ -49,7 +49,8 @@ class ApplicationPolicy
     def resolve
       return scope.none unless user
 
-      return scope.all if user.respond_to?(:godmode?) && user.godmode?
+      # Platform staff (godmode + moderators) are platform-wide overseers and see all data
+      return scope.all if user.respond_to?(:platform_staff?) && user.platform_staff?
 
       if scope.respond_to?(:column_names) && scope.column_names.include?("studio_id")
         scope.where(studio_id: user.studio_id)

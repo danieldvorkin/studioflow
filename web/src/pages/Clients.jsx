@@ -192,7 +192,7 @@ export default function ClientsPage() {
                   <th className="px-3 py-2">Name</th>
                   <th className="px-3 py-2">Email</th>
                   <th className="px-3 py-2">Phone</th>
-                  {isOwner && <th className="px-3 py-2 text-right">View as</th>}
+                  {(isOwner || isModerator) && <th className="px-3 py-2 text-right">View as</th>}
                   <th className="px-3 py-2" />
                 </tr>
               </thead>
@@ -249,7 +249,7 @@ export default function ClientsPage() {
                         c.phone || "—"
                       )}
                     </td>
-                    {isOwner && (
+                    {(isOwner || isModerator) && (
                       <td className="px-3 py-2 text-right text-xs">
                         {c.user?.id && c.user.id !== user?.id ? (
                           <button

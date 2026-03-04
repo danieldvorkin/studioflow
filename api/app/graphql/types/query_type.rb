@@ -245,9 +245,9 @@ module Types
     description: "List instructor users (owner and staff)"
     def instructors
     user = context[:current_user]
-    raise GraphQL::ExecutionError, "Not authorized" unless user&.owner? || user&.staff?
+    require_management_access!(user)
 
-    if user.godmode?
+    if user.platform_staff?
       User.where(role: User::ROLES[:instructor]).order(:name)
     else
       User.where(studio_id: user.studio_id, role: User::ROLES[:instructor]).order(:name)
@@ -260,7 +260,7 @@ module Types
       user = context[:current_user]
       raise GraphQL::ExecutionError, "Not authorized" unless user
 
-      if user.godmode?
+      if user.platform_staff?
         Client.order(:name)
       elsif user.owner? || user.staff?
         Client.where(studio_id: user.studio_id).order(:name)
@@ -284,7 +284,7 @@ module Types
       user = context[:current_user]
       raise GraphQL::ExecutionError, "Not authorized" unless user
 
-      if user.godmode?
+      if user.platform_staff?
         Client.find(id)
       elsif user.owner? || user.staff?
         Client.where(studio_id: user.studio_id).find(id)
@@ -304,9 +304,9 @@ module Types
       description: "List all users (owner only)"
     def users
       user = context[:current_user]
-      raise GraphQL::ExecutionError, "Not authorized" unless user&.owner?
+      require_owner_access!(user)
 
-      if user.godmode?
+      if user.platform_staff?
         User.order(:email)
       else
         User.where(studio_id: user.studio_id).order(:email)
@@ -385,9 +385,9 @@ module Types
     description: "Payment records (owner and staff)"
     def payments
     user = context[:current_user]
-    raise GraphQL::ExecutionError, "Not authorized" unless user&.owner? || user&.staff?
+    require_management_access!(user)
 
-    base = user.godmode? ? Payment.all : Payment.where(studio_id: user.studio_id)
+    base = user.platform_staff? ? Payment.all : Payment.where(studio_id: user.studio_id)
     base
       .includes(:booking, :client, :class_session)
       .order(created_at: :desc)
@@ -397,7 +397,7 @@ module Types
   description: "Stripe/Payment configuration (owner only)"
     def payment_settings
     user = context[:current_user]
-    raise GraphQL::ExecutionError, "Not authorized" unless user&.owner?
+    require_owner_access!(user)
 
     PaymentSetting.instance_for(user.studio)
     end
@@ -645,9 +645,10 @@ module Types
     end
     def instructor_payouts(week_start: nil, instructor_id: nil, currency: nil)
       user = context[:current_user]
-      raise GraphQL::ExecutionError, "Not authorized" unless user&.owner?
+      require_owner_access!(user)
 
-      scope = InstructorPayout.where(studio_id: user.studio_id).includes(:instructor, :created_by).order(week_start: :desc, created_at: :desc)
+      base_scope = user.platform_staff? ? InstructorPayout.all : InstructorPayout.where(studio_id: user.studio_id)
+      scope = base_scope.includes(:instructor, :created_by).order(week_start: :desc, created_at: :desc)
       scope = scope.where(week_start: week_start.to_date) if week_start
       scope = scope.where(instructor_id: instructor_id) if instructor_id
       scope = scope.where(currency: currency) if currency.present?
@@ -850,6 +851,18 @@ module Types
       description: "An example field added by the generator"
     def test_field
       "Hello World!"
+    end
+
+    private
+
+    # Management access: owner, staff, or platform staff (godmode + moderator)
+    def require_management_access!(user)
+      raise GraphQL::ExecutionError, "Not authorized" unless user&.owner? || user&.staff? || user&.platform_staff?
+    end
+
+    # Owner-level access: owner or platform staff (godmode + moderator)
+    def require_owner_access!(user)
+      raise GraphQL::ExecutionError, "Not authorized" unless user&.owner? || user&.platform_staff?
     end
   end
 end

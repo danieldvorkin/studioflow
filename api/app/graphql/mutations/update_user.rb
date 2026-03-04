@@ -19,9 +19,14 @@ module Mutations
 
     def resolve(id:, **attrs)
       current_user = context[:current_user]
-      raise GraphQL::ExecutionError, "Not authorized" unless current_user&.owner?
+      raise GraphQL::ExecutionError, "Not authorized" unless current_user&.owner? || current_user&.moderator?
 
-      user = User.where(studio_id: current_user.studio_id).find_by(id: id)
+      user =
+        if current_user.respond_to?(:platform_staff?) && current_user.platform_staff?
+          User.find_by(id: id)
+        else
+          User.where(studio_id: current_user.studio_id).find_by(id: id)
+        end
       return { user: nil, errors: [ "User not found" ] } unless user
 
       if attrs.key?(:role) && !User::ROLES.value?(attrs[:role])
