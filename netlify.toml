@@ -2,6 +2,8 @@
 base = "web"
 command = "npm run build"
 publish = "dist"
+# Builds triggered by GitHub Actions only — block Netlify's auto-deploy
+ignore = "exit 0"
 
 [build.environment]
 NODE_VERSION = "20"
