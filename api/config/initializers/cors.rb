@@ -12,6 +12,8 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
     origins(
       "http://localhost:5173",
       "http://127.0.0.1:5173",
+      "https://joinstudioflow.com",
+      "https://www.joinstudioflow.com",
       /\Ahttps:\/\/.*\.netlify\.app\z/,
       *extra
     )
