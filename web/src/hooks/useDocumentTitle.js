@@ -16,7 +16,7 @@ export function useDocumentTitle(title, separator = " — ") {
     if (title) {
       document.title = `${title}${separator}${APP_NAME}`;
     } else {
-      document.title = `${APP_NAME} — Pilates Studio Management`;
+      document.title = `${APP_NAME} — Studio management at your fingertips`;
     }
 
     return () => {

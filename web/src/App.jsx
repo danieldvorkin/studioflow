@@ -7,63 +7,58 @@ import {
   Navigate,
   NavLink,
   useLocation,
-} from 'react-router-dom'
-import { useEffect, useState } from 'react'
-import { useQuery } from '@apollo/client'
-import './App.css'
-import SignIn from './pages/SignIn'
-import SignUp from './pages/SignUp'
-import SignUpPortal from './pages/SignUpPortal'
-import Landing from './pages/Landing'
-import NotFound from './pages/NotFound'
-import ProtectedRoute from './auth/ProtectedRoute'
-import RoleGate from './auth/RoleGate'
-import { useAuth } from './auth/AuthProvider'
-import Templates from './pages/Templates'
-import Sessions from './pages/Sessions'
-import Booking from './pages/Booking'
-import Dashboard from './pages/Dashboard'
-import Analytics from './pages/Analytics'
-import Schedule from './pages/Schedule'
-import Owner from './pages/Owner'
-import GodmodeStudio from './pages/GodmodeStudio'
-import GodmodeSubscriptions from './pages/GodmodeSubscriptions'
-import GodmodeModerators from './pages/GodmodeModerators'
-import GodmodeDashboard from './pages/GodmodeDashboard'
-import OwnerSubscription from './pages/OwnerSubscription'
-import LocationsPage from './pages/Locations'
-import BookingsPage from './pages/Bookings'
-import BookingShow from './pages/BookingShow'
-import ClientsPage from './pages/Clients'
-import ClientProfile from './pages/ClientProfile'
-import Profile from './pages/Profile'
-import InstructorPayoutsPage from './pages/InstructorPayouts'
-import Favorites from './pages/Favorites'
-import BundlesPage from './pages/Bundles'
-import MyBundlesPage from './pages/MyBundles'
-import OwnerMembershipsPage from './pages/OwnerMemberships'
-import MyMembershipsPage from './pages/MyMemberships'
-import StudiosPage from './pages/StudiosPage'
-import StudioShowPage from './pages/StudioShowPage'
-import { useTheme } from './theme/ThemeProvider'
-import { useLocationContext } from './location/LocationProvider'
-import { STUDIO_SETTINGS } from './apollo/queries'
-import { useStudio } from './studio/StudioProvider'
-import OnboardingModal from './components/OnboardingModal'
-import QuickGlancePanel from './components/QuickGlancePanel'
+} from "react-router-dom";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { useQuery } from "@apollo/client";
+import "./App.css";
+import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SignUp";
+import SignUpPortal from "./pages/SignUpPortal";
+import Landing from "./pages/Landing";
+import ProtectedRoute from "./auth/ProtectedRoute";
+import RoleGate from "./auth/RoleGate";
+import { useAuth } from "./auth/AuthProvider";
+import Templates from "./pages/Templates";
+import Sessions from "./pages/Sessions";
+import Booking from "./pages/Booking";
+import { PageSpinner } from "./components/Spinner";
 
-function NavItem({ to, onNavigate, children, variant = 'sidebar', end = true }) {
-  const base = variant === 'mobile'
-    ? 'rounded-lg px-3 py-2 text-sm transition'
-    : 'rounded-lg px-3 py-2 transition'
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+import Schedule from "./pages/Schedule";
+import Owner from "./pages/Owner";
+import LocationsPage from "./pages/Locations";
+import BookingsPage from "./pages/Bookings";
+import BookingShow from "./pages/BookingShow";
+import ClientsPage from "./pages/Clients";
+import Profile from "./pages/Profile";
+import InstructorPayoutsPage from "./pages/InstructorPayouts";
+import Favorites from "./pages/Favorites";
+import { useTheme } from "./theme/ThemeProvider";
+import { useLocationContext } from "./location/LocationProvider";
+import { STUDIO_SETTINGS } from "./apollo/queries";
+import { useStudio } from "./studio/StudioProvider";
 
-  const inactive = variant === 'mobile'
-    ? 'text-slate-200 hover:bg-slate-800/80 hover:text-white'
-    : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+function NavItem({
+  to,
+  onNavigate,
+  children,
+  variant = "sidebar",
+  end = true,
+}) {
+  const base =
+    variant === "mobile"
+      ? "rounded-lg px-3 py-2 text-sm transition"
+      : "rounded-lg px-3 py-2 transition";
 
-  const active = variant === 'mobile'
-    ? 'bg-slate-800/80 text-white font-semibold'
-    : 'bg-slate-800/80 text-white font-semibold'
+  const inactive =
+    variant === "mobile"
+      ? "text-slate-200 hover:bg-slate-800/80 hover:text-white"
+      : "text-slate-300 hover:bg-slate-800/80 hover:text-white";
+
+  const active =
+    variant === "mobile"
+      ? "bg-slate-800/80 text-white font-semibold"
+      : "bg-slate-800/80 text-white font-semibold";
 
   return (
     <NavLink
@@ -74,130 +69,141 @@ function NavItem({ to, onNavigate, children, variant = 'sidebar', end = true }) 
     >
       {children}
     </NavLink>
-  )
+  );
 }
 
-function NavFolder({ label, children, defaultOpen = true, variant = 'sidebar' }) {
-  const summaryClass = variant === 'mobile'
-    ? 'flex cursor-pointer select-none items-center justify-between rounded-lg px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400 hover:bg-slate-800/60'
-    : 'flex cursor-pointer select-none items-center justify-between rounded-lg px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400 hover:bg-slate-800/60'
+function NavFolder({
+  label,
+  children,
+  defaultOpen = true,
+  variant = "sidebar",
+}) {
+  const summaryClass =
+    variant === "mobile"
+      ? "flex cursor-pointer select-none items-center justify-between rounded-lg px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400 hover:bg-slate-800/60"
+      : "flex cursor-pointer select-none items-center justify-between rounded-lg px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400 hover:bg-slate-800/60";
 
   return (
     <details open={defaultOpen} className="group">
       <summary className={summaryClass}>
         <span>{label}</span>
-        <span className="text-slate-500 transition group-open:rotate-180">▾</span>
+        <span className="text-slate-500 transition group-open:rotate-180">
+          ▾
+        </span>
       </summary>
       <div className="mt-1 flex flex-col gap-1 border-l border-slate-800 pl-2">
         {children}
       </div>
     </details>
-  )
+  );
 }
 
 function AppShell() {
-  const { user, signOut, isImpersonating, stopImpersonation, impersonator } = useAuth()
-  const initials = user?.name?.split(' ').map((n) => n[0]).join('').slice(0, 2) ||
-    (user?.email ? user.email[0].toUpperCase() : '?')
+  const { user, signOut, isImpersonating, stopImpersonation, impersonator } =
+    useAuth();
+  const initials =
+    user?.name
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .slice(0, 2) || (user?.email ? user.email[0].toUpperCase() : "?");
 
-  const routerLocation = useLocation()
-  const [mobileNavState, setMobileNavState] = useState({ open: false, openedAtPath: null })
-  const [quickGlanceOpen, setQuickGlanceOpen] = useState(false)
-  const { theme, toggleTheme } = useTheme()
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const mobileNavOpenRef = useRef(mobileNavOpen);
+  const routerLocation = useLocation();
+  const { theme, toggleTheme } = useTheme();
 
-  const mobileNavOpen = mobileNavState.open && mobileNavState.openedAtPath === routerLocation.pathname
-  const closeMobileNav = () => setMobileNavState((s) => ({ ...s, open: false }))
-  const toggleMobileNav = () => {
-    setMobileNavState((s) => {
-      const isCurrentlyOpen = s.open && s.openedAtPath === routerLocation.pathname
-      return isCurrentlyOpen ? { ...s, open: false } : { open: true, openedAtPath: routerLocation.pathname }
-    })
-  }
+  const { locations, locationId, setLocationId } = useLocationContext();
 
-  const { locations, locationId, setLocationId } = useLocationContext()
-
-  const role = (user?.roleName || '').toString().toLowerCase()
-  const isClient = role === 'client' || user?.role === 3 || user?.role === 'client'
-  const { studios, selectedStudioId, setSelectedStudioId } = useStudio()
+  const role = (user?.roleName || "").toString().toLowerCase();
+  const isClient =
+    role === "client" || user?.role === 2 || user?.role === "client";
+  const { studios, selectedStudioId, setSelectedStudioId } = useStudio();
 
   const { data: studioSettingsData } = useQuery(STUDIO_SETTINGS, {
     variables: isClient ? { studioId: selectedStudioId } : undefined,
     skip: isClient && !selectedStudioId,
-  })
-  const dashboardTitle = studioSettingsData?.studioSettings?.dashboardTitle || 'Pilates Studio Dashboard'
-  const clientsPageEnabled = studioSettingsData?.studioSettings?.clientsPageEnabled !== false
+  });
+  const dashboardTitle =
+    studioSettingsData?.studioSettings?.dashboardTitle ||
+    "Pilates Studio Dashboard";
+  const clientsPageEnabled =
+    studioSettingsData?.studioSettings?.clientsPageEnabled !== false;
 
-  const roleRaw = user?.roleName
-  const isGodmode = user?.godmode === true || (roleRaw || '').toString().toLowerCase() === 'godmode'
-  const isOwner = isGodmode || roleRaw === 'owner' || user?.role === 0 || roleRaw === 'OWNER'
-  const isStaff = isGodmode || roleRaw === 'staff' || user?.role === 1
-  const isInstructor = isGodmode || roleRaw === 'instructor'
+  const roleRaw = user?.roleName;
+  const isOwner =
+    roleRaw === "owner" || user?.role === 0 || roleRaw === "OWNER";
+  const isStaff = roleRaw === "staff" || user?.role === 1;
+  const isInstructor = roleRaw === "instructor";
 
-  const showGodmodeNav = isGodmode && !isImpersonating
-  const showOwnerNav = isOwner && (!isGodmode || isImpersonating)
-  const showStudioAdminTools = (isOwner || isStaff) && (!isGodmode || isImpersonating)
-
-  const canManageStudio = isOwner || isStaff || isInstructor
+  const canManageStudio = isOwner || isStaff || isInstructor;
 
   useEffect(() => {
-    if (!mobileNavOpen) {
-      return undefined
-    }
+    mobileNavOpenRef.current = mobileNavOpen;
+  }, [mobileNavOpen]);
 
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+  useEffect(() => {
+    if (!mobileNavOpenRef.current) return undefined;
+    const t = window.setTimeout(() => setMobileNavOpen(false), 0);
+    return () => window.clearTimeout(t);
+  }, [routerLocation.pathname]);
+
+  useEffect(() => {
+    if (!mobileNavOpen) return undefined;
 
     const onKeyDown = (e) => {
-      if (e.key === 'Escape') closeMobileNav()
-    }
+      if (e.key === "Escape") setMobileNavOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [mobileNavOpen]);
 
-    window.addEventListener('keydown', onKeyDown)
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    if (mobileNavOpen) document.body.style.overflow = "hidden";
     return () => {
-      window.removeEventListener('keydown', onKeyDown)
-      document.body.style.overflow = prevOverflow
-    }
-  }, [mobileNavOpen])
+      document.body.style.overflow = prev;
+    };
+  }, [mobileNavOpen]);
 
   return (
     <div className="flex h-dvh overflow-hidden">
       <aside className="hidden h-dvh min-h-0 overflow-y-auto md:flex md:w-64 flex-col gap-6 border-r border-slate-800 bg-slate-950/80 px-5 py-6">
         <div>
-          <div className="text-xs font-semibold tracking-[0.3em] uppercase text-sky-400/80">Studio<strong className="text-slate-300">Flow</strong></div>
+          <div className="text-xs font-semibold tracking-[0.3em] uppercase text-sky-400/80">
+            Studio<strong className="text-slate-300">Flow</strong>
+          </div>
         </div>
         <nav className="flex flex-col gap-2 text-sm font-medium text-slate-300">
           <NavFolder label="General" defaultOpen>
             <NavItem to="/dashboard">Dashboard</NavItem>
             <NavItem to="/profile">Profile</NavItem>
-            {isClient && <NavItem to="/studios" end={false}>Studios</NavItem>}
           </NavFolder>
 
           <NavFolder label="Operations" defaultOpen>
             <NavItem to="/schedule">Calendar</NavItem>
-            <NavItem to="/bookings" end={false}>Bookings</NavItem>
+            <NavItem to="/bookings" end={false}>
+              Bookings
+            </NavItem>
             {!isClient && <NavItem to="/my-bookings">My bookings</NavItem>}
             {isClient && <NavItem to="/saved">Saved</NavItem>}
-            {isClient && <NavItem to="/my-bundles">Bundles</NavItem>}
-            {canManageStudio && clientsPageEnabled && <NavItem to="/clients">Clients</NavItem>}
-            {canManageStudio && <NavItem to="/templates" end={false}>Classes</NavItem>}
-            {showStudioAdminTools && <NavItem to="/bundles">Bundles</NavItem>}
-            {showStudioAdminTools && <NavItem to="/memberships">Memberships</NavItem>}
-            {isClient && <NavItem to="/my-memberships">Memberships</NavItem>}
+            {canManageStudio && clientsPageEnabled && (
+              <NavItem to="/clients">Clients</NavItem>
+            )}
+            {canManageStudio && (
+              <NavItem to="/templates" end={false}>
+                Classes
+              </NavItem>
+            )}
           </NavFolder>
 
-          {showGodmodeNav && (
-            <NavFolder label="Godmode" defaultOpen>
-              <NavItem to="/godmode/dashboard">Analytics</NavItem>
-              <NavItem to="/owner">Owners</NavItem>
-              <NavItem to="/godmode/subscriptions">Subscriptions</NavItem>
-              <NavItem to="/godmode/moderators">Moderators</NavItem>
-            </NavFolder>
-          )}
-          {showOwnerNav && (
+          {isOwner && (
             <NavFolder label="Owner" defaultOpen>
               <NavItem to="/owner">Owner</NavItem>
-              <NavItem to="/owner/instructor-payouts">Instructor payouts</NavItem>
+              <NavItem to="/owner/instructor-payouts">
+                Instructor payouts
+              </NavItem>
               <NavItem to="/locations">Locations</NavItem>
-              <NavItem to="/subscription">Subscription</NavItem>
             </NavFolder>
           )}
         </nav>
@@ -215,9 +221,9 @@ function AppShell() {
         >
           <button
             type="button"
-            className="absolute inset-0 bg-slate-950/60"
+            className="absolute inset-0 bg-black/60"
             aria-label="Close navigation"
-            onClick={closeMobileNav}
+            onClick={() => setMobileNavOpen(false)}
           />
           <div className="absolute inset-y-0 left-0 flex w-[min(85vw,20rem)] flex-col gap-4 border-r border-slate-800 bg-slate-950/95 px-4 py-4 text-slate-200">
             <div className="flex items-center justify-between gap-3">
@@ -226,115 +232,148 @@ function AppShell() {
               </div>
               <button
                 type="button"
-                onClick={closeMobileNav}
+                onClick={() => setMobileNavOpen(false)}
                 className="inline-flex items-center rounded-full border border-slate-700 px-3 py-1 text-[11px] font-semibold text-slate-200 hover:bg-slate-800"
               >
                 Close
               </button>
             </div>
 
-            {(showGodmodeNav && studios.length > 0) && (
+            {isClient && studios.length > 0 && (
               <div className="space-y-1">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Studio</div>
-                <div className="relative">
-                  <select
-                    className="appearance-none w-full rounded-md border border-slate-700 bg-slate-900 pl-2.5 pr-7 py-1.5 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-                    value={selectedStudioId || ''}
-                    onChange={(e) => setSelectedStudioId(e.target.value || null)}
-                  >
-                    {showGodmodeNav && <option value="">All studios</option>}
-                    {studios.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-slate-400">
-                    <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M2 4l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </span>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Studio
                 </div>
+                <select
+                  className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                  value={selectedStudioId || ""}
+                  onChange={(e) => setSelectedStudioId(e.target.value || null)}
+                >
+                  {studios.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
 
             {locations.length > 0 && (
               <div className="space-y-1">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Location</div>
-                <div className="relative">
-                  <select
-                    className="appearance-none w-full rounded-md border border-slate-700 bg-slate-900 pl-2.5 pr-7 py-1.5 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-                    value={locationId || ''}
-                    onChange={(e) => setLocationId(e.target.value || null)}
-                  >
-                    {locations.map((loc) => (
-                      <option key={loc.id} value={loc.id}>
-                        {loc.name}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-slate-400">
-                    <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M2 4l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </span>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Location
                 </div>
+                <select
+                  className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                  value={locationId || ""}
+                  onChange={(e) => setLocationId(e.target.value || null)}
+                >
+                  {locations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
 
             <nav className="min-h-0 flex-1 overflow-y-auto pr-1">
               <div className="flex flex-col gap-2">
                 <NavFolder label="General" defaultOpen variant="mobile">
-                  <NavItem to="/dashboard" variant="mobile" onNavigate={closeMobileNav}>Dashboard</NavItem>
-                  <NavItem to="/profile" variant="mobile" onNavigate={closeMobileNav}>Profile</NavItem>
-                  {isClient && (
-                    <NavItem to="/studios" end={false} variant="mobile" onNavigate={closeMobileNav}>Studios</NavItem>
-                  )}
+                  <NavItem
+                    to="/dashboard"
+                    variant="mobile"
+                    onNavigate={() => setMobileNavOpen(false)}
+                  >
+                    Dashboard
+                  </NavItem>
+                  <NavItem
+                    to="/profile"
+                    variant="mobile"
+                    onNavigate={() => setMobileNavOpen(false)}
+                  >
+                    Profile
+                  </NavItem>
                 </NavFolder>
 
                 <NavFolder label="Operations" defaultOpen variant="mobile">
-                  <NavItem to="/schedule" variant="mobile" onNavigate={closeMobileNav}>Calendar</NavItem>
-                  <NavItem to="/bookings" end={false} variant="mobile" onNavigate={closeMobileNav}>Bookings</NavItem>
+                  <NavItem
+                    to="/schedule"
+                    variant="mobile"
+                    onNavigate={() => setMobileNavOpen(false)}
+                  >
+                    Calendar
+                  </NavItem>
+                  <NavItem
+                    to="/bookings"
+                    end={false}
+                    variant="mobile"
+                    onNavigate={() => setMobileNavOpen(false)}
+                  >
+                    Bookings
+                  </NavItem>
                   {!isClient && (
-                    <NavItem to="/my-bookings" variant="mobile" onNavigate={closeMobileNav}>My bookings</NavItem>
+                    <NavItem
+                      to="/my-bookings"
+                      variant="mobile"
+                      onNavigate={() => setMobileNavOpen(false)}
+                    >
+                      My bookings
+                    </NavItem>
                   )}
                   {isClient && (
-                    <NavItem to="/saved" variant="mobile" onNavigate={closeMobileNav}>Saved</NavItem>
-                  )}
-                  {isClient && (
-                    <NavItem to="/my-bundles" variant="mobile" onNavigate={closeMobileNav}>Bundles</NavItem>
+                    <NavItem
+                      to="/saved"
+                      variant="mobile"
+                      onNavigate={() => setMobileNavOpen(false)}
+                    >
+                      Saved
+                    </NavItem>
                   )}
                   {canManageStudio && clientsPageEnabled && (
-                    <NavItem to="/clients" variant="mobile" onNavigate={closeMobileNav}>Clients</NavItem>
+                    <NavItem
+                      to="/clients"
+                      variant="mobile"
+                      onNavigate={() => setMobileNavOpen(false)}
+                    >
+                      Clients
+                    </NavItem>
                   )}
                   {canManageStudio && (
-                    <NavItem to="/templates" end={false} variant="mobile" onNavigate={closeMobileNav}>Classes</NavItem>
-                  )}
-                  {showStudioAdminTools && (
-                    <NavItem to="/bundles" variant="mobile" onNavigate={closeMobileNav}>Bundles</NavItem>
-                  )}
-                  {showStudioAdminTools && (
-                    <NavItem to="/memberships" variant="mobile" onNavigate={closeMobileNav}>Memberships</NavItem>
-                  )}
-                  {isClient && (
-                    <NavItem to="/my-memberships" variant="mobile" onNavigate={closeMobileNav}>Memberships</NavItem>
+                    <NavItem
+                      to="/templates"
+                      end={false}
+                      variant="mobile"
+                      onNavigate={() => setMobileNavOpen(false)}
+                    >
+                      Classes
+                    </NavItem>
                   )}
                 </NavFolder>
 
-                {showGodmodeNav && (
-                  <NavFolder label="Godmode" defaultOpen variant="mobile">
-                    <NavItem to="/godmode/dashboard" variant="mobile" onNavigate={closeMobileNav}>Analytics</NavItem>
-                    <NavItem to="/owner" variant="mobile" onNavigate={closeMobileNav}>Owners</NavItem>
-                    <NavItem to="/godmode/subscriptions" variant="mobile" onNavigate={closeMobileNav}>Subscriptions</NavItem>
-                    <NavItem to="/godmode/moderators" variant="mobile" onNavigate={closeMobileNav}>Moderators</NavItem>
-                  </NavFolder>
-                )}
-                {showOwnerNav && (
+                {isOwner && (
                   <NavFolder label="Owner" defaultOpen variant="mobile">
-                    <NavItem to="/owner" variant="mobile" onNavigate={closeMobileNav}>Owner</NavItem>
-                    <NavItem to="/owner/instructor-payouts" variant="mobile" onNavigate={closeMobileNav}>Instructor payouts</NavItem>
-                    <NavItem to="/locations" variant="mobile" onNavigate={closeMobileNav}>Locations</NavItem>
-                    <NavItem to="/subscription" variant="mobile" onNavigate={closeMobileNav}>Subscription</NavItem>
+                    <NavItem
+                      to="/owner"
+                      variant="mobile"
+                      onNavigate={() => setMobileNavOpen(false)}
+                    >
+                      Owner
+                    </NavItem>
+                    <NavItem
+                      to="/owner/instructor-payouts"
+                      variant="mobile"
+                      onNavigate={() => setMobileNavOpen(false)}
+                    >
+                      Instructor payouts
+                    </NavItem>
+                    <NavItem
+                      to="/locations"
+                      variant="mobile"
+                      onNavigate={() => setMobileNavOpen(false)}
+                    >
+                      Locations
+                    </NavItem>
                   </NavFolder>
                 )}
               </div>
@@ -344,8 +383,8 @@ function AppShell() {
               <button
                 type="button"
                 onClick={() => {
-                  closeMobileNav()
-                  stopImpersonation()
+                  setMobileNavOpen(false);
+                  stopImpersonation();
                 }}
                 className="inline-flex w-full items-center justify-center rounded-full border border-amber-400 px-3 py-2 text-xs font-semibold text-amber-50 hover:bg-amber-500/20"
               >
@@ -357,8 +396,8 @@ function AppShell() {
               <button
                 type="button"
                 onClick={() => {
-                  closeMobileNav()
-                  signOut()
+                  setMobileNavOpen(false);
+                  signOut();
                 }}
                 className="inline-flex w-full items-center justify-center rounded-full border border-slate-600 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800"
               >
@@ -370,12 +409,12 @@ function AppShell() {
       )}
 
       <main className="flex min-h-0 h-dvh min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="relative flex items-center justify-between gap-3 border-b border-slate-800 bg-slate-900/80 px-4 py-3 backdrop-blur">
+        <header className="flex items-center justify-between gap-3 border-b border-slate-800 bg-slate-900/80 px-4 py-3 backdrop-blur">
           <div className="flex min-w-0 flex-1 items-center gap-2 text-xs uppercase tracking-[0.25em] text-slate-400">
             <button
               type="button"
               className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 md:hidden"
-              onClick={toggleMobileNav}
+              onClick={() => setMobileNavOpen((v) => !v)}
               aria-expanded={mobileNavOpen}
             >
               <span className="sr-only">Toggle navigation</span>
@@ -389,84 +428,40 @@ function AppShell() {
             <span className="min-w-0 truncate">{dashboardTitle}</span>
           </div>
           <div className="flex shrink-0 items-center gap-3 text-sm">
-            {(isClient || showGodmodeNav) && studios.length > 0 && (
+            {isClient && studios.length > 0 && (
               <div className="flex items-center gap-2 text-xs text-slate-300">
-                {showGodmodeNav ? (
-                  <>
-                    <span className="uppercase tracking-[0.18em] text-slate-500">Studio</span>
-                    <div className="relative">
-                      <select
-                        className="appearance-none rounded-md border border-slate-700 bg-slate-900 pl-2.5 pr-7 py-1.5 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-                        value={selectedStudioId || ''}
-                        onChange={(e) => setSelectedStudioId(e.target.value || null)}
-                      >
-                        <option value="">All studios</option>
-                        {studios.map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.name}
-                          </option>
-                        ))}
-                      </select>
-                      <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-slate-400">
-                        <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M2 4l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  selectedStudioId && (
-                    <Link
-                      to={`/studios/${selectedStudioId}`}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-800"
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                      {studios.find((s) => s.id === selectedStudioId)?.name || 'My Studio'}
-                    </Link>
-                  )
-                )}
+                <span className="uppercase tracking-[0.18em] text-slate-500">
+                  Studio
+                </span>
+                <select
+                  className="rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                  value={selectedStudioId || ""}
+                  onChange={(e) => setSelectedStudioId(e.target.value || null)}
+                >
+                  {studios.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
             {locations.length > 0 && (
               <div className="hidden sm:flex items-center gap-2 text-xs text-slate-300">
-                <span className="uppercase tracking-[0.18em] text-slate-500">Location</span>
-                <div className="relative">
-                  <select
-                    className="appearance-none rounded-md border border-slate-700 bg-slate-900 pl-2.5 pr-7 py-1.5 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-                    value={locationId || ''}
-                    onChange={(e) => setLocationId(e.target.value || null)}
-                  >
-                    {locations.map((loc) => (
-                      <option key={loc.id} value={loc.id}>
-                        {loc.name}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-slate-400">
-                    <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M2 4l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </span>
-                </div>
-              </div>
-            )}
-            {showOwnerNav && (
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setQuickGlanceOpen((v) => !v)}
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition ${
-                    quickGlanceOpen
-                      ? 'border-sky-500/60 bg-sky-500/10 text-sky-300'
-                      : 'border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800'
-                  }`}
-                  aria-label="Quick glance"
-                  aria-expanded={quickGlanceOpen}
+                <span className="uppercase tracking-[0.18em] text-slate-500">
+                  Location
+                </span>
+                <select
+                  className="rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                  value={locationId || ""}
+                  onChange={(e) => setLocationId(e.target.value || null)}
                 >
-                  <span className={`inline-block h-1.5 w-1.5 rounded-full ${quickGlanceOpen ? 'bg-sky-400' : 'bg-emerald-400'}`} />
-                  Quick Glance
-                </button>
-                <QuickGlancePanel open={quickGlanceOpen} onClose={() => setQuickGlanceOpen(false)} />
+                  {locations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
             <button
@@ -475,7 +470,7 @@ function AppShell() {
               className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-900 text-xs text-slate-200 hover:bg-slate-800"
               aria-label="Toggle theme"
             >
-              {theme === 'dark' ? '☀︎' : '☾'}
+              {theme === "dark" ? "☀︎" : "☾"}
             </button>
             {user ? (
               <>
@@ -488,7 +483,8 @@ function AppShell() {
                       {user.name || user.email}
                     </span>
                     <span className="text-[11px] text-slate-400 uppercase tracking-[0.18em]">
-                      {(user.roleName || '').toString().toUpperCase() || 'OWNER'}
+                      {(user.roleName || "").toString().toUpperCase() ||
+                        "OWNER"}
                     </span>
                   </div>
                 </div>
@@ -522,11 +518,11 @@ function AppShell() {
           <div className="flex items-center justify-between gap-3 border-b border-amber-500/40 bg-amber-950/40 px-4 py-2 text-[11px] text-amber-100">
             <div className="flex flex-col">
               <span className="font-semibold tracking-[0.18em] uppercase">
-                Viewing as {user.name || 'selected user'}
+                Viewing as {user.name || "selected user"}
               </span>
               {impersonator && (
                 <span className="text-[10px] text-amber-200/80">
-                      {dashboardTitle}
+                  {dashboardTitle}
                 </span>
               )}
             </div>
@@ -540,36 +536,22 @@ function AppShell() {
           </div>
         )}
         <div className="flex-1 min-h-0 overflow-y-auto px-4 py-6 md:px-8">
-          <div className="mx-auto w-full max-w-screen-2xl">
-            <Outlet />
-          </div>
+          <Outlet />
         </div>
       </main>
-      {showOwnerNav && !isImpersonating && <OnboardingModal />}
     </div>
-  )
+  );
 }
 
 function ClientsRouteGate() {
-  const { data } = useQuery(STUDIO_SETTINGS)
-  const clientsPageEnabled = data?.studioSettings?.clientsPageEnabled !== false
+  const { data } = useQuery(STUDIO_SETTINGS);
+  const clientsPageEnabled = data?.studioSettings?.clientsPageEnabled !== false;
 
   if (!clientsPageEnabled) {
-    return <Navigate to="/dashboard" replace />
+    return <Navigate to="/dashboard" replace />;
   }
 
-  return <ClientsPage />
-}
-
-function ClientProfileRouteGate() {
-  const { data } = useQuery(STUDIO_SETTINGS)
-  const clientsPageEnabled = data?.studioSettings?.clientsPageEnabled !== false
-
-  if (!clientsPageEnabled) {
-    return <Navigate to="/dashboard" replace />
-  }
-
-  return <ClientProfile />
+  return <ClientsPage />;
 }
 
 function App() {
@@ -579,217 +561,120 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
-        <Route path="/signup/owner" element={<SignUpPortal accountType="OWNER" />} />
-        <Route path="/signup/client" element={<SignUpPortal accountType="CLIENT" />} />
+        <Route
+          path="/signup/owner"
+          element={<SignUpPortal accountType="OWNER" />}
+        />
+        <Route
+          path="/signup/client"
+          element={<SignUpPortal accountType="CLIENT" />}
+        />
         <Route element={<AppShell />}>
           <Route
             path="/dashboard"
-            element={(
+            element={
               <ProtectedRoute>
-                <Dashboard />
+                <Suspense fallback={<PageSpinner />}>
+                  <Dashboard />
+                </Suspense>
               </ProtectedRoute>
-            )}
-          />
-          <Route
-            path="/analytics"
-            element={(
-              <RoleGate allow={["owner", "staff"]}>
-                <Analytics />
-              </RoleGate>
-            )}
+            }
           />
           <Route
             path="/profile"
-            element={(
+            element={
               <ProtectedRoute>
                 <Profile />
               </ProtectedRoute>
-            )}
+            }
           />
           <Route
             path="/owner"
-            element={(
+            element={
               <ProtectedRoute>
                 <Owner />
               </ProtectedRoute>
-            )}
-          />
-          <Route
-            path="/owner/studios/:studioId"
-            element={(
-              <ProtectedRoute>
-                <GodmodeStudio />
-              </ProtectedRoute>
-            )}
-          />
-          <Route
-            path="/godmode/dashboard"
-            element={(
-              <ProtectedRoute>
-                <GodmodeDashboard />
-              </ProtectedRoute>
-            )}
-          />
-          <Route
-            path="/godmode/subscriptions"
-            element={(
-              <ProtectedRoute>
-                <GodmodeSubscriptions />
-              </ProtectedRoute>
-            )}
-          />
-          <Route
-            path="/godmode/moderators"
-            element={(
-              <ProtectedRoute>
-                <GodmodeModerators />
-              </ProtectedRoute>
-            )}
-          />
-          <Route
-            path="/subscription"
-            element={(
-              <ProtectedRoute>
-                <OwnerSubscription />
-              </ProtectedRoute>
-            )}
+            }
           />
           <Route
             path="/owner/instructor-payouts"
-            element={(
+            element={
               <ProtectedRoute>
                 <InstructorPayoutsPage />
               </ProtectedRoute>
-            )}
+            }
           />
           <Route
             path="/locations"
-            element={(
+            element={
               <ProtectedRoute>
                 <LocationsPage />
               </ProtectedRoute>
-            )}
+            }
           />
           <Route
             path="/templates"
-            element={(
+            element={
               <RoleGate allow={["owner", "staff", "instructor"]}>
                 <Templates />
               </RoleGate>
-            )}
+            }
           />
           <Route path="/templates/:id/sessions" element={<Sessions />} />
           <Route
             path="/booking/:id"
-            element={(
+            element={
               <ProtectedRoute>
                 <Booking />
               </ProtectedRoute>
-            )}
+            }
           />
           <Route path="/schedule" element={<Schedule />} />
           <Route
             path="/bookings"
-            element={(
+            element={
               <ProtectedRoute>
                 <BookingsPage />
               </ProtectedRoute>
-            )}
-          />
-          <Route
-            path="/bundles"
-            element={(
-              <ProtectedRoute>
-                <BundlesPage />
-              </ProtectedRoute>
-            )}
-          />
-          <Route
-            path="/my-bundles"
-            element={(
-              <ProtectedRoute>
-                <MyBundlesPage />
-              </ProtectedRoute>
-            )}
-          />
-          <Route
-            path="/studios"
-            element={(
-              <ProtectedRoute>
-                <StudiosPage />
-              </ProtectedRoute>
-            )}
-          />
-          <Route
-            path="/studios/:id"
-            element={(
-              <ProtectedRoute>
-                <StudioShowPage />
-              </ProtectedRoute>
-            )}
-          />
-          <Route
-            path="/memberships"
-            element={(
-              <ProtectedRoute>
-                <OwnerMembershipsPage />
-              </ProtectedRoute>
-            )}
-          />
-          <Route
-            path="/my-memberships"
-            element={(
-              <ProtectedRoute>
-                <MyMembershipsPage />
-              </ProtectedRoute>
-            )}
+            }
           />
           <Route
             path="/my-bookings"
-            element={(
+            element={
               <ProtectedRoute>
                 <BookingsPage scope="mine" />
               </ProtectedRoute>
-            )}
+            }
           />
           <Route
             path="/bookings/:id"
-            element={(
+            element={
               <ProtectedRoute>
                 <BookingShow />
               </ProtectedRoute>
-            )}
+            }
           />
           <Route
             path="/saved"
-            element={(
+            element={
               <ProtectedRoute>
                 <Favorites />
               </ProtectedRoute>
-            )}
+            }
           />
           <Route path="/favorites" element={<Navigate to="/saved" replace />} />
           <Route
             path="/clients"
-            element={(
+            element={
               <ProtectedRoute>
                 <ClientsRouteGate />
               </ProtectedRoute>
-            )}
-          />
-          <Route
-            path="/clients/:id"
-            element={(
-              <ProtectedRoute>
-                <ClientProfileRouteGate />
-              </ProtectedRoute>
-            )}
+            }
           />
         </Route>
-        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;

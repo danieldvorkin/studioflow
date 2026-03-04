@@ -1,4 +1,3 @@
-import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "@apollo/client";
 import { Link } from "react-router-dom";
@@ -24,7 +23,6 @@ function formatDateTime(isoString) {
 }
 
 export default function Favorites() {
-  useDocumentTitle("Favorites");
   const { studios, selectedStudioId, setSelectedStudioId } = useStudio();
   const { addToast } = useToast();
 
@@ -102,7 +100,7 @@ export default function Favorites() {
   }, [myBookingsData?.myBookings]);
 
   return (
-    <div className="flex w-full flex-col gap-4">
+    <div className="mx-auto flex max-w-5xl flex-col gap-4">
       <header className="flex flex-col gap-1">
         <h1 className="text-xl font-semibold text-slate-50">Saved</h1>
         <p className="text-sm text-slate-400">
@@ -112,7 +110,7 @@ export default function Favorites() {
 
       <section className="grid gap-3 rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-sm md:grid-cols-2">
         <div className="space-y-1">
-          <label className="block text-xs font-semibold uppercase tracking-[0.18em] text-sky-400/70">
+          <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
             Studio
           </label>
           <select
@@ -133,7 +131,7 @@ export default function Favorites() {
         </div>
 
         <div className="space-y-1">
-          <label className="block text-xs font-semibold uppercase tracking-[0.18em] text-sky-400/70">
+          <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
             Location
           </label>
           <select

@@ -1,7 +1,7 @@
 {
   "name": "StudioFlow",
   "short_name": "StudioFlow",
-  "description": "A modern Pilates studio OS — bookings, payments, scheduling, and instructor payouts in one flow.",
+  "description": "Studio management at your fingertips — bookings, payments, scheduling, and payouts in one flow.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

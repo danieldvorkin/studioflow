@@ -3,6 +3,11 @@ import { useQuery } from "@apollo/client";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
+  SkeletonDashboardPanel,
+  SkeletonSidePanel,
+  SkeletonStatCard,
+} from "../components/SkeletonCards";
+import {
   CURRENT_USER,
   CLASS_TEMPLATES,
   CLASS_SESSIONS,
@@ -786,7 +791,7 @@ export default function Dashboard() {
           </div>
 
           {(templatesLoading || sessionsLoading || bookingsLoading) && (
-            <p className="text-sm text-slate-400">Loading dashboard…</p>
+            <SkeletonDashboardPanel cards={3} rows={5} />
           )}
 
           {!templatesLoading &&
@@ -1423,20 +1428,28 @@ export default function Dashboard() {
               </h2>
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">
-              <StatCard
-                label="Classes"
-                value={templates.length}
-                helper={
-                  isClient
-                    ? "Programs you can book"
-                    : "Programs you can schedule"
-                }
-              />
-              <StatCard
-                label="Sessions"
-                value={sessions.length}
-                helper={isClient ? "On the calendar" : "Available to manage"}
-              />
+              {templatesLoading ? (
+                <SkeletonStatCard />
+              ) : (
+                <StatCard
+                  label="Classes"
+                  value={templates.length}
+                  helper={
+                    isClient
+                      ? "Programs you can book"
+                      : "Programs you can schedule"
+                  }
+                />
+              )}
+              {sessionsLoading ? (
+                <SkeletonStatCard />
+              ) : (
+                <StatCard
+                  label="Sessions"
+                  value={sessions.length}
+                  helper={isClient ? "On the calendar" : "Available to manage"}
+                />
+              )}
             </div>
 
             {isClient && (
@@ -1444,7 +1457,11 @@ export default function Dashboard() {
                 <div className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400/70">
                   Instructors
                 </div>
-                {instructorsByLocation.length === 0 ? (
+                {templatesLoading ? (
+                  <div className="mt-2">
+                    <SkeletonSidePanel rows={3} />
+                  </div>
+                ) : instructorsByLocation.length === 0 ? (
                   <p className="mt-2 rounded-lg border border-dashed border-slate-700 bg-slate-900/60 p-3 text-sm text-slate-400">
                     No instructors are listed for this location yet.
                   </p>

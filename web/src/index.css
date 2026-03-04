@@ -10,6 +10,15 @@ body {
   color: var(--app-fg);
 }
 
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 @keyframes hashTargetFlash {
   0% {
     border-color: color-mix(

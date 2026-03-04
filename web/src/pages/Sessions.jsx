@@ -1,4 +1,3 @@
-import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { useMutation, useQuery } from "@apollo/client";
 import { useParams, Link } from "react-router-dom";
 import {
@@ -18,7 +17,6 @@ import { canDeleteSessions, canEditSession } from "../auth/permissions";
 import { useStudio } from "../studio/StudioProvider";
 
 export default function Sessions() {
-  useDocumentTitle("Classes");
   const { id } = useParams();
   const { user } = useAuth();
   const roleName = (user?.roleName || "").toString().toLowerCase();
@@ -88,7 +86,7 @@ export default function Sessions() {
   );
 
   return (
-    <div className="flex w-full flex-col gap-4">
+    <div className="mx-auto flex max-w-5xl flex-col gap-4">
       <header className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
         <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">
