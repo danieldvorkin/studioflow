@@ -192,7 +192,9 @@ export default function ClientsPage() {
                   <th className="px-3 py-2">Name</th>
                   <th className="px-3 py-2">Email</th>
                   <th className="px-3 py-2">Phone</th>
-                  {(isOwner || isModerator) && <th className="px-3 py-2 text-right">View as</th>}
+                  {(isOwner || isModerator) && (
+                    <th className="px-3 py-2 text-right">View as</th>
+                  )}
                   <th className="px-3 py-2" />
                 </tr>
               </thead>

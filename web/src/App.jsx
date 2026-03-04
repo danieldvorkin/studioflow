@@ -118,8 +118,7 @@ function AppShell() {
   const { locations, locationId, setLocationId } = useLocationContext();
 
   const role = (user?.roleName || "").toString().toLowerCase();
-  const isClient =
-    role === "client" || user?.role === 3;
+  const isClient = role === "client" || user?.role === 3;
   const { studios, selectedStudioId, setSelectedStudioId } = useStudio();
 
   const { data: studioSettingsData } = useQuery(STUDIO_SETTINGS, {
@@ -134,9 +133,17 @@ function AppShell() {
 
   const roleRaw = user?.roleName;
   const isOwner =
-    roleRaw === "owner" || user?.role === 0 || roleRaw === "OWNER" || roleRaw === "godmode" || user?.godmode === true;
+    roleRaw === "owner" ||
+    user?.role === 0 ||
+    roleRaw === "OWNER" ||
+    roleRaw === "godmode" ||
+    user?.godmode === true;
   const isStaff = roleRaw === "staff" || user?.role === 1;
-  const isModerator = roleRaw === "moderator" || user?.role === 4 || roleRaw === "godmode" || user?.godmode === true;
+  const isModerator =
+    roleRaw === "moderator" ||
+    user?.role === 4 ||
+    roleRaw === "godmode" ||
+    user?.godmode === true;
 
   const canManageStudio = isOwner || isStaff || isModerator;
 
