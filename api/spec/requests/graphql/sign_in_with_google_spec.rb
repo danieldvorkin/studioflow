@@ -18,6 +18,7 @@ RSpec.describe 'Sign in with Google', type: :request do
     begin
       ENV.delete('GOOGLE_CLIENT_ID')
       ENV.delete('VITE_GOOGLE_CLIENT_ID')
+      ENV.delete('GOOGLE_IOS_CLIENT_ID')
       ENV.delete('GOOGLE_CLIENT_SECRET')
       example.run
     ensure
@@ -37,7 +38,7 @@ RSpec.describe 'Sign in with Google', type: :request do
     json = graphql_post(query: mutation, variables: {})
     payload = json.dig('data', 'signInWithGoogle')
     expect(payload['token']).to be_nil
-    expect(payload['errors']).to include('Provide code or accessToken')
+    expect(payload['errors']).to include('Provide code, accessToken, or idToken')
   end
 
   it 'creates a user via accessToken userinfo and returns a JWT' do

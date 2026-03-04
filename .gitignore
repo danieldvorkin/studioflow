@@ -52,3 +52,5 @@
 /api/coverage/*
 # Local Netlify folder
 .netlify
+
+IOS_APP_CONTEXT.md

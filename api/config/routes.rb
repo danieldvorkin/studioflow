@@ -5,6 +5,12 @@ Rails.application.routes.draw do
 
   post "/stripe/platform-webhook", to: "platform_webhooks#receive"
 
+  # Native iOS Google Sign-In REST endpoint
+  # Accepts: { id_token: "..." } or { access_token: "..." }
+  # Returns: { token: "<jwt>", user: { ... } }
+  match "/auth/google", to: ->(env) { [ 200, { "Content-Type" => "text/plain" }, [ "OK" ] ] }, via: :options
+  post  "/auth/google", to: "auth#google"
+
   if Rails.env.development?
     mount GraphiQL::Rails::Engine, at: "/graphiql", graphql_path: "/graphql"
     get "/voyager", to: "voyager#show"
