@@ -55,23 +55,30 @@ module Types
     end
 
     field :studios, [ Types::StudioType ], null: false,
-      description: "List all studios (for client marketplace browsing)"
+      description: "List all studios (platform staff: all; clients: all for marketplace browsing)"
     def studios
       user = context[:current_user]
       raise GraphQL::ExecutionError, "Not authorized" unless user
+      raise GraphQL::ExecutionError, "Not authorized" unless user.platform_staff? || user.client?
 
       Studio.order(:name)
     end
 
     field :studio, Types::StudioType, null: true,
-      description: "Fetch a single studio by ID (for studio show page)" do
+      description: "Fetch a single studio by ID" do
       argument :id, ID, required: true
     end
     def studio(id:)
       user = context[:current_user]
       raise GraphQL::ExecutionError, "Not authorized" unless user
 
-      Studio.find_by(id: id)
+      # Platform staff and clients may look up any studio.
+      # All other roles (owner, staff, instructor) are restricted to their own studio.
+      if user.platform_staff? || user.client?
+        Studio.find_by(id: id)
+      else
+        user.studio_id.to_s == id.to_s ? user.studio : nil
+      end
     end
 
     field :my_studio, Types::StudioType, null: true,
@@ -309,7 +316,13 @@ module Types
       if user.platform_staff?
         User.order(:email)
       else
-        User.where(studio_id: user.studio_id).order(:email)
+        # Regular owners see only staff and instructors from their studio.
+        # Other owners are excluded (owners cannot manage peers) and clients
+        # belong in the clients section, not the user management table.
+        User.where(
+          studio_id: user.studio_id,
+          role: [ User::ROLES[:staff], User::ROLES[:instructor] ]
+        ).order(:email)
       end
     end
 
