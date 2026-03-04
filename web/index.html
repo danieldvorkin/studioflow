@@ -2,9 +2,106 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>web</title>
+
+    <!-- =====================================================
+         FAVICONS & ICONS
+         ===================================================== -->
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- =====================================================
+         VIEWPORT & THEME
+         ===================================================== -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta
+      name="theme-color"
+      content="#050913"
+      media="(prefers-color-scheme: dark)"
+    />
+    <meta
+      name="theme-color"
+      content="#0ea5e9"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta name="color-scheme" content="dark light" />
+
+    <!-- =====================================================
+         PWA / HOME SCREEN
+         ===================================================== -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- iOS standalone mode -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="StudioFlow" />
+    <!-- Windows / Microsoft -->
+    <meta name="msapplication-TileColor" content="#050913" />
+    <meta name="msapplication-TileImage" content="/icon-192.png" />
+    <meta name="application-name" content="StudioFlow" />
+
+    <!-- =====================================================
+         PRIMARY META
+         ===================================================== -->
+    <title>StudioFlow — Pilates Studio Management</title>
+    <meta
+      name="description"
+      content="StudioFlow is a modern OS for Pilates studios. Fast bookings, client-friendly payments, clear schedules, and instructor payouts — without the chaos."
+    />
+    <meta
+      name="keywords"
+      content="pilates studio software, pilates booking, studio management, class scheduling, instructor payouts, fitness studio app"
+    />
+    <meta name="author" content="StudioFlow" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- =====================================================
+         OPEN GRAPH (Facebook, LinkedIn, Slack, iMessage…)
+         ===================================================== -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://studioflow.app/" />
+    <meta property="og:site_name" content="StudioFlow" />
+    <meta
+      property="og:title"
+      content="StudioFlow — A modern Pilates studio OS"
+    />
+    <meta
+      property="og:description"
+      content="Bookings, payments, scheduling, and instructor payouts in one flow. Your studio team will actually enjoy it."
+    />
+    <meta property="og:image" content="https://studioflow.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="StudioFlow — Pilates studio management platform"
+    />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- =====================================================
+         TWITTER / X CARDS
+         ===================================================== -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@studioflowapp" />
+    <meta name="twitter:creator" content="@studioflowapp" />
+    <meta
+      name="twitter:title"
+      content="StudioFlow — A modern Pilates studio OS"
+    />
+    <meta
+      name="twitter:description"
+      content="Bookings, payments, scheduling, and instructor payouts in one flow. Your studio team will actually enjoy it."
+    />
+    <meta name="twitter:image" content="https://studioflow.app/og-image.png" />
+    <meta
+      name="twitter:image:alt"
+      content="StudioFlow — Pilates studio management platform"
+    />
   </head>
   <body>
     <div id="root"></div>

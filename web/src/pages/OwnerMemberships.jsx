@@ -1,47 +1,48 @@
-import { useMutation, useQuery } from '@apollo/client'
-import { useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { useMutation, useQuery } from "@apollo/client";
+import { useState } from "react";
+import { Navigate } from "react-router-dom";
 import {
   MEMBERSHIP_PLANS,
   CLIENT_MEMBERSHIPS,
   CLIENTS,
   CURRENT_USER,
-} from '../apollo/queries'
+} from "../apollo/queries";
 import {
   CREATE_MEMBERSHIP_PLAN,
   UPDATE_MEMBERSHIP_PLAN,
   DELETE_MEMBERSHIP_PLAN,
   ENROLL_CLIENT_MEMBERSHIP,
   UPDATE_CLIENT_MEMBERSHIP,
-} from '../apollo/mutations'
-import { useToast } from '../components/ToastProvider'
-import { isOwner, isStaff } from '../auth/permissions'
+} from "../apollo/mutations";
+import { useToast } from "../components/ToastProvider";
+import { isOwner, isStaff } from "../auth/permissions";
 
 function dollarsFromCents(cents) {
-  if (typeof cents !== 'number') return ''
-  return (cents / 100).toFixed(2)
+  if (typeof cents !== "number") return "";
+  return (cents / 100).toFixed(2);
 }
 
 function centsFromDollars(val) {
-  const n = Number(val)
-  if (!Number.isFinite(n)) return 0
-  return Math.round(n * 100)
+  const n = Number(val);
+  if (!Number.isFinite(n)) return 0;
+  return Math.round(n * 100);
 }
 
 const STATUS_COLORS = {
-  active: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30',
-  paused: 'bg-amber-500/10 text-amber-400 border border-amber-500/30',
-  cancelled: 'bg-red-500/10 text-red-400 border border-red-500/30',
-  expired: 'bg-slate-500/10 text-slate-400 border border-slate-500/30',
-}
+  active: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30",
+  paused: "bg-amber-500/10 text-amber-400 border border-amber-500/30",
+  cancelled: "bg-red-500/10 text-red-400 border border-red-500/30",
+  expired: "bg-slate-500/10 text-slate-400 border border-slate-500/30",
+};
 
 const EMPTY_PLAN_FORM = {
-  name: '',
-  description: '',
-  priceDollars: '',
-  currency: 'cad',
-  reformerClassesPerMonth: '',
-  matClassesPerMonth: '',
+  name: "",
+  description: "",
+  priceDollars: "",
+  currency: "cad",
+  reformerClassesPerMonth: "",
+  matClassesPerMonth: "",
   includesPriorityBooking: false,
   includesEarlyBooking: false,
   privateSessionDiscountPercent: 0,
@@ -51,7 +52,7 @@ const EMPTY_PLAN_FORM = {
   autoRenew: true,
   active: false,
   position: 0,
-}
+};
 
 function planFormToVars(form) {
   return {
@@ -60,35 +61,39 @@ function planFormToVars(form) {
     priceCents: centsFromDollars(form.priceDollars),
     currency: form.currency,
     reformerClassesPerMonth:
-      form.reformerClassesPerMonth === '' || form.reformerClassesPerMonth === null
+      form.reformerClassesPerMonth === "" ||
+      form.reformerClassesPerMonth === null
         ? null
         : Number(form.reformerClassesPerMonth),
     matClassesPerMonth:
-      form.matClassesPerMonth === '' || form.matClassesPerMonth === null
+      form.matClassesPerMonth === "" || form.matClassesPerMonth === null
         ? null
         : Number(form.matClassesPerMonth),
     includesPriorityBooking: !!form.includesPriorityBooking,
     includesEarlyBooking: !!form.includesEarlyBooking,
-    privateSessionDiscountPercent: Number(form.privateSessionDiscountPercent) || 0,
+    privateSessionDiscountPercent:
+      Number(form.privateSessionDiscountPercent) || 0,
     guestPassesPerMonth: Number(form.guestPassesPerMonth) || 0,
     includesRetailDiscount: !!form.includesRetailDiscount,
     minCommitmentMonths: Number(form.minCommitmentMonths) || 3,
     autoRenew: !!form.autoRenew,
     active: !!form.active,
     position: Number(form.position) || 0,
-  }
+  };
 }
 
 function planToForm(plan) {
   return {
-    name: plan.name || '',
-    description: plan.description || '',
+    name: plan.name || "",
+    description: plan.description || "",
     priceDollars: dollarsFromCents(plan.priceCents),
-    currency: plan.currency || 'cad',
+    currency: plan.currency || "cad",
     reformerClassesPerMonth:
-      plan.reformerClassesPerMonth == null ? '' : String(plan.reformerClassesPerMonth),
+      plan.reformerClassesPerMonth == null
+        ? ""
+        : String(plan.reformerClassesPerMonth),
     matClassesPerMonth:
-      plan.matClassesPerMonth == null ? '' : String(plan.matClassesPerMonth),
+      plan.matClassesPerMonth == null ? "" : String(plan.matClassesPerMonth),
     includesPriorityBooking: !!plan.includesPriorityBooking,
     includesEarlyBooking: !!plan.includesEarlyBooking,
     privateSessionDiscountPercent: plan.privateSessionDiscountPercent ?? 0,
@@ -98,39 +103,48 @@ function planToForm(plan) {
     autoRenew: plan.autoRenew !== false,
     active: !!plan.active,
     position: plan.position ?? 0,
-  }
+  };
 }
 
 function PlanForm({ form, setForm, onSave, onCancel, saving, title }) {
   const field = (key) => ({
     value: form[key],
     onChange: (e) =>
-      setForm((f) => ({ ...f, [key]: e.target.type === 'checkbox' ? e.target.checked : e.target.value })),
-  })
+      setForm((f) => ({
+        ...f,
+        [key]: e.target.type === "checkbox" ? e.target.checked : e.target.value,
+      })),
+  });
 
   return (
     <div className="rounded-xl border border-slate-700 bg-slate-900 p-5 space-y-4">
       <h2 className="text-base font-semibold text-slate-100">{title}</h2>
       <div className="grid grid-cols-2 gap-3">
         <div className="col-span-2">
-          <label className="block text-xs font-medium text-slate-400 mb-1">Plan Name *</label>
+          <label className="block text-xs font-medium text-slate-400 mb-1">
+            Plan Name *
+          </label>
           <input
             className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none"
             placeholder="e.g. Signature Membership"
-            {...field('name')}
+            {...field("name")}
           />
         </div>
         <div className="col-span-2">
-          <label className="block text-xs font-medium text-slate-400 mb-1">Description</label>
+          <label className="block text-xs font-medium text-slate-400 mb-1">
+            Description
+          </label>
           <textarea
             className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none"
             rows={2}
             placeholder="Optional description shown to clients"
-            {...field('description')}
+            {...field("description")}
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1">Monthly Price *</label>
+          <label className="block text-xs font-medium text-slate-400 mb-1">
+            Monthly Price *
+          </label>
           <div className="flex items-center gap-2">
             <span className="text-sm text-slate-400">$</span>
             <input
@@ -139,15 +153,17 @@ function PlanForm({ form, setForm, onSave, onCancel, saving, title }) {
               step="0.01"
               className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none"
               placeholder="139.00"
-              {...field('priceDollars')}
+              {...field("priceDollars")}
             />
           </div>
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1">Currency</label>
+          <label className="block text-xs font-medium text-slate-400 mb-1">
+            Currency
+          </label>
           <select
             className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none"
-            {...field('currency')}
+            {...field("currency")}
           >
             <option value="cad">CAD</option>
             <option value="usd">USD</option>
@@ -155,26 +171,28 @@ function PlanForm({ form, setForm, onSave, onCancel, saving, title }) {
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-400 mb-1">
-            Reformer Classes / Month <span className="text-slate-500">(blank = unlimited)</span>
+            Reformer Classes / Month{" "}
+            <span className="text-slate-500">(blank = unlimited)</span>
           </label>
           <input
             type="number"
             min="0"
             className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none"
             placeholder="Unlimited"
-            {...field('reformerClassesPerMonth')}
+            {...field("reformerClassesPerMonth")}
           />
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-400 mb-1">
-            Mat / Barre / Yoga Classes / Month <span className="text-slate-500">(blank = unlimited)</span>
+            Mat / Barre / Yoga Classes / Month{" "}
+            <span className="text-slate-500">(blank = unlimited)</span>
           </label>
           <input
             type="number"
             min="0"
             className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none"
             placeholder="Unlimited"
-            {...field('matClassesPerMonth')}
+            {...field("matClassesPerMonth")}
           />
         </div>
         <div>
@@ -186,7 +204,7 @@ function PlanForm({ form, setForm, onSave, onCancel, saving, title }) {
             min="0"
             max="100"
             className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none"
-            {...field('privateSessionDiscountPercent')}
+            {...field("privateSessionDiscountPercent")}
           />
         </div>
         <div>
@@ -197,7 +215,7 @@ function PlanForm({ form, setForm, onSave, onCancel, saving, title }) {
             type="number"
             min="0"
             className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none"
-            {...field('guestPassesPerMonth')}
+            {...field("guestPassesPerMonth")}
           />
         </div>
         <div>
@@ -208,33 +226,40 @@ function PlanForm({ form, setForm, onSave, onCancel, saving, title }) {
             type="number"
             min="1"
             className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none"
-            {...field('minCommitmentMonths')}
+            {...field("minCommitmentMonths")}
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1">Display Order</label>
+          <label className="block text-xs font-medium text-slate-400 mb-1">
+            Display Order
+          </label>
           <input
             type="number"
             min="0"
             className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none"
-            {...field('position')}
+            {...field("position")}
           />
         </div>
       </div>
       <div className="flex flex-wrap gap-4 pt-1">
         {[
-          ['includesPriorityBooking', 'Priority Booking'],
-          ['includesEarlyBooking', 'Early Booking Access'],
-          ['includesRetailDiscount', 'Retail Discount'],
-          ['autoRenew', 'Auto-Renew'],
-          ['active', 'Published (visible to clients)'],
+          ["includesPriorityBooking", "Priority Booking"],
+          ["includesEarlyBooking", "Early Booking Access"],
+          ["includesRetailDiscount", "Retail Discount"],
+          ["autoRenew", "Auto-Renew"],
+          ["active", "Published (visible to clients)"],
         ].map(([key, label]) => (
-          <label key={key} className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+          <label
+            key={key}
+            className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer"
+          >
             <input
               type="checkbox"
               className="rounded border-slate-600 bg-slate-800 text-sky-500"
               checked={!!form[key]}
-              onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.checked }))}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, [key]: e.target.checked }))
+              }
             />
             {label}
           </label>
@@ -246,7 +271,7 @@ function PlanForm({ form, setForm, onSave, onCancel, saving, title }) {
           disabled={saving}
           className="rounded-md bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-50"
         >
-          {saving ? 'Saving…' : 'Save Plan'}
+          {saving ? "Saving…" : "Save Plan"}
         </button>
         <button
           onClick={onCancel}
@@ -256,30 +281,36 @@ function PlanForm({ form, setForm, onSave, onCancel, saving, title }) {
         </button>
       </div>
     </div>
-  )
+  );
 }
 
 function EnrollModal({ plans, clients, onEnroll, onClose }) {
-  const [clientId, setClientId] = useState('')
-  const [planId, setPlanId] = useState('')
-  const [startedAt, setStartedAt] = useState(new Date().toISOString().split('T')[0])
-  const [notes, setNotes] = useState('')
-  const [saving, setSaving] = useState(false)
+  const [clientId, setClientId] = useState("");
+  const [planId, setPlanId] = useState("");
+  const [startedAt, setStartedAt] = useState(
+    new Date().toISOString().split("T")[0],
+  );
+  const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const handleEnroll = async () => {
-    if (!clientId || !planId) return
-    setSaving(true)
-    await onEnroll({ clientId, membershipPlanId: planId, startedAt, notes })
-    setSaving(false)
-  }
+    if (!clientId || !planId) return;
+    setSaving(true);
+    await onEnroll({ clientId, membershipPlanId: planId, startedAt, notes });
+    setSaving(false);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70">
       <div className="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
-        <h3 className="mb-4 text-base font-semibold text-slate-100">Enroll Client in Membership</h3>
+        <h3 className="mb-4 text-base font-semibold text-slate-100">
+          Enroll Client in Membership
+        </h3>
         <div className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">Client *</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1">
+              Client *
+            </label>
             <select
               className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none"
               value={clientId}
@@ -294,7 +325,9 @@ function EnrollModal({ plans, clients, onEnroll, onClose }) {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">Plan *</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1">
+              Plan *
+            </label>
             <select
               className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none"
               value={planId}
@@ -303,13 +336,16 @@ function EnrollModal({ plans, clients, onEnroll, onClose }) {
               <option value="">Select plan…</option>
               {plans.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name} — ${dollarsFromCents(p.priceCents)}/{p.currency?.toUpperCase()}
+                  {p.name} — ${dollarsFromCents(p.priceCents)}/
+                  {p.currency?.toUpperCase()}
                 </option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">Start Date</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1">
+              Start Date
+            </label>
             <input
               type="date"
               className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none"
@@ -318,7 +354,9 @@ function EnrollModal({ plans, clients, onEnroll, onClose }) {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">Notes</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1">
+              Notes
+            </label>
             <textarea
               className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none"
               rows={2}
@@ -339,174 +377,207 @@ function EnrollModal({ plans, clients, onEnroll, onClose }) {
             disabled={saving || !clientId || !planId}
             className="rounded-md bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-50"
           >
-            {saving ? 'Enrolling…' : 'Enroll'}
+            {saving ? "Enrolling…" : "Enroll"}
           </button>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default function OwnerMembershipsPage() {
-  const { addToast } = useToast()
+  useDocumentTitle("Memberships");
+  const { addToast } = useToast();
 
-  const { data: userData } = useQuery(CURRENT_USER)
-  const user = userData?.currentUser
+  const { data: userData } = useQuery(CURRENT_USER);
+  const user = userData?.currentUser;
 
-  const canManage = isOwner(user) || isStaff(user)
+  const canManage = isOwner(user) || isStaff(user);
 
-  const { data: plansData, loading: plansLoading, refetch: refetchPlans } = useQuery(
-    MEMBERSHIP_PLANS,
-    { skip: !canManage, fetchPolicy: 'cache-and-network' }
-  )
-  const { data: enrollmentsData, loading: enrollmentsLoading, refetch: refetchEnrollments } = useQuery(
-    CLIENT_MEMBERSHIPS,
-    { skip: !canManage, fetchPolicy: 'cache-and-network' }
-  )
-  const { data: clientsData } = useQuery(CLIENTS, { skip: !canManage })
+  const {
+    data: plansData,
+    loading: plansLoading,
+    refetch: refetchPlans,
+  } = useQuery(MEMBERSHIP_PLANS, {
+    skip: !canManage,
+    fetchPolicy: "cache-and-network",
+  });
+  const {
+    data: enrollmentsData,
+    loading: enrollmentsLoading,
+    refetch: refetchEnrollments,
+  } = useQuery(CLIENT_MEMBERSHIPS, {
+    skip: !canManage,
+    fetchPolicy: "cache-and-network",
+  });
+  const { data: clientsData } = useQuery(CLIENTS, { skip: !canManage });
 
-  const [createPlan] = useMutation(CREATE_MEMBERSHIP_PLAN)
-  const [updatePlan] = useMutation(UPDATE_MEMBERSHIP_PLAN)
-  const [deletePlan] = useMutation(DELETE_MEMBERSHIP_PLAN)
-  const [enrollClient] = useMutation(ENROLL_CLIENT_MEMBERSHIP)
-  const [updateEnrollment] = useMutation(UPDATE_CLIENT_MEMBERSHIP)
+  const [createPlan] = useMutation(CREATE_MEMBERSHIP_PLAN);
+  const [updatePlan] = useMutation(UPDATE_MEMBERSHIP_PLAN);
+  const [deletePlan] = useMutation(DELETE_MEMBERSHIP_PLAN);
+  const [enrollClient] = useMutation(ENROLL_CLIENT_MEMBERSHIP);
+  const [updateEnrollment] = useMutation(UPDATE_CLIENT_MEMBERSHIP);
 
-  const plans = plansData?.membershipPlans || []
-  const enrollments = enrollmentsData?.clientMemberships || []
-  const clients = clientsData?.clients || []
+  const plans = plansData?.membershipPlans || [];
+  const enrollments = enrollmentsData?.clientMemberships || [];
+  const clients = clientsData?.clients || [];
 
   // Plan form state
-  const [showCreate, setShowCreate] = useState(false)
-  const [createForm, setCreateForm] = useState(EMPTY_PLAN_FORM)
-  const [saving, setSaving] = useState(false)
+  const [showCreate, setShowCreate] = useState(false);
+  const [createForm, setCreateForm] = useState(EMPTY_PLAN_FORM);
+  const [saving, setSaving] = useState(false);
 
   // Edit state
-  const [editingPlanId, setEditingPlanId] = useState(null)
-  const [editForm, setEditForm] = useState(EMPTY_PLAN_FORM)
+  const [editingPlanId, setEditingPlanId] = useState(null);
+  const [editForm, setEditForm] = useState(EMPTY_PLAN_FORM);
 
   // Enrollment modal
-  const [showEnrollModal, setShowEnrollModal] = useState(false)
+  const [showEnrollModal, setShowEnrollModal] = useState(false);
 
   // Active tab
-  const [tab, setTab] = useState('plans')
+  const [tab, setTab] = useState("plans");
 
   // Filter
-  const [filterPlanId, setFilterPlanId] = useState('')
-  const [filterStatus, setFilterStatus] = useState('')
+  const [filterPlanId, setFilterPlanId] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
 
-  if (!user) return <p className="text-sm text-slate-400">Loading…</p>
+  if (!user) return <p className="text-sm text-slate-400">Loading…</p>;
   if (!canManage) {
-    return (
-      <Navigate to="/dashboard" replace />
-    )
+    return <Navigate to="/dashboard" replace />;
   }
 
   const handleCreatePlan = async () => {
     if (!createForm.name.trim()) {
-      addToast({ message: 'Plan name is required', type: 'error' })
-      return
+      addToast({ message: "Plan name is required", type: "error" });
+      return;
     }
-    setSaving(true)
+    setSaving(true);
     try {
-      const res = await createPlan({ variables: planFormToVars(createForm) })
-      const payload = res.data?.createMembershipPlan
-      if (payload?.errors?.length) throw new Error(payload.errors.join(', '))
-      addToast({ message: 'Plan created', type: 'success' })
-      setShowCreate(false)
-      setCreateForm(EMPTY_PLAN_FORM)
-      refetchPlans()
+      const res = await createPlan({ variables: planFormToVars(createForm) });
+      const payload = res.data?.createMembershipPlan;
+      if (payload?.errors?.length) throw new Error(payload.errors.join(", "));
+      addToast({ message: "Plan created", type: "success" });
+      setShowCreate(false);
+      setCreateForm(EMPTY_PLAN_FORM);
+      refetchPlans();
     } catch (e) {
-      addToast({ message: e.message || 'Failed to create plan', type: 'error' })
+      addToast({
+        message: e.message || "Failed to create plan",
+        type: "error",
+      });
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const startEdit = (plan) => {
-    setEditingPlanId(plan.id)
-    setEditForm(planToForm(plan))
-  }
+    setEditingPlanId(plan.id);
+    setEditForm(planToForm(plan));
+  };
 
   const handleUpdatePlan = async () => {
-    setSaving(true)
+    setSaving(true);
     try {
-      const res = await updatePlan({ variables: { id: editingPlanId, ...planFormToVars(editForm) } })
-      const payload = res.data?.updateMembershipPlan
-      if (payload?.errors?.length) throw new Error(payload.errors.join(', '))
-      addToast({ message: 'Plan updated', type: 'success' })
-      setEditingPlanId(null)
-      refetchPlans()
+      const res = await updatePlan({
+        variables: { id: editingPlanId, ...planFormToVars(editForm) },
+      });
+      const payload = res.data?.updateMembershipPlan;
+      if (payload?.errors?.length) throw new Error(payload.errors.join(", "));
+      addToast({ message: "Plan updated", type: "success" });
+      setEditingPlanId(null);
+      refetchPlans();
     } catch (e) {
-      addToast({ message: e.message || 'Failed to update plan', type: 'error' })
+      addToast({
+        message: e.message || "Failed to update plan",
+        type: "error",
+      });
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handleDeletePlan = async (id) => {
-    if (!window.confirm('Delete this plan? This cannot be undone.')) return
+    if (!window.confirm("Delete this plan? This cannot be undone.")) return;
     try {
-      const res = await deletePlan({ variables: { id } })
-      const payload = res.data?.deleteMembershipPlan
-      if (!payload?.success) throw new Error((payload?.errors || ['Delete failed']).join(', '))
-      addToast({ message: 'Plan deleted', type: 'success' })
-      refetchPlans()
+      const res = await deletePlan({ variables: { id } });
+      const payload = res.data?.deleteMembershipPlan;
+      if (!payload?.success)
+        throw new Error((payload?.errors || ["Delete failed"]).join(", "));
+      addToast({ message: "Plan deleted", type: "success" });
+      refetchPlans();
     } catch (e) {
-      addToast({ message: e.message || 'Delete failed', type: 'error' })
+      addToast({ message: e.message || "Delete failed", type: "error" });
     }
-  }
+  };
 
   const handleToggleActive = async (plan) => {
     try {
-      const res = await updatePlan({ variables: { id: plan.id, active: !plan.active } })
-      const payload = res.data?.updateMembershipPlan
-      if (payload?.errors?.length) throw new Error(payload.errors.join(', '))
-      addToast({ message: plan.active ? 'Plan unpublished' : 'Plan published', type: 'success' })
-      refetchPlans()
+      const res = await updatePlan({
+        variables: { id: plan.id, active: !plan.active },
+      });
+      const payload = res.data?.updateMembershipPlan;
+      if (payload?.errors?.length) throw new Error(payload.errors.join(", "));
+      addToast({
+        message: plan.active ? "Plan unpublished" : "Plan published",
+        type: "success",
+      });
+      refetchPlans();
     } catch (e) {
-      addToast({ message: e.message || 'Could not update', type: 'error' })
+      addToast({ message: e.message || "Could not update", type: "error" });
     }
-  }
+  };
 
-  const handleEnroll = async ({ clientId, membershipPlanId, startedAt, notes }) => {
+  const handleEnroll = async ({
+    clientId,
+    membershipPlanId,
+    startedAt,
+    notes,
+  }) => {
     try {
       const res = await enrollClient({
-        variables: { clientId, membershipPlanId, startedAt, notes: notes || null },
-      })
-      const payload = res.data?.enrollClientMembership
-      if (payload?.errors?.length) throw new Error(payload.errors.join(', '))
-      addToast({ message: 'Client enrolled', type: 'success' })
-      setShowEnrollModal(false)
-      refetchEnrollments()
+        variables: {
+          clientId,
+          membershipPlanId,
+          startedAt,
+          notes: notes || null,
+        },
+      });
+      const payload = res.data?.enrollClientMembership;
+      if (payload?.errors?.length) throw new Error(payload.errors.join(", "));
+      addToast({ message: "Client enrolled", type: "success" });
+      setShowEnrollModal(false);
+      refetchEnrollments();
     } catch (e) {
-      addToast({ message: e.message || 'Enroll failed', type: 'error' })
+      addToast({ message: e.message || "Enroll failed", type: "error" });
     }
-  }
+  };
 
   const handleUpdateStatus = async (id, status) => {
     try {
-      const res = await updateEnrollment({ variables: { id, status } })
-      const payload = res.data?.updateClientMembership
-      if (payload?.errors?.length) throw new Error(payload.errors.join(', '))
-      addToast({ message: 'Membership updated', type: 'success' })
-      refetchEnrollments()
+      const res = await updateEnrollment({ variables: { id, status } });
+      const payload = res.data?.updateClientMembership;
+      if (payload?.errors?.length) throw new Error(payload.errors.join(", "));
+      addToast({ message: "Membership updated", type: "success" });
+      refetchEnrollments();
     } catch (e) {
-      addToast({ message: e.message || 'Update failed', type: 'error' })
+      addToast({ message: e.message || "Update failed", type: "error" });
     }
-  }
+  };
 
   const filteredEnrollments = enrollments.filter((e) => {
-    if (filterPlanId && e.membershipPlan?.id !== filterPlanId) return false
-    if (filterStatus && e.status !== filterStatus) return false
-    return true
-  })
+    if (filterPlanId && e.membershipPlan?.id !== filterPlanId) return false;
+    if (filterStatus && e.status !== filterStatus) return false;
+    return true;
+  });
 
   return (
     <div className="flex w-full flex-col gap-4">
       {/* Header */}
       <header className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-50">Memberships</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-50">
+            Memberships
+          </h1>
           <p className="text-sm text-slate-400">
             Auto-renewing monthly plans with a 3-month minimum commitment.
           </p>
@@ -516,16 +587,16 @@ export default function OwnerMembershipsPage() {
       {/* Tabs */}
       <div className="flex gap-1 border-b border-slate-800 pb-0">
         {[
-          ['plans', 'Plans'],
-          ['members', `Members (${enrollments.length})`],
+          ["plans", "Plans"],
+          ["members", `Members (${enrollments.length})`],
         ].map(([key, label]) => (
           <button
             key={key}
             onClick={() => setTab(key)}
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition ${
               tab === key
-                ? 'border-sky-500 text-sky-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? "border-sky-500 text-sky-400"
+                : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
             {label}
@@ -534,7 +605,7 @@ export default function OwnerMembershipsPage() {
       </div>
 
       {/* PLANS TAB */}
-      {tab === 'plans' && (
+      {tab === "plans" && (
         <div className="flex flex-col gap-4">
           {/* Create toggle */}
           {!showCreate && !editingPlanId && (
@@ -578,7 +649,8 @@ export default function OwnerMembershipsPage() {
           )}
           {!plansLoading && plans.length === 0 && (
             <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-8 text-center text-sm text-slate-400">
-              No membership plans yet. Click <strong>+ New Plan</strong> to create your first one.
+              No membership plans yet. Click <strong>+ New Plan</strong> to
+              create your first one.
             </div>
           )}
 
@@ -590,7 +662,9 @@ export default function OwnerMembershipsPage() {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <div className="text-base font-semibold text-slate-100">{plan.name}</div>
+                    <div className="text-base font-semibold text-slate-100">
+                      {plan.name}
+                    </div>
                     <div className="text-xl font-bold text-sky-400 mt-0.5">
                       ${dollarsFromCents(plan.priceCents)}
                       <span className="text-xs font-normal text-slate-500 ml-1">
@@ -601,11 +675,11 @@ export default function OwnerMembershipsPage() {
                   <span
                     className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
                       plan.active
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                        : 'bg-slate-700/50 text-slate-400 border border-slate-700'
+                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                        : "bg-slate-700/50 text-slate-400 border border-slate-700"
                     }`}
                   >
-                    {plan.active ? 'Published' : 'Draft'}
+                    {plan.active ? "Published" : "Draft"}
                   </span>
                 </div>
 
@@ -615,32 +689,53 @@ export default function OwnerMembershipsPage() {
 
                 <ul className="space-y-1 text-xs text-slate-300">
                   <li>
-                    🏋️ <strong>
-                      {plan.reformerClassesPerMonth == null ? 'Unlimited' : plan.reformerClassesPerMonth}
-                    </strong> Reformer classes/mo
+                    🏋️{" "}
+                    <strong>
+                      {plan.reformerClassesPerMonth == null
+                        ? "Unlimited"
+                        : plan.reformerClassesPerMonth}
+                    </strong>{" "}
+                    Reformer classes/mo
                   </li>
-                  {(plan.matClassesPerMonth != null || plan.matClassesPerMonth === null) &&
+                  {(plan.matClassesPerMonth != null ||
+                    plan.matClassesPerMonth === null) &&
                     plan.matClassesPerMonth !== undefined && (
                       <li>
-                        🧘 <strong>
-                          {plan.matClassesPerMonth == null ? 'Unlimited' : plan.matClassesPerMonth}
-                        </strong> Mat/Barre/Yoga/mo
+                        🧘{" "}
+                        <strong>
+                          {plan.matClassesPerMonth == null
+                            ? "Unlimited"
+                            : plan.matClassesPerMonth}
+                        </strong>{" "}
+                        Mat/Barre/Yoga/mo
                       </li>
                     )}
                   {plan.includesPriorityBooking && <li>⭐ Priority booking</li>}
-                  {plan.includesEarlyBooking && <li>🔓 Early booking access</li>}
+                  {plan.includesEarlyBooking && (
+                    <li>🔓 Early booking access</li>
+                  )}
                   {plan.privateSessionDiscountPercent > 0 && (
-                    <li>💆 {plan.privateSessionDiscountPercent}% off private sessions</li>
+                    <li>
+                      💆 {plan.privateSessionDiscountPercent}% off private
+                      sessions
+                    </li>
                   )}
                   {plan.guestPassesPerMonth > 0 && (
-                    <li>🎟 {plan.guestPassesPerMonth} guest pass{plan.guestPassesPerMonth > 1 ? 'es' : ''}/mo</li>
+                    <li>
+                      🎟 {plan.guestPassesPerMonth} guest pass
+                      {plan.guestPassesPerMonth > 1 ? "es" : ""}/mo
+                    </li>
                   )}
                   {plan.includesRetailDiscount && <li>🛍 Retail discount</li>}
-                  <li>📅 {plan.minCommitmentMonths}-month minimum • {plan.autoRenew ? 'Auto-renew' : 'No auto-renew'}</li>
+                  <li>
+                    📅 {plan.minCommitmentMonths}-month minimum •{" "}
+                    {plan.autoRenew ? "Auto-renew" : "No auto-renew"}
+                  </li>
                 </ul>
 
                 <div className="text-xs text-slate-500 mt-auto">
-                  {plan.enrolledCount} active member{plan.enrolledCount !== 1 ? 's' : ''}
+                  {plan.enrolledCount} active member
+                  {plan.enrolledCount !== 1 ? "s" : ""}
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap pt-1">
@@ -654,11 +749,11 @@ export default function OwnerMembershipsPage() {
                     onClick={() => handleToggleActive(plan)}
                     className={`rounded border px-2 py-1 text-xs ${
                       plan.active
-                        ? 'border-amber-600 text-amber-400 hover:bg-amber-600/10'
-                        : 'border-emerald-600 text-emerald-400 hover:bg-emerald-600/10'
+                        ? "border-amber-600 text-amber-400 hover:bg-amber-600/10"
+                        : "border-emerald-600 text-emerald-400 hover:bg-emerald-600/10"
                     }`}
                   >
-                    {plan.active ? 'Unpublish' : 'Publish'}
+                    {plan.active ? "Unpublish" : "Publish"}
                   </button>
                   <button
                     onClick={() => handleDeletePlan(plan.id)}
@@ -674,7 +769,7 @@ export default function OwnerMembershipsPage() {
       )}
 
       {/* MEMBERS TAB */}
-      {tab === 'members' && (
+      {tab === "members" && (
         <div className="flex flex-col gap-4">
           {/* Controls */}
           <div className="flex flex-wrap items-center gap-3">
@@ -691,7 +786,9 @@ export default function OwnerMembershipsPage() {
             >
               <option value="">All plans</option>
               {plans.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
               ))}
             </select>
             <select
@@ -700,14 +797,21 @@ export default function OwnerMembershipsPage() {
               onChange={(e) => setFilterStatus(e.target.value)}
             >
               <option value="">All statuses</option>
-              {['active', 'paused', 'cancelled', 'expired'].map((s) => (
-                <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+              {["active", "paused", "cancelled", "expired"].map((s) => (
+                <option key={s} value={s}>
+                  {s.charAt(0).toUpperCase() + s.slice(1)}
+                </option>
               ))}
             </select>
-            <span className="text-sm text-slate-400 ml-auto">{filteredEnrollments.length} result{filteredEnrollments.length !== 1 ? 's' : ''}</span>
+            <span className="text-sm text-slate-400 ml-auto">
+              {filteredEnrollments.length} result
+              {filteredEnrollments.length !== 1 ? "s" : ""}
+            </span>
           </div>
 
-          {enrollmentsLoading && <p className="text-sm text-slate-400">Loading…</p>}
+          {enrollmentsLoading && (
+            <p className="text-sm text-slate-400">Loading…</p>
+          )}
           {!enrollmentsLoading && filteredEnrollments.length === 0 && (
             <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-8 text-center text-sm text-slate-400">
               No members yet. Click <strong>+ Enroll Client</strong> to add one.
@@ -729,53 +833,75 @@ export default function OwnerMembershipsPage() {
                 </thead>
                 <tbody>
                   {filteredEnrollments.map((m) => (
-                    <tr key={m.id} className="border-b border-slate-800/50 hover:bg-slate-900/40">
+                    <tr
+                      key={m.id}
+                      className="border-b border-slate-800/50 hover:bg-slate-900/40"
+                    >
                       <td className="px-4 py-3">
-                        <div className="font-medium text-slate-100">{m.client?.name}</div>
-                        <div className="text-xs text-slate-500">{m.client?.email}</div>
+                        <div className="font-medium text-slate-100">
+                          {m.client?.name}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {m.client?.email}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <div>{m.membershipPlan?.name}</div>
                         <div className="text-xs text-slate-500">
-                          ${dollarsFromCents(m.membershipPlan?.priceCents)}/{m.membershipPlan?.currency?.toUpperCase()}/mo
+                          ${dollarsFromCents(m.membershipPlan?.priceCents)}/
+                          {m.membershipPlan?.currency?.toUpperCase()}/mo
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[m.status] || ''}`}>
+                        <span
+                          className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[m.status] || ""}`}
+                        >
                           {m.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-xs">{m.startedAt ? new Date(m.startedAt).toLocaleDateString() : '—'}</td>
-                      <td className="px-4 py-3 text-xs">{m.endsAt ? new Date(m.endsAt).toLocaleDateString() : '—'}</td>
+                      <td className="px-4 py-3 text-xs">
+                        {m.startedAt
+                          ? new Date(m.startedAt).toLocaleDateString()
+                          : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-xs">
+                        {m.endsAt
+                          ? new Date(m.endsAt).toLocaleDateString()
+                          : "—"}
+                      </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 flex-wrap">
-                          {m.status === 'active' && (
+                          {m.status === "active" && (
                             <>
                               <button
-                                onClick={() => handleUpdateStatus(m.id, 'paused')}
+                                onClick={() =>
+                                  handleUpdateStatus(m.id, "paused")
+                                }
                                 className="rounded border border-amber-600 px-2 py-0.5 text-xs text-amber-400 hover:bg-amber-600/10"
                               >
                                 Pause
                               </button>
                               <button
-                                onClick={() => handleUpdateStatus(m.id, 'cancelled')}
+                                onClick={() =>
+                                  handleUpdateStatus(m.id, "cancelled")
+                                }
                                 className="rounded border border-red-700 px-2 py-0.5 text-xs text-red-400 hover:bg-red-700/10"
                               >
                                 Cancel
                               </button>
                             </>
                           )}
-                          {m.status === 'paused' && (
+                          {m.status === "paused" && (
                             <button
-                              onClick={() => handleUpdateStatus(m.id, 'active')}
+                              onClick={() => handleUpdateStatus(m.id, "active")}
                               className="rounded border border-emerald-600 px-2 py-0.5 text-xs text-emerald-400 hover:bg-emerald-600/10"
                             >
                               Reactivate
                             </button>
                           )}
-                          {m.status === 'cancelled' && (
+                          {m.status === "cancelled" && (
                             <button
-                              onClick={() => handleUpdateStatus(m.id, 'active')}
+                              onClick={() => handleUpdateStatus(m.id, "active")}
                               className="rounded border border-emerald-600 px-2 py-0.5 text-xs text-emerald-400 hover:bg-emerald-600/10"
                             >
                               Reactivate
@@ -801,5 +927,5 @@ export default function OwnerMembershipsPage() {
         />
       )}
     </div>
-  )
+  );
 }

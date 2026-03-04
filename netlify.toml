@@ -23,11 +23,34 @@ X-Content-Type-Options = "nosniff"
 X-XSS-Protection = "1; mode=block"
 Referrer-Policy = "strict-origin-when-cross-origin"
 
-# Cache static assets
+# Cache static assets (JS/CSS bundles — content-hashed)
 [[headers]]
 for = "/assets/*"
 [headers.values]
 Cache-Control = "public, max-age=31536000, immutable"
+
+# Cache icon PNGs / SVG long-term (versioned via filename when updated)
+[[headers]]
+for = "/*.png"
+[headers.values]
+Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
+
+[[headers]]
+for = "/*.svg"
+[headers.values]
+Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
+
+[[headers]]
+for = "/*.ico"
+[headers.values]
+Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
+
+# Web app manifest — short cache so theme/icon updates are picked up quickly
+[[headers]]
+for = "/manifest.webmanifest"
+[headers.values]
+Content-Type = "application/manifest+json"
+Cache-Control = "public, max-age=86400"
 
 # Production
 [context.production]

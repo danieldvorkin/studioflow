@@ -1,143 +1,205 @@
-import { useMutation, gql } from '@apollo/client'
-import client from '../apollo/client'
-import { useForm } from 'react-hook-form'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { useGoogleLogin } from '@react-oauth/google'
-import { SIGN_IN_WITH_GOOGLE } from '../apollo/mutations'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../auth/AuthProvider'
-import DevSeedLoginButtons from '../auth/DevSeedLoginButtons'
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { useMutation, gql } from "@apollo/client";
+import client from "../apollo/client";
+import { useForm } from "react-hook-form";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useGoogleLogin } from "@react-oauth/google";
+import { SIGN_IN_WITH_GOOGLE } from "../apollo/mutations";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthProvider";
+import DevSeedLoginButtons from "../auth/DevSeedLoginButtons";
 
 const SIGN_IN = gql`
   mutation SignIn($email: String!, $password: String!) {
     signIn(input: { email: $email, password: $password }) {
       token
-      user { id email name role roleName active availableForSessions }
+      user {
+        id
+        email
+        name
+        role
+        roleName
+        active
+        availableForSessions
+      }
       errors
     }
   }
-`
+`;
 
 export default function SignIn() {
-  const [signInWithGoogle] = useMutation(SIGN_IN_WITH_GOOGLE)
-  const [error, setError] = useState(null)
-  const [googleStarting, setGoogleStarting] = useState(false)
-  const [signIn, { loading }] = useMutation(SIGN_IN)
-  const navigate = useNavigate()
-  const location = useLocation()
-  const auth = useAuth()
-  const didConsumeDevSeed = useRef(false)
+  useDocumentTitle("Sign In");
+  const [signInWithGoogle] = useMutation(SIGN_IN_WITH_GOOGLE);
+  const [error, setError] = useState(null);
+  const [googleStarting, setGoogleStarting] = useState(false);
+  const [signIn, { loading }] = useMutation(SIGN_IN);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const auth = useAuth();
+  const didConsumeDevSeed = useRef(false);
 
-  const devSeedAccount = (import.meta.env.DEV && location?.state?.devSeed?.email && location?.state?.devSeed?.password)
-    ? location.state.devSeed
-    : null
+  const devSeedAccount =
+    import.meta.env.DEV &&
+    location?.state?.devSeed?.email &&
+    location?.state?.devSeed?.password
+      ? location.state.devSeed
+      : null;
 
   const { register, handleSubmit, setValue } = useForm({
     defaultValues: devSeedAccount
       ? { email: devSeedAccount.email, password: devSeedAccount.password }
       : undefined,
-  })
+  });
 
-  const onSubmit = useCallback(async (data) => {
-    setError(null)
-    try {
-      const res = await signIn({ variables: data })
-      const payload = res?.data?.signIn
-      if (payload?.token) {
-        try {
-          if (payload.user) {
-            try { localStorage.setItem('pilates_user', JSON.stringify(payload.user)) } catch (e) { void e }
+  const onSubmit = useCallback(
+    async (data) => {
+      setError(null);
+      try {
+        const res = await signIn({ variables: data });
+        const payload = res?.data?.signIn;
+        if (payload?.token) {
+          try {
+            if (payload.user) {
+              try {
+                localStorage.setItem(
+                  "pilates_user",
+                  JSON.stringify(payload.user),
+                );
+              } catch (e) {
+                void e;
+              }
+            }
+            await auth.signInWithToken(payload.token, payload.user || null);
+            try {
+              await client.resetStore();
+            } catch (e) {
+              void e;
+            }
+            navigate("/dashboard");
+          } catch (e) {
+            void e;
+            setError("Sign-in succeeded but fetching user failed");
           }
-          await auth.signInWithToken(payload.token, payload.user || null)
-          try { await client.resetStore() } catch (e) { void e }
-          navigate('/dashboard')
-        } catch (e) {
-          void e
-          setError('Sign-in succeeded but fetching user failed')
+        } else {
+          setError(
+            (payload && payload.errors && payload.errors.join(", ")) ||
+              "Sign in failed",
+          );
         }
-      } else {
-        setError((payload && payload.errors && payload.errors.join(', ')) || 'Sign in failed')
+      } catch (e) {
+        setError(e.message);
       }
-    } catch (e) {
-      setError(e.message)
-    }
-  }, [auth, navigate, signIn])
+    },
+    [auth, navigate, signIn],
+  );
 
-  const onPickDevSeed = useCallback((account) => {
-    if (!account) return
-    setError(null)
-    setValue('email', account.email, { shouldDirty: true, shouldTouch: true, shouldValidate: true })
-    setValue('password', account.password, { shouldDirty: true, shouldTouch: true, shouldValidate: true })
-    queueMicrotask(() => handleSubmit(onSubmit)())
-  }, [handleSubmit, onSubmit, setValue])
+  const onPickDevSeed = useCallback(
+    (account) => {
+      if (!account) return;
+      setError(null);
+      setValue("email", account.email, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+      setValue("password", account.password, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+      queueMicrotask(() => handleSubmit(onSubmit)());
+    },
+    [handleSubmit, onSubmit, setValue],
+  );
 
   useEffect(() => {
-    if (!import.meta.env.DEV) return
-    if (didConsumeDevSeed.current) return
-    if (!devSeedAccount?.email || !devSeedAccount?.password) return
+    if (!import.meta.env.DEV) return;
+    if (didConsumeDevSeed.current) return;
+    if (!devSeedAccount?.email || !devSeedAccount?.password) return;
 
-    didConsumeDevSeed.current = true
+    didConsumeDevSeed.current = true;
     setTimeout(() => {
-      handleSubmit(onSubmit)()
-    }, 0)
+      handleSubmit(onSubmit)();
+    }, 0);
     // Clear state so we don't re-trigger on refresh/back
-    navigate(location.pathname, { replace: true, state: null })
-  }, [devSeedAccount?.email, devSeedAccount?.password, handleSubmit, location.pathname, navigate, onSubmit])
+    navigate(location.pathname, { replace: true, state: null });
+  }, [
+    devSeedAccount?.email,
+    devSeedAccount?.password,
+    handleSubmit,
+    location.pathname,
+    navigate,
+    onSubmit,
+  ]);
 
   const handleGoogleAccessToken = async (accessToken) => {
-    setError(null)
+    setError(null);
     if (!accessToken) {
-      setError('No Google access token received')
-      return
+      setError("No Google access token received");
+      return;
     }
     try {
-      const res = await signInWithGoogle({ variables: { accessToken } })
-      const payload = res?.data?.signInWithGoogle
+      const res = await signInWithGoogle({ variables: { accessToken } });
+      const payload = res?.data?.signInWithGoogle;
       if (payload?.token) {
         try {
           if (payload.user) {
-            try { localStorage.setItem('pilates_user', JSON.stringify(payload.user)) } catch (e) { void e }
+            try {
+              localStorage.setItem(
+                "pilates_user",
+                JSON.stringify(payload.user),
+              );
+            } catch (e) {
+              void e;
+            }
           }
-          await auth.signInWithToken(payload.token, payload.user || null)
-          try { await client.resetStore() } catch (e) { void e }
-          navigate('/dashboard')
+          await auth.signInWithToken(payload.token, payload.user || null);
+          try {
+            await client.resetStore();
+          } catch (e) {
+            void e;
+          }
+          navigate("/dashboard");
         } catch (e) {
-          void e
-          setError('Google sign-in succeeded but fetching user failed')
+          void e;
+          setError("Google sign-in succeeded but fetching user failed");
         }
       } else {
-        setError((payload && payload.errors && payload.errors.join(', ')) || 'Google sign-in failed')
+        setError(
+          (payload && payload.errors && payload.errors.join(", ")) ||
+            "Google sign-in failed",
+        );
       }
     } catch (e) {
-      console.error('Google sign-in error', e)
-      setError(e.message || 'Google sign-in error')
+      console.error("Google sign-in error", e);
+      setError(e.message || "Google sign-in error");
     }
-  }
+  };
 
   const startGoogleLogin = useGoogleLogin({
-    flow: 'implicit',
-    scope: 'openid email profile',
-    ux_mode: 'popup',
+    flow: "implicit",
+    scope: "openid email profile",
+    ux_mode: "popup",
     onSuccess: async (codeResponse) => {
-      setGoogleStarting(false)
-      await handleGoogleAccessToken(codeResponse?.access_token)
+      setGoogleStarting(false);
+      await handleGoogleAccessToken(codeResponse?.access_token);
     },
     onError: () => {
-      setGoogleStarting(false)
-      setError('Google sign-in failed')
+      setGoogleStarting(false);
+      setError("Google sign-in failed");
     },
-  })
+  });
 
   const onGoogleClick = () => {
-    setError(null)
-    setGoogleStarting(true)
+    setError(null);
+    setGoogleStarting(true);
     try {
-      startGoogleLogin()
+      startGoogleLogin();
     } catch (e) {
-      setGoogleStarting(false)
-      setError(e?.message || 'Google sign-in failed')
+      setGoogleStarting(false);
+      setError(e?.message || "Google sign-in failed");
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-slate-950">
@@ -161,49 +223,61 @@ export default function SignIn() {
                 StudioFlow
               </div>
               <h2 className="text-xl font-semibold text-slate-50">Sign in</h2>
-              <p className="mt-1 text-xs text-slate-400">Access your classes, clients, and schedule.</p>
+              <p className="mt-1 text-xs text-slate-400">
+                Access your classes, clients, and schedule.
+              </p>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 text-sm">
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="space-y-4 text-sm"
+            >
               <div className="space-y-1">
-                <label className="block text-xs font-medium text-slate-300">Email</label>
+                <label className="block text-xs font-medium text-slate-300">
+                  Email
+                </label>
                 <input
-                  {...register('email')}
+                  {...register("email")}
                   type="email"
                   required
                   className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none ring-0 focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                 />
               </div>
               <div className="space-y-1">
-                <label className="block text-xs font-medium text-slate-300">Password</label>
+                <label className="block text-xs font-medium text-slate-300">
+                  Password
+                </label>
                 <input
-                  {...register('password')}
+                  {...register("password")}
                   type="password"
                   required
                   className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none ring-0 focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                 />
               </div>
-              {error && (
-                <p className="text-xs text-rose-400">{error}</p>
-              )}
+              {error && <p className="text-xs text-rose-400">{error}</p>}
               <button
                 type="submit"
                 disabled={loading}
                 className="flex w-full items-center justify-center rounded-lg bg-sky-500 px-3 py-2 text-sm font-semibold text-on-accent hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {loading ? 'Signing in…' : 'Sign In'}
+                {loading ? "Signing in…" : "Sign In"}
               </button>
             </form>
 
             {import.meta.env.DEV && (
               <div className="mt-4 md:hidden">
-                <DevSeedLoginButtons busy={loading || googleStarting} onPick={onPickDevSeed} />
+                <DevSeedLoginButtons
+                  busy={loading || googleStarting}
+                  onPick={onPickDevSeed}
+                />
               </div>
             )}
 
             <div className="my-4 flex items-center gap-3">
               <div className="h-px flex-1 bg-slate-800" />
-              <span className="text-[10px] uppercase tracking-[0.2em] text-slate-500">or</span>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
+                or
+              </span>
               <div className="h-px flex-1 bg-slate-800" />
             </div>
 
@@ -220,19 +294,21 @@ export default function SignIn() {
                 >
                   G
                 </span>
-                {googleStarting ? 'Opening Google…' : 'Continue with Google'}
+                {googleStarting ? "Opening Google…" : "Continue with Google"}
               </button>
             </div>
 
             <div className="mt-4 text-center text-xs text-slate-400">
-              Don’t have an account?{' '}
-              <Link to="/signup" className="text-slate-200 hover:text-white">Sign up</Link>
+              Don’t have an account?{" "}
+              <Link to="/signup" className="text-slate-200 hover:text-white">
+                Sign up
+              </Link>
             </div>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function AuthMarketingPanel({ children }) {
@@ -262,7 +338,7 @@ function AuthMarketingPanel({ children }) {
             viewBox="0 0 900 700"
             className="h-full w-full max-w-2xl"
             aria-hidden="true"
-            style={{ pointerEvents: 'none' }}
+            style={{ pointerEvents: "none" }}
           >
             <defs>
               <linearGradient id="sf" x1="0" x2="1" y1="0" y2="1">
@@ -286,9 +362,27 @@ function AuthMarketingPanel({ children }) {
                 strokeWidth="12"
                 strokeLinecap="round"
               />
-              <circle cx="260" cy="250" r="70" fill="currentColor" opacity="0.06" />
-              <circle cx="610" cy="390" r="110" fill="currentColor" opacity="0.05" />
-              <circle cx="720" cy="190" r="60" fill="currentColor" opacity="0.06" />
+              <circle
+                cx="260"
+                cy="250"
+                r="70"
+                fill="currentColor"
+                opacity="0.06"
+              />
+              <circle
+                cx="610"
+                cy="390"
+                r="110"
+                fill="currentColor"
+                opacity="0.05"
+              />
+              <circle
+                cx="720"
+                cy="190"
+                r="60"
+                fill="currentColor"
+                opacity="0.06"
+              />
               <path
                 d="M280 460h340"
                 stroke="currentColor"
@@ -304,7 +398,6 @@ function AuthMarketingPanel({ children }) {
                 strokeLinecap="round"
               />
             </g>
-
           </svg>
         </div>
 
@@ -319,5 +412,5 @@ function AuthMarketingPanel({ children }) {
         </div>
       </div>
     </div>
-  )
+  );
 }

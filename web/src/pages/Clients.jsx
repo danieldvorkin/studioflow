@@ -1,38 +1,45 @@
-import { useMutation, useQuery } from '@apollo/client'
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { CURRENT_USER, CLIENTS } from '../apollo/queries'
-import { UPDATE_CLIENT, DELETE_CLIENT, TOGGLE_CLIENT_BLOCK, START_IMPERSONATION } from '../apollo/mutations'
-import { useToast } from '../components/ToastProvider'
-import { useAuth } from '../auth/AuthProvider'
-import InviteClientModal from '../components/InviteClientModal'
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { useMutation, useQuery } from "@apollo/client";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { CURRENT_USER, CLIENTS } from "../apollo/queries";
+import {
+  UPDATE_CLIENT,
+  DELETE_CLIENT,
+  TOGGLE_CLIENT_BLOCK,
+  START_IMPERSONATION,
+} from "../apollo/mutations";
+import { useToast } from "../components/ToastProvider";
+import { useAuth } from "../auth/AuthProvider";
+import InviteClientModal from "../components/InviteClientModal";
 
 export default function ClientsPage() {
-  const { data: userData } = useQuery(CURRENT_USER)
-  const user = userData?.currentUser
-  const role = (user?.roleName || '').toString().toLowerCase()
-  const isGodmode = user?.godmode === true || role === 'godmode'
-  const isOwner = isGodmode || role === 'owner' || user?.role === 0
-  const isInstructor = isGodmode || role === 'instructor'
+  useDocumentTitle("Clients");
+  const { data: userData } = useQuery(CURRENT_USER);
+  const user = userData?.currentUser;
+  const role = (user?.roleName || "").toString().toLowerCase();
+  const isGodmode = user?.godmode === true || role === "godmode";
+  const isOwner = isGodmode || role === "owner" || user?.role === 0;
+  const isInstructor = isGodmode || role === "instructor";
 
   const { data, loading, error } = useQuery(CLIENTS, {
     skip: !user,
-    fetchPolicy: 'cache-and-network',
-    nextFetchPolicy: 'cache-first',
-  })
+    fetchPolicy: "cache-and-network",
+    nextFetchPolicy: "cache-first",
+  });
 
-  const [updateClient] = useMutation(UPDATE_CLIENT)
-  const [toggleBlock] = useMutation(TOGGLE_CLIENT_BLOCK)
-  const [deleteClient] = useMutation(DELETE_CLIENT)
-  const [startImpersonation] = useMutation(START_IMPERSONATION)
-  const { addToast } = useToast()
-  const auth = useAuth()
-  const [editingId, setEditingId] = useState(null)
-  const [editForm, setEditForm] = useState({ name: '', email: '', phone: '' })
-  const [showInviteModal, setShowInviteModal] = useState(false)
+  const [updateClient] = useMutation(UPDATE_CLIENT);
+  const [toggleBlock] = useMutation(TOGGLE_CLIENT_BLOCK);
+  const [deleteClient] = useMutation(DELETE_CLIENT);
+  const [startImpersonation] = useMutation(START_IMPERSONATION);
+  const { addToast } = useToast();
+  const auth = useAuth();
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({ name: "", email: "", phone: "" });
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   if (!user) {
-    return <p className="text-sm text-slate-400">Sign in to view clients.</p>
+    return <p className="text-sm text-slate-400">Sign in to view clients.</p>;
   }
 
   if (!isOwner && !isInstructor) {
@@ -43,76 +50,100 @@ export default function ClientsPage() {
           Only owners and instructors can view the client list.
         </p>
       </div>
-    )
+    );
   }
 
-  const clients = data?.clients || []
+  const clients = data?.clients || [];
 
   const startEdit = (c) => {
-    setEditingId(c.id)
-    setEditForm({ name: c.name || '', email: c.email || '', phone: c.phone || '' })
-  }
+    setEditingId(c.id);
+    setEditForm({
+      name: c.name || "",
+      email: c.email || "",
+      phone: c.phone || "",
+    });
+  };
 
   const cancelEdit = () => {
-    setEditingId(null)
-  }
+    setEditingId(null);
+  };
 
   const submitEdit = async (id) => {
     try {
-      const res = await updateClient({ variables: { id, ...editForm } })
-      const payload = res.data?.updateClient
-      const errors = payload?.errors || []
-      if (errors.length || !payload?.client) throw new Error(errors.join(', ') || 'Could not update client')
-      addToast({ message: 'Client updated', type: 'success' })
-      setEditingId(null)
+      const res = await updateClient({ variables: { id, ...editForm } });
+      const payload = res.data?.updateClient;
+      const errors = payload?.errors || [];
+      if (errors.length || !payload?.client)
+        throw new Error(errors.join(", ") || "Could not update client");
+      addToast({ message: "Client updated", type: "success" });
+      setEditingId(null);
     } catch (e) {
-      addToast({ message: e.message || 'Update failed', type: 'error' })
+      addToast({ message: e.message || "Update failed", type: "error" });
     }
-  }
+  };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this client? This will also remove their bookings.')) return
+    if (
+      !window.confirm(
+        "Delete this client? This will also remove their bookings.",
+      )
+    )
+      return;
     try {
-      const res = await deleteClient({ variables: { id } })
-      const payload = res.data?.deleteClient
-      if (!payload?.success) throw new Error((payload?.errors || ['Delete failed']).join(', '))
-      addToast({ message: 'Client deleted', type: 'success' })
+      const res = await deleteClient({ variables: { id } });
+      const payload = res.data?.deleteClient;
+      if (!payload?.success)
+        throw new Error((payload?.errors || ["Delete failed"]).join(", "));
+      addToast({ message: "Client deleted", type: "success" });
     } catch (e) {
-      addToast({ message: e.message || 'Delete failed', type: 'error' })
+      addToast({ message: e.message || "Delete failed", type: "error" });
     }
-  }
+  };
 
   const handleViewAsClient = async (client) => {
     if (!client?.user?.id) {
-      addToast({ message: 'This client does not have a login user.', type: 'error' })
-      return
+      addToast({
+        message: "This client does not have a login user.",
+        type: "error",
+      });
+      return;
     }
-    if (client.user.id === user?.id) return
+    if (client.user.id === user?.id) return;
 
     try {
-      const res = await startImpersonation({ variables: { userId: client.user.id } })
-      const payload = res.data?.startImpersonation
-      const errors = payload?.errors || []
+      const res = await startImpersonation({
+        variables: { userId: client.user.id },
+      });
+      const payload = res.data?.startImpersonation;
+      const errors = payload?.errors || [];
       if (!payload?.token || errors.length) {
-        addToast({ message: errors.join(', ') || 'Could not start view-as session', type: 'error' })
-        return
+        addToast({
+          message: errors.join(", ") || "Could not start view-as session",
+          type: "error",
+        });
+        return;
       }
 
-      await auth.beginImpersonation(payload.token, payload.user)
+      await auth.beginImpersonation(payload.token, payload.user);
       addToast({
-        message: `Now viewing as ${payload.user?.name || payload.user?.email || 'selected user'}`,
-        type: 'success',
-      })
+        message: `Now viewing as ${payload.user?.name || payload.user?.email || "selected user"}`,
+        type: "success",
+      });
     } catch (e) {
-      addToast({ message: e.message || 'Could not start view-as session', type: 'error' })
+      addToast({
+        message: e.message || "Could not start view-as session",
+        type: "error",
+      });
     }
-  }
+  };
 
   return (
     <div className="flex w-full flex-col gap-4">
       <header className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-50">Clients</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-50">
+            Clients
+          </h1>
           <p className="text-sm text-slate-400">
             View the people who attend your classes.
           </p>
@@ -122,19 +153,27 @@ export default function ClientsPage() {
           onClick={() => setShowInviteModal(true)}
           className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-sky-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-sky-500 transition"
         >
-          <svg className="h-3.5 w-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            className="h-3.5 w-3.5"
+            viewBox="0 0 14 14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <path d="M7 2v10M2 7h10" strokeLinecap="round" />
           </svg>
           Invite client
         </button>
       </header>
-      {showInviteModal && <InviteClientModal onClose={() => setShowInviteModal(false)} />}
+      {showInviteModal && (
+        <InviteClientModal onClose={() => setShowInviteModal(false)} />
+      )}
 
       {loading && <p className="text-sm text-slate-400">Loading clients…</p>}
 
       {!loading && error && (
         <div className="rounded-2xl border border-rose-700/40 bg-rose-950/30 p-4 text-sm text-rose-200">
-          {error.message || 'Could not load clients.'}
+          {error.message || "Could not load clients."}
         </div>
       )}
 
@@ -166,7 +205,9 @@ export default function ClientsPage() {
                         <input
                           className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-sm text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                           value={editForm.name}
-                          onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+                          onChange={(e) =>
+                            setEditForm((f) => ({ ...f, name: e.target.value }))
+                          }
                         />
                       ) : (
                         <Link
@@ -182,7 +223,12 @@ export default function ClientsPage() {
                         <input
                           className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-sm text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                           value={editForm.email}
-                          onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))}
+                          onChange={(e) =>
+                            setEditForm((f) => ({
+                              ...f,
+                              email: e.target.value,
+                            }))
+                          }
                         />
                       ) : (
                         c.email
@@ -193,10 +239,15 @@ export default function ClientsPage() {
                         <input
                           className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-sm text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                           value={editForm.phone}
-                          onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
+                          onChange={(e) =>
+                            setEditForm((f) => ({
+                              ...f,
+                              phone: e.target.value,
+                            }))
+                          }
                         />
                       ) : (
-                        c.phone || '—'
+                        c.phone || "—"
                       )}
                     </td>
                     {isInstructor && (
@@ -206,18 +257,31 @@ export default function ClientsPage() {
                           onClick={async () => {
                             try {
                               const res = await toggleBlock({
-                                variables: { clientId: c.id, blocked: !c.blockedByCurrentInstructor },
-                              })
-                              const errors = res.data?.toggleClientBlock?.errors || []
-                              if (errors.length) throw new Error(errors.join(', '))
-                              addToast({ message: c.blockedByCurrentInstructor ? 'Client unblocked' : 'Client blocked', type: 'success' })
+                                variables: {
+                                  clientId: c.id,
+                                  blocked: !c.blockedByCurrentInstructor,
+                                },
+                              });
+                              const errors =
+                                res.data?.toggleClientBlock?.errors || [];
+                              if (errors.length)
+                                throw new Error(errors.join(", "));
+                              addToast({
+                                message: c.blockedByCurrentInstructor
+                                  ? "Client unblocked"
+                                  : "Client blocked",
+                                type: "success",
+                              });
                             } catch (e) {
-                              addToast({ message: e.message || 'Update failed', type: 'error' })
+                              addToast({
+                                message: e.message || "Update failed",
+                                type: "error",
+                              });
                             }
                           }}
-                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${c.blockedByCurrentInstructor ? 'bg-rose-500/10 text-rose-300' : 'bg-slate-800 text-slate-400'}`}
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${c.blockedByCurrentInstructor ? "bg-rose-500/10 text-rose-300" : "bg-slate-800 text-slate-400"}`}
                         >
-                          {c.blockedByCurrentInstructor ? 'Blocked' : 'Allow'}
+                          {c.blockedByCurrentInstructor ? "Blocked" : "Allow"}
                         </button>
                       </td>
                     )}
@@ -237,8 +301,8 @@ export default function ClientsPage() {
                       </td>
                     )}
                     <td className="px-3 py-2 text-right text-xs">
-                      {(isOwner || isInstructor) && (
-                        editingId === c.id ? (
+                      {(isOwner || isInstructor) &&
+                        (editingId === c.id ? (
                           <div className="flex justify-end gap-2">
                             <button
                               type="button"
@@ -274,8 +338,7 @@ export default function ClientsPage() {
                               </button>
                             )}
                           </div>
-                        )
-                      )}
+                        ))}
                     </td>
                   </tr>
                 ))}
@@ -285,5 +348,5 @@ export default function ClientsPage() {
         </div>
       )}
     </div>
-  )
+  );
 }
