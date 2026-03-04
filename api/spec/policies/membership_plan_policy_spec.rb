@@ -33,23 +33,7 @@ RSpec.describe MembershipPlanPolicy do
   end
 
   describe "staff" do
-    let(:staff_user) { create(:user, :staff, studio: studio) }
-
-    it "allows index? (read plans)" do
-      expect(described_class.new(staff_user, plan).index?).to eq(true)
-    end
-
-    it "denies create?" do
-      expect(described_class.new(staff_user, plan).create?).to eq(false)
-    end
-
-    it "denies update?" do
-      expect(described_class.new(staff_user, plan).update?).to eq(false)
-    end
-
-    it "denies destroy?" do
-      expect(described_class.new(staff_user, plan).destroy?).to eq(false)
-    end
+    include_examples "can manage", :staff
   end
 
   describe "client" do

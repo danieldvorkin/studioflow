@@ -4,10 +4,13 @@ RSpec.describe UserPolicy do
   let(:record) { User.new }
 
   describe 'invite?' do
-    it 'allows owner, staff, and moderator' do
+    it 'allows owner and moderator' do
       expect(described_class.new(create(:user, :owner), record).invite?).to eq(true)
-      expect(described_class.new(create(:user, :staff), record).invite?).to eq(true)
       expect(described_class.new(create(:user, :moderator), record).invite?).to eq(true)
+    end
+
+    it 'denies staff' do
+      expect(described_class.new(create(:user, :staff), record).invite?).to eq(false)
     end
 
     it 'denies instructor and client' do

@@ -4,7 +4,7 @@ class MembershipPlanPolicy < ApplicationPolicy
   end
 
   def create?
-    user && (user.owner? || user.moderator?)
+    user && (user.owner? || user.staff? || user.moderator?)
   end
 
   def update?
