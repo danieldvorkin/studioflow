@@ -626,6 +626,23 @@ export const PLATFORM_PAYMENT_SETTINGS = gql`
   }
 `
 
+export const PLATFORM_STATS = gql`
+  query PlatformStats {
+    platformStats {
+      studiosCount
+      activeSubscriptionsCount
+      totalUsersCount
+      totalClientsCount
+      totalBookingsCount
+      confirmedBookingsCount
+      totalPaymentsCount
+      totalRevenueCents
+      newStudiosThisMonth
+      subscriptionsByTier
+    }
+  }
+`
+
 export const MODERATORS = gql`
   query Moderators {
     moderators {

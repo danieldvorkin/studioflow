@@ -795,6 +795,29 @@ module Types
       scope.order(created_at: :desc)
     end
 
+    # Platform-wide analytics (godmode only)
+    field :platform_stats, Types::PlatformStatsType, null: false,
+      description: "Aggregate platform metrics visible to godmode users only"
+    def platform_stats
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authorized" unless user&.godmode?
+
+      month_start = Time.current.beginning_of_month
+
+      {
+        studios_count:              Studio.count,
+        active_subscriptions_count: StudioSubscription.where(status: "active").count,
+        total_users_count:          User.count,
+        total_clients_count:        Client.count,
+        total_bookings_count:       Booking.count,
+        confirmed_bookings_count:   Booking.where(status: "confirmed").count,
+        total_payments_count:       Payment.where(status: "succeeded").count,
+        total_revenue_cents:        Payment.where(status: "succeeded").sum(:amount_cents),
+        new_studios_this_month:     Studio.where("created_at >= ?", month_start).count,
+        subscriptions_by_tier:      StudioSubscription.group(:tier).count,
+      }
+    end
+
     # TODO: remove me
     field :test_field, String, null: false,
       description: "An example field added by the generator"
