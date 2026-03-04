@@ -16,6 +16,11 @@ on:
         required: false
         default: 'Sprint'
 
+# NOTE: To add issues to a user-level GitHub Project (Projects v2), you need a Personal
+# Access Token (PAT) with the "project" scope. Add it as a repository secret named
+# PROJECT_TOKEN. If PROJECT_TOKEN is not set, issues are still created but may not be
+# automatically assigned to the project.
+
 permissions:
   issues: write
   contents: read
@@ -25,7 +30,9 @@ jobs:
   create-issues:
     runs-on: ubuntu-latest
     env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Use PROJECT_TOKEN (PAT with project scope) for project operations if available,
+      # otherwise fall back to GITHUB_TOKEN (issues will still be created).
+      GH_TOKEN: ${{ secrets.PROJECT_TOKEN || secrets.GITHUB_TOKEN }}
       REPO: ${{ github.repository }}
       PROJECT_OWNER: ${{ inputs.project_owner }}
       PROJECT_NAME: ${{ inputs.project_name }}
