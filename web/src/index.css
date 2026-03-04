@@ -10,23 +10,32 @@ body {
   color: var(--app-fg);
 }
 
-:root {
-
-  @keyframes hashTargetFlash {
-    0% {
-      border-color: color-mix(in oklab, var(--color-sky-500) 55%, var(--color-slate-800));
-      box-shadow: 0 0 0 6px color-mix(in oklab, var(--color-sky-500) 20%, transparent);
-    }
-    70% {
-      border-color: color-mix(in oklab, var(--color-sky-500) 40%, var(--color-slate-800));
-      box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-sky-500) 12%, transparent);
-    }
-    100% {
-      border-color: var(--color-slate-800);
-      box-shadow: none;
-    }
+@keyframes hashTargetFlash {
+  0% {
+    border-color: color-mix(
+      in oklab,
+      var(--color-sky-500) 55%,
+      var(--color-slate-800)
+    );
+    box-shadow: 0 0 0 6px
+      color-mix(in oklab, var(--color-sky-500) 20%, transparent);
   }
+  70% {
+    border-color: color-mix(
+      in oklab,
+      var(--color-sky-500) 40%,
+      var(--color-slate-800)
+    );
+    box-shadow: 0 0 0 3px
+      color-mix(in oklab, var(--color-sky-500) 12%, transparent);
+  }
+  100% {
+    border-color: var(--color-slate-800);
+    box-shadow: none;
+  }
+}
 
+:root {
   .hash-target:target {
     animation: hashTargetFlash 1.1s ease-out;
   }
@@ -54,16 +63,24 @@ body {
    and tune semantic app tokens for comfortable contrast.
 */
 :root:not([data-theme]) body,
-:root[data-theme='dark'] body {
+:root[data-theme="dark"] body {
   /* Progressive enhancement: make the "dark" theme feel slate/charcoal instead of near-black.
     Fallback keeps a reasonable dark gray if `color-mix` isn't supported.
   */
   /* “Slate” variant: one step lighter than the prior mapping */
   --color-slate-950: var(--base-zinc-800);
-  --color-slate-950: color-mix(in oklab, var(--base-zinc-800) 90%, var(--base-zinc-700) 10%);
+  --color-slate-950: color-mix(
+    in oklab,
+    var(--base-zinc-800) 90%,
+    var(--base-zinc-700) 10%
+  );
 
   --color-slate-900: var(--base-zinc-700);
-  --color-slate-900: color-mix(in oklab, var(--base-zinc-700) 92%, var(--base-zinc-600) 8%);
+  --color-slate-900: color-mix(
+    in oklab,
+    var(--base-zinc-700) 92%,
+    var(--base-zinc-600) 8%
+  );
 
   --color-slate-50: var(--base-zinc-50);
   --color-slate-100: var(--base-zinc-100);
@@ -74,7 +91,11 @@ body {
   --color-slate-600: var(--base-zinc-600);
   --color-slate-700: var(--base-zinc-700);
   --color-slate-800: var(--base-zinc-600);
-  --color-slate-800: color-mix(in oklab, var(--base-zinc-600) 92%, var(--base-zinc-500) 8%);
+  --color-slate-800: color-mix(
+    in oklab,
+    var(--base-zinc-600) 92%,
+    var(--base-zinc-500) 8%
+  );
 
   /* App theme tokens (semantic) */
   --app-canvas: var(--color-slate-950);
@@ -88,7 +109,7 @@ body {
 /* Light theme: invert the (neutral) scale so existing `bg-slate-*`, `text-slate-*`,
    and `border-slate-*` utilities automatically switch.
 */
-:root[data-theme='light'] body {
+:root[data-theme="light"] body {
   --color-slate-950: var(--base-zinc-50);
   --color-slate-900: var(--base-zinc-100);
   --color-slate-800: var(--base-zinc-200);
