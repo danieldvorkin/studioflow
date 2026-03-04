@@ -11,7 +11,7 @@ module Mutations
 
     def resolve(email:, role:, name: nil)
       current_user = context[:current_user]
-      raise GraphQL::ExecutionError, "Not authorized" unless current_user&.owner?
+      raise GraphQL::ExecutionError, "Not authorized" unless current_user && Pundit.policy!(current_user, User).invite?
 
       normalized_email = email.to_s.strip.downcase
       return { user: nil, errors: [ "Email is required" ] } if normalized_email.blank?

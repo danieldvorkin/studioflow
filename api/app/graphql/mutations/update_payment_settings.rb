@@ -15,7 +15,7 @@ module Mutations
 
     def resolve(**attrs)
       user = context[:current_user]
-      raise Pundit::NotAuthorizedError unless user&.owner?
+      raise Pundit::NotAuthorizedError unless user&.owner? || user&.moderator?
 
       settings = PaymentSetting.instance_for(user.studio)
 

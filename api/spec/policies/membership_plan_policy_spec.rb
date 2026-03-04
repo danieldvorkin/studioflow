@@ -28,6 +28,10 @@ RSpec.describe MembershipPlanPolicy do
     include_examples "can manage", :owner
   end
 
+  describe "moderator" do
+    include_examples "can manage", :moderator
+  end
+
   describe "staff" do
     include_examples "can manage", :staff
   end

@@ -7,7 +7,7 @@ module Mutations
 
     def resolve(id:)
       user = context[:current_user]
-      raise Pundit::NotAuthorizedError unless user&.owner?
+      raise Pundit::NotAuthorizedError unless user&.owner? || user&.moderator?
 
       payout = InstructorPayout.where(studio_id: user.studio_id).find_by(id: id)
       return { payout: nil, errors: [ "Payout not found" ] } unless payout

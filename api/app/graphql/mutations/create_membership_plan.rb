@@ -22,7 +22,7 @@ module Mutations
     def resolve(**args)
       user = context[:current_user]
       raise GraphQL::ExecutionError, "Not authenticated" unless user
-      raise Pundit::NotAuthorizedError unless user.owner? || user.staff?
+      raise Pundit::NotAuthorizedError unless Pundit.policy!(user, MembershipPlan).create?
 
       plan = MembershipPlan.new(args.merge(studio_id: user.studio_id))
       plan.currency ||= "cad"

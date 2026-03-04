@@ -7,7 +7,7 @@ module Mutations
 
     def resolve(id:)
       user = context[:current_user]
-      raise GraphQL::ExecutionError, "Not authorized" unless user&.owner?
+      raise GraphQL::ExecutionError, "Not authorized" unless user&.owner? || user&.moderator?
 
       location = StudioLocation.where(studio_id: user.studio_id).find_by(id: id)
       return { success: false, errors: [ "Studio location not found" ] } unless location

@@ -9,12 +9,12 @@ module Mutations
     def resolve(user_id:)
       actor = context[:current_user]
 
-      unless actor&.owner?
+      unless actor&.owner? || actor&.moderator?
         return { token: nil, user: nil, errors: [ "Not authorized" ] }
       end
 
       user =
-        if actor.respond_to?(:godmode?) && actor.godmode?
+        if actor.respond_to?(:platform_staff?) && actor.platform_staff?
           ::User.find_by(id: user_id)
         else
           ::User.where(studio_id: actor.studio_id).find_by(id: user_id)

@@ -13,7 +13,8 @@ export default function InstructorPayoutsPage() {
   const user = userData?.currentUser;
   const roleName = (user?.roleName || "").toString().toLowerCase();
   const isGodmode = user?.godmode === true || roleName === "godmode";
-  const isOwner = roleName === "owner" || user?.role === 0;
+  const isOwner = isGodmode || roleName === "owner" || user?.role === 0;
+  const isModerator = isGodmode || roleName === "moderator" || user?.role === 4;
   const { addToast } = useToast();
 
   if (userLoading || (!user && !userLoading)) {
@@ -26,14 +27,14 @@ export default function InstructorPayoutsPage() {
     return <Navigate to="/owner" replace />;
   }
 
-  if (!isOwner) {
+  if (!isOwner && !isModerator) {
     return (
       <div className="mx-auto max-w-xl rounded-2xl border border-slate-800 bg-slate-900/80 p-6 text-sm text-slate-200">
         <h1 className="mb-2 text-lg font-semibold text-slate-50">
           Owner access only
         </h1>
         <p className="text-sm text-slate-400">
-          Only the studio owner can manage instructor payouts.
+          Only the studio owner or moderators can manage instructor payouts.
         </p>
       </div>
     );
