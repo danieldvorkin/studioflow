@@ -11,6 +11,8 @@ module Mutations
 
     def resolve(email:, name: nil)
       current_user = context[:current_user]
+      # Use UserPolicy#invite? since inviting a client is a user-invitation operation
+      # (owner, staff, and moderators may invite clients; instructors may not)
       unless current_user && Pundit.policy!(current_user, User).invite?
         raise GraphQL::ExecutionError, "Not authorized"
       end

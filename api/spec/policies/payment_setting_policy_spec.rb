@@ -15,6 +15,8 @@ RSpec.describe PaymentSettingPolicy do
       expect(described_class.new(create(:user, :staff), record).show?).to eq(false)
       expect(described_class.new(create(:user, :staff), record).update?).to eq(false)
       expect(described_class.new(create(:user, :instructor), record).show?).to eq(false)
+      expect(described_class.new(create(:user, :instructor), record).update?).to eq(false)
+      expect(described_class.new(create(:user, :client), record).show?).to eq(false)
       expect(described_class.new(create(:user, :client), record).update?).to eq(false)
     end
 

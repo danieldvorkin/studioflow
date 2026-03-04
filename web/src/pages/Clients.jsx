@@ -6,7 +6,6 @@ import { CURRENT_USER, CLIENTS } from "../apollo/queries";
 import {
   UPDATE_CLIENT,
   DELETE_CLIENT,
-  TOGGLE_CLIENT_BLOCK,
   START_IMPERSONATION,
 } from "../apollo/mutations";
 import { useToast } from "../components/ToastProvider";
@@ -22,7 +21,6 @@ export default function ClientsPage() {
   const isOwner = isGodmode || role === "owner" || user?.role === 0;
   const isStaff = isGodmode || role === "staff" || user?.role === 1;
   const isModerator = isGodmode || role === "moderator" || user?.role === 4;
-  const isInstructor = role === "instructor";
   const canViewClients = isOwner || isStaff || isModerator;
 
   const { data, loading, error } = useQuery(CLIENTS, {
@@ -32,7 +30,6 @@ export default function ClientsPage() {
   });
 
   const [updateClient] = useMutation(UPDATE_CLIENT);
-  const [toggleBlock] = useMutation(TOGGLE_CLIENT_BLOCK);
   const [deleteClient] = useMutation(DELETE_CLIENT);
   const [startImpersonation] = useMutation(START_IMPERSONATION);
   const { addToast } = useToast();
@@ -195,7 +192,6 @@ export default function ClientsPage() {
                   <th className="px-3 py-2">Name</th>
                   <th className="px-3 py-2">Email</th>
                   <th className="px-3 py-2">Phone</th>
-                  {isInstructor && <th className="px-3 py-2">Blocked</th>}
                   {isOwner && <th className="px-3 py-2 text-right">View as</th>}
                   <th className="px-3 py-2" />
                 </tr>
@@ -253,41 +249,6 @@ export default function ClientsPage() {
                         c.phone || "—"
                       )}
                     </td>
-                    {isInstructor && (
-                      <td className="px-3 py-2 text-xs">
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            try {
-                              const res = await toggleBlock({
-                                variables: {
-                                  clientId: c.id,
-                                  blocked: !c.blockedByCurrentInstructor,
-                                },
-                              });
-                              const errors =
-                                res.data?.toggleClientBlock?.errors || [];
-                              if (errors.length)
-                                throw new Error(errors.join(", "));
-                              addToast({
-                                message: c.blockedByCurrentInstructor
-                                  ? "Client unblocked"
-                                  : "Client blocked",
-                                type: "success",
-                              });
-                            } catch (e) {
-                              addToast({
-                                message: e.message || "Update failed",
-                                type: "error",
-                              });
-                            }
-                          }}
-                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${c.blockedByCurrentInstructor ? "bg-rose-500/10 text-rose-300" : "bg-slate-800 text-slate-400"}`}
-                        >
-                          {c.blockedByCurrentInstructor ? "Blocked" : "Allow"}
-                        </button>
-                      </td>
-                    )}
                     {isOwner && (
                       <td className="px-3 py-2 text-right text-xs">
                         {c.user?.id && c.user.id !== user?.id ? (
@@ -304,7 +265,7 @@ export default function ClientsPage() {
                       </td>
                     )}
                     <td className="px-3 py-2 text-right text-xs">
-                      {(isOwner || isInstructor) &&
+                      {canViewClients &&
                         (editingId === c.id ? (
                           <div className="flex justify-end gap-2">
                             <button
@@ -331,7 +292,7 @@ export default function ClientsPage() {
                             >
                               Edit
                             </button>
-                            {isOwner && (
+                            {(isOwner || isModerator) && (
                               <button
                                 type="button"
                                 onClick={() => handleDelete(c.id)}
