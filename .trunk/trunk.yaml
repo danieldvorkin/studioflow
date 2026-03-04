@@ -18,9 +18,12 @@ runtimes:
     - ruby@3.4.2
 # This is the section where you manage your linters. (https://docs.trunk.io/check/configuration)
 lint:
+  disabled:
+    # Trunk's sandboxed brakeman can't load racc/parser in its Ruby 3.4.2 env.
+    # Run brakeman directly via: cd api && bin/brakeman
+    - brakeman
   enabled:
     - actionlint@1.7.11
-    - brakeman@5.4.0
     - checkov@3.2.506
     - git-diff-check
     - hadolint@2.14.0

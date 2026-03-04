@@ -1,64 +1,134 @@
-import { gql } from '@apollo/client'
+import { gql } from "@apollo/client";
 
 export const CREATE_CLIENT = gql`
   mutation CreateClient {
     createClient(input: {}) {
-      client { id name email phone }
-      errors
-    }
-  }
-`
-
-export const CREATE_BOOKING = gql`
-  mutation CreateBooking($clientId: ID, $classSessionId: ID!) {
-    createBooking(input: { clientId: $clientId, classSessionId: $classSessionId }) {
-      booking {
+      client {
         id
-        status
-        classSession { id startTime }
+        name
+        email
+        phone
       }
       errors
     }
   }
-`
+`;
+
+export const CREATE_BOOKING = gql`
+  mutation CreateBooking($clientId: ID, $classSessionId: ID!) {
+    createBooking(
+      input: { clientId: $clientId, classSessionId: $classSessionId }
+    ) {
+      booking {
+        id
+        status
+        classSession {
+          id
+          startTime
+        }
+      }
+      errors
+    }
+  }
+`;
 
 export const SIGN_IN_WITH_GOOGLE = gql`
   mutation SignInWithGoogle($accessToken: String!) {
     signInWithGoogle(input: { accessToken: $accessToken }) {
       token
-      user { id email name role roleName active availableForSessions }
+      user {
+        id
+        email
+        name
+        role
+        roleName
+        active
+        availableForSessions
+      }
       errors
     }
   }
-`
+`;
 
 export const START_IMPERSONATION = gql`
   mutation StartImpersonation($userId: ID!) {
     startImpersonation(input: { userId: $userId }) {
       token
-      user { id email name role roleName active availableForSessions }
+      user {
+        id
+        email
+        name
+        role
+        roleName
+        active
+        availableForSessions
+      }
       errors
     }
   }
-`
+`;
 
 export const CREATE_STUDIO_LOCATION = gql`
-  mutation CreateStudioLocation($name: String!, $address: String, $city: String, $state: String, $zip: String) {
-    createStudioLocation(input: { name: $name, address: $address, city: $city, state: $state, zip: $zip }) {
-      studioLocation { id name address city state zip }
+  mutation CreateStudioLocation(
+    $name: String!
+    $address: String
+    $city: String
+    $state: String
+    $zip: String
+  ) {
+    createStudioLocation(
+      input: {
+        name: $name
+        address: $address
+        city: $city
+        state: $state
+        zip: $zip
+      }
+    ) {
+      studioLocation {
+        id
+        name
+        address
+        city
+        state
+        zip
+      }
       errors
     }
   }
-`
+`;
 
 export const UPDATE_STUDIO_LOCATION = gql`
-  mutation UpdateStudioLocation($id: ID!, $name: String, $address: String, $city: String, $state: String, $zip: String) {
-    updateStudioLocation(input: { id: $id, name: $name, address: $address, city: $city, state: $state, zip: $zip }) {
-      studioLocation { id name address city state zip }
+  mutation UpdateStudioLocation(
+    $id: ID!
+    $name: String
+    $address: String
+    $city: String
+    $state: String
+    $zip: String
+  ) {
+    updateStudioLocation(
+      input: {
+        id: $id
+        name: $name
+        address: $address
+        city: $city
+        state: $state
+        zip: $zip
+      }
+    ) {
+      studioLocation {
+        id
+        name
+        address
+        city
+        state
+        zip
+      }
       errors
     }
   }
-`
+`;
 
 export const DELETE_STUDIO_LOCATION = gql`
   mutation DeleteStudioLocation($id: ID!) {
@@ -67,7 +137,7 @@ export const DELETE_STUDIO_LOCATION = gql`
       errors
     }
   }
-`
+`;
 
 export const UPDATE_USER = gql`
   mutation UpdateUser(
@@ -82,18 +152,20 @@ export const UPDATE_USER = gql`
     $instructorDefaultFlatRateCents: Int
     $stripeConnectAccountId: String
   ) {
-    updateUser(input: {
-      id: $id
-      name: $name
-      email: $email
-      role: $role
-      active: $active
-      availableForSessions: $availableForSessions
-      instructorCompensationType: $instructorCompensationType
-      instructorDefaultSplitPercent: $instructorDefaultSplitPercent
-      instructorDefaultFlatRateCents: $instructorDefaultFlatRateCents
-      stripeConnectAccountId: $stripeConnectAccountId
-    }) {
+    updateUser(
+      input: {
+        id: $id
+        name: $name
+        email: $email
+        role: $role
+        active: $active
+        availableForSessions: $availableForSessions
+        instructorCompensationType: $instructorCompensationType
+        instructorDefaultSplitPercent: $instructorDefaultSplitPercent
+        instructorDefaultFlatRateCents: $instructorDefaultFlatRateCents
+        stripeConnectAccountId: $stripeConnectAccountId
+      }
+    ) {
       user {
         id
         email
@@ -111,16 +183,24 @@ export const UPDATE_USER = gql`
       errors
     }
   }
-`
+`;
 
 export const INVITE_USER = gql`
   mutation InviteUser($email: String!, $name: String, $role: Int!) {
     inviteUser(input: { email: $email, name: $name, role: $role }) {
-      user { id email name role roleName active availableForSessions }
+      user {
+        id
+        email
+        name
+        role
+        roleName
+        active
+        availableForSessions
+      }
       errors
     }
   }
-`
+`;
 
 export const UPDATE_PROFILE = gql`
   mutation UpdateProfile(
@@ -130,18 +210,28 @@ export const UPDATE_PROFILE = gql`
     $passwordConfirmation: String
     $currentPassword: String
   ) {
-    updateProfile(input: {
-      name: $name
-      email: $email
-      password: $password
-      passwordConfirmation: $passwordConfirmation
-      currentPassword: $currentPassword
-    }) {
-      user { id email name role roleName active availableForSessions }
+    updateProfile(
+      input: {
+        name: $name
+        email: $email
+        password: $password
+        passwordConfirmation: $passwordConfirmation
+        currentPassword: $currentPassword
+      }
+    ) {
+      user {
+        id
+        email
+        name
+        role
+        roleName
+        active
+        availableForSessions
+      }
       errors
     }
   }
-`
+`;
 
 export const CANCEL_BOOKING = gql`
   mutation CancelBooking($id: ID!) {
@@ -150,7 +240,7 @@ export const CANCEL_BOOKING = gql`
       errors
     }
   }
-`
+`;
 
 export const ARCHIVE_BOOKING = gql`
   mutation ArchiveBooking($id: ID!) {
@@ -159,7 +249,7 @@ export const ARCHIVE_BOOKING = gql`
       errors
     }
   }
-`
+`;
 
 export const REBOOK_BOOKING = gql`
   mutation RebookBooking($id: ID!) {
@@ -172,11 +262,13 @@ export const REBOOK_BOOKING = gql`
       errors
     }
   }
-`
+`;
 
 export const REBOOK_BOOKING_WITH_PAYMENT = gql`
   mutation RebookBookingWithPayment($id: ID!, $paymentMethodId: String) {
-    rebookBookingWithPayment(input: { id: $id, paymentMethodId: $paymentMethodId }) {
+    rebookBookingWithPayment(
+      input: { id: $id, paymentMethodId: $paymentMethodId }
+    ) {
       booking {
         id
         status
@@ -192,17 +284,19 @@ export const REBOOK_BOOKING_WITH_PAYMENT = gql`
       errors
     }
   }
-`
+`;
 
 export const TOGGLE_FAVORITE_CLASS_SESSION = gql`
   mutation ToggleFavoriteClassSession($classSessionId: ID!) {
     toggleFavoriteClassSession(input: { classSessionId: $classSessionId }) {
       favorited
-      classSession { id }
+      classSession {
+        id
+      }
       errors
     }
   }
-`
+`;
 
 export const CREATE_BOOKING_CHECKOUT_SESSION = gql`
   mutation CreateBookingCheckoutSession($bookingId: ID!) {
@@ -212,17 +306,36 @@ export const CREATE_BOOKING_CHECKOUT_SESSION = gql`
       errors
     }
   }
-`
+`;
 
 export const CONFIRM_BOOKING_CHECKOUT_PAYMENT = gql`
-  mutation ConfirmBookingCheckoutPayment($bookingId: ID!, $checkoutSessionId: String!) {
-    confirmBookingCheckoutPayment(input: { bookingId: $bookingId, checkoutSessionId: $checkoutSessionId }) {
-      booking { id paid payment { id status amountCents currency } }
-      payment { id status amountCents currency }
+  mutation ConfirmBookingCheckoutPayment(
+    $bookingId: ID!
+    $checkoutSessionId: String!
+  ) {
+    confirmBookingCheckoutPayment(
+      input: { bookingId: $bookingId, checkoutSessionId: $checkoutSessionId }
+    ) {
+      booking {
+        id
+        paid
+        payment {
+          id
+          status
+          amountCents
+          currency
+        }
+      }
+      payment {
+        id
+        status
+        amountCents
+        currency
+      }
       errors
     }
   }
-`
+`;
 
 export const SEND_BOOKING_PAYMENT_REMINDER = gql`
   mutation SendBookingPaymentReminder($bookingId: ID!) {
@@ -232,7 +345,7 @@ export const SEND_BOOKING_PAYMENT_REMINDER = gql`
       errors
     }
   }
-`
+`;
 
 export const CREATE_CLASS_SESSION = gql`
   mutation CreateClassSession(
@@ -244,15 +357,17 @@ export const CREATE_CLASS_SESSION = gql`
     $bundleEnabled: Boolean
     $bundleSpots: Int
   ) {
-    createClassSession(input: {
-      classTemplateId: $classTemplateId
-      startTime: $startTime
-      endTime: $endTime
-      capacity: $capacity
-      room: $room
-      bundleEnabled: $bundleEnabled
-      bundleSpots: $bundleSpots
-    }) {
+    createClassSession(
+      input: {
+        classTemplateId: $classTemplateId
+        startTime: $startTime
+        endTime: $endTime
+        capacity: $capacity
+        room: $room
+        bundleEnabled: $bundleEnabled
+        bundleSpots: $bundleSpots
+      }
+    ) {
       classSession {
         id
         startTime
@@ -263,13 +378,19 @@ export const CREATE_CLASS_SESSION = gql`
         bundleSpots
         bundleSpotsTaken
         bundleSpotsAvailable
-        classTemplate { id title }
-        instructor { id name }
+        classTemplate {
+          id
+          title
+        }
+        instructor {
+          id
+          name
+        }
       }
       errors
     }
   }
-`
+`;
 
 export const CREATE_CLASS_TEMPLATE = gql`
   mutation CreateClassTemplate(
@@ -302,13 +423,20 @@ export const CREATE_CLASS_TEMPLATE = gql`
         durationMinutes
         priceCents
         currency
-        studioLocation { id name }
-        instructor { id name email }
+        studioLocation {
+          id
+          name
+        }
+        instructor {
+          id
+          name
+          email
+        }
       }
       errors
     }
   }
-`
+`;
 
 export const UPDATE_CLASS_TEMPLATE = gql`
   mutation UpdateClassTemplate(
@@ -350,16 +478,32 @@ export const UPDATE_CLASS_TEMPLATE = gql`
         compensationType
         instructorSplitPercent
         instructorFlatRateCents
-        instructor { id name email }
+        instructor {
+          id
+          name
+          email
+        }
       }
       errors
     }
   }
-`
+`;
 
 export const CREATE_INSTRUCTOR_PAYOUT = gql`
-  mutation CreateInstructorPayout($instructorId: ID!, $weekStart: ISO8601Date!, $weekEnd: ISO8601Date, $currency: String!) {
-    createInstructorPayout(input: { instructorId: $instructorId, weekStart: $weekStart, weekEnd: $weekEnd, currency: $currency }) {
+  mutation CreateInstructorPayout(
+    $instructorId: ID!
+    $weekStart: ISO8601Date!
+    $weekEnd: ISO8601Date
+    $currency: String!
+  ) {
+    createInstructorPayout(
+      input: {
+        instructorId: $instructorId
+        weekStart: $weekStart
+        weekEnd: $weekEnd
+        currency: $currency
+      }
+    ) {
       payout {
         id
         status
@@ -375,7 +519,7 @@ export const CREATE_INSTRUCTOR_PAYOUT = gql`
       errors
     }
   }
-`
+`;
 
 export const PAY_INSTRUCTOR_PAYOUT = gql`
   mutation PayInstructorPayout($id: ID!) {
@@ -391,11 +535,23 @@ export const PAY_INSTRUCTOR_PAYOUT = gql`
       errors
     }
   }
-`
+`;
 
 export const MARK_INSTRUCTOR_PAYOUT_PAID = gql`
-  mutation MarkInstructorPayoutPaid($id: ID!, $paidMethod: String!, $paidReference: String, $paidNotes: String) {
-    markInstructorPayoutPaid(input: { id: $id, paidMethod: $paidMethod, paidReference: $paidReference, paidNotes: $paidNotes }) {
+  mutation MarkInstructorPayoutPaid(
+    $id: ID!
+    $paidMethod: String!
+    $paidReference: String
+    $paidNotes: String
+  ) {
+    markInstructorPayoutPaid(
+      input: {
+        id: $id
+        paidMethod: $paidMethod
+        paidReference: $paidReference
+        paidNotes: $paidNotes
+      }
+    ) {
       payout {
         id
         status
@@ -407,7 +563,7 @@ export const MARK_INSTRUCTOR_PAYOUT_PAID = gql`
       errors
     }
   }
-`
+`;
 
 export const CREATE_INSTRUCTOR_CONNECT_ONBOARDING = gql`
   mutation CreateInstructorConnectOnboarding($instructorId: ID!) {
@@ -421,7 +577,7 @@ export const CREATE_INSTRUCTOR_CONNECT_ONBOARDING = gql`
       errors
     }
   }
-`
+`;
 
 export const REFRESH_INSTRUCTOR_CONNECT_STATUS = gql`
   mutation RefreshInstructorConnectStatus($instructorId: ID!) {
@@ -434,7 +590,7 @@ export const REFRESH_INSTRUCTOR_CONNECT_STATUS = gql`
       errors
     }
   }
-`
+`;
 
 export const DELETE_CLASS_TEMPLATE = gql`
   mutation DeleteClassTemplate($id: ID!) {
@@ -443,7 +599,7 @@ export const DELETE_CLASS_TEMPLATE = gql`
       errors
     }
   }
-`
+`;
 
 export const UPDATE_CLASS_SESSION = gql`
   mutation UpdateClassSession(
@@ -455,15 +611,17 @@ export const UPDATE_CLASS_SESSION = gql`
     $bundleEnabled: Boolean
     $bundleSpots: Int
   ) {
-    updateClassSession(input: {
-      id: $id
-      startTime: $startTime
-      endTime: $endTime
-      capacity: $capacity
-      room: $room
-      bundleEnabled: $bundleEnabled
-      bundleSpots: $bundleSpots
-    }) {
+    updateClassSession(
+      input: {
+        id: $id
+        startTime: $startTime
+        endTime: $endTime
+        capacity: $capacity
+        room: $room
+        bundleEnabled: $bundleEnabled
+        bundleSpots: $bundleSpots
+      }
+    ) {
       classSession {
         id
         startTime
@@ -478,7 +636,7 @@ export const UPDATE_CLASS_SESSION = gql`
       errors
     }
   }
-`
+`;
 
 export const CREATE_BUNDLE_PRODUCT = gql`
   mutation CreateBundleProduct(
@@ -491,16 +649,18 @@ export const CREATE_BUNDLE_PRODUCT = gql`
     $classTemplateId: ID
     $instructorId: ID
   ) {
-    createBundleProduct(input: {
-      title: $title
-      description: $description
-      active: $active
-      creditsCount: $creditsCount
-      priceCents: $priceCents
-      currency: $currency
-      classTemplateId: $classTemplateId
-      instructorId: $instructorId
-    }) {
+    createBundleProduct(
+      input: {
+        title: $title
+        description: $description
+        active: $active
+        creditsCount: $creditsCount
+        priceCents: $priceCents
+        currency: $currency
+        classTemplateId: $classTemplateId
+        instructorId: $instructorId
+      }
+    ) {
       bundleProduct {
         id
         title
@@ -509,13 +669,20 @@ export const CREATE_BUNDLE_PRODUCT = gql`
         creditsCount
         priceCents
         currency
-        classTemplate { id title }
-        instructor { id name email }
+        classTemplate {
+          id
+          title
+        }
+        instructor {
+          id
+          name
+          email
+        }
       }
       errors
     }
   }
-`
+`;
 
 export const UPDATE_BUNDLE_PRODUCT = gql`
   mutation UpdateBundleProduct(
@@ -529,17 +696,19 @@ export const UPDATE_BUNDLE_PRODUCT = gql`
     $classTemplateId: ID
     $instructorId: ID
   ) {
-    updateBundleProduct(input: {
-      id: $id
-      title: $title
-      description: $description
-      active: $active
-      creditsCount: $creditsCount
-      priceCents: $priceCents
-      currency: $currency
-      classTemplateId: $classTemplateId
-      instructorId: $instructorId
-    }) {
+    updateBundleProduct(
+      input: {
+        id: $id
+        title: $title
+        description: $description
+        active: $active
+        creditsCount: $creditsCount
+        priceCents: $priceCents
+        currency: $currency
+        classTemplateId: $classTemplateId
+        instructorId: $instructorId
+      }
+    ) {
       bundleProduct {
         id
         title
@@ -548,13 +717,20 @@ export const UPDATE_BUNDLE_PRODUCT = gql`
         creditsCount
         priceCents
         currency
-        classTemplate { id title }
-        instructor { id name email }
+        classTemplate {
+          id
+          title
+        }
+        instructor {
+          id
+          name
+          email
+        }
       }
       errors
     }
   }
-`
+`;
 
 export const DELETE_BUNDLE_PRODUCT = gql`
   mutation DeleteBundleProduct($id: ID!) {
@@ -563,7 +739,7 @@ export const DELETE_BUNDLE_PRODUCT = gql`
       errors
     }
   }
-`
+`;
 
 export const DELETE_CLASS_SESSION = gql`
   mutation DeleteClassSession($id: ID!) {
@@ -572,16 +748,36 @@ export const DELETE_CLASS_SESSION = gql`
       errors
     }
   }
-`
+`;
 
 export const UPDATE_CLIENT = gql`
-  mutation UpdateClient($id: ID!, $name: String, $email: String, $phone: String, $characteristicScores: JSON) {
-    updateClient(input: { id: $id, name: $name, email: $email, phone: $phone, characteristicScores: $characteristicScores }) {
-      client { id name email phone characteristicScores }
+  mutation UpdateClient(
+    $id: ID!
+    $name: String
+    $email: String
+    $phone: String
+    $characteristicScores: JSON
+  ) {
+    updateClient(
+      input: {
+        id: $id
+        name: $name
+        email: $email
+        phone: $phone
+        characteristicScores: $characteristicScores
+      }
+    ) {
+      client {
+        id
+        name
+        email
+        phone
+        characteristicScores
+      }
       errors
     }
   }
-`
+`;
 
 export const CREATE_CLIENT_NOTE = gql`
   mutation CreateClientNote($clientId: ID!, $body: String!) {
@@ -590,22 +786,32 @@ export const CREATE_CLIENT_NOTE = gql`
         id
         body
         createdAt
-        author { id name email }
+        author {
+          id
+          name
+          email
+        }
       }
       errors
     }
   }
-`
+`;
 
 export const TOGGLE_CLIENT_BLOCK = gql`
   mutation ToggleClientBlock($clientId: ID!, $blocked: Boolean!) {
     toggleClientBlock(clientId: $clientId, blocked: $blocked) {
-      client { id name email phone blockedByCurrentInstructor }
+      client {
+        id
+        name
+        email
+        phone
+        blockedByCurrentInstructor
+      }
       blocked
       errors
     }
   }
-`
+`;
 
 export const DELETE_CLIENT = gql`
   mutation DeleteClient($id: ID!) {
@@ -614,12 +820,20 @@ export const DELETE_CLIENT = gql`
       errors
     }
   }
-`
+`;
 
 export const CREATE_BOOKING_WITH_PAYMENT = gql`
-  mutation CreateBookingWithPayment($clientId: ID, $classSessionId: ID!, $paymentMethodId: String) {
+  mutation CreateBookingWithPayment(
+    $clientId: ID
+    $classSessionId: ID!
+    $paymentMethodId: String
+  ) {
     createBookingWithPayment(
-      input: { clientId: $clientId, classSessionId: $classSessionId, paymentMethodId: $paymentMethodId }
+      input: {
+        clientId: $clientId
+        classSessionId: $classSessionId
+        paymentMethodId: $paymentMethodId
+      }
     ) {
       booking {
         id
@@ -634,12 +848,20 @@ export const CREATE_BOOKING_WITH_PAYMENT = gql`
       errors
     }
   }
-`
+`;
 
 export const PURCHASE_BUNDLE_PRODUCT = gql`
-  mutation PurchaseBundleProduct($bundleProductId: ID!, $clientId: ID, $paymentMethodId: String) {
+  mutation PurchaseBundleProduct(
+    $bundleProductId: ID!
+    $clientId: ID
+    $paymentMethodId: String
+  ) {
     purchaseBundleProduct(
-      input: { bundleProductId: $bundleProductId, clientId: $clientId, paymentMethodId: $paymentMethodId }
+      input: {
+        bundleProductId: $bundleProductId
+        clientId: $clientId
+        paymentMethodId: $paymentMethodId
+      }
     ) {
       bundlePurchase {
         id
@@ -649,25 +871,49 @@ export const PURCHASE_BUNDLE_PRODUCT = gql`
         priceCents
         currency
         createdAt
-        bundleProduct { id title creditsCount currency }
+        bundleProduct {
+          id
+          title
+          creditsCount
+          currency
+        }
       }
       errors
     }
   }
-`
+`;
 
 export const CREATE_BOOKING_WITH_BUNDLE = gql`
-  mutation CreateBookingWithBundle($clientId: ID, $classSessionId: ID!, $bundlePurchaseId: ID!) {
+  mutation CreateBookingWithBundle(
+    $clientId: ID
+    $classSessionId: ID!
+    $bundlePurchaseId: ID!
+  ) {
     createBookingWithBundle(
-      input: { clientId: $clientId, classSessionId: $classSessionId, bundlePurchaseId: $bundlePurchaseId }
+      input: {
+        clientId: $clientId
+        classSessionId: $classSessionId
+        bundlePurchaseId: $bundlePurchaseId
+      }
     ) {
-      booking { id status }
-      payment { id amountCents currency status }
-      bundlePurchase { id creditsRemaining }
+      booking {
+        id
+        status
+      }
+      payment {
+        id
+        amountCents
+        currency
+        status
+      }
+      bundlePurchase {
+        id
+        creditsRemaining
+      }
       errors
     }
   }
-`
+`;
 
 export const CREATE_SETUP_INTENT = gql`
   mutation CreateSetupIntent($studioId: ID) {
@@ -685,11 +931,13 @@ export const CREATE_SETUP_INTENT = gql`
       errors
     }
   }
-`
+`;
 
 export const SAVE_MY_PAYMENT_METHOD = gql`
   mutation SaveMyPaymentMethod($paymentMethodId: String!, $studioId: ID) {
-    saveMyPaymentMethod(input: { paymentMethodId: $paymentMethodId, studioId: $studioId }) {
+    saveMyPaymentMethod(
+      input: { paymentMethodId: $paymentMethodId, studioId: $studioId }
+    ) {
       client {
         id
         stripeCustomerId
@@ -712,11 +960,13 @@ export const SAVE_MY_PAYMENT_METHOD = gql`
       errors
     }
   }
-`
+`;
 
 export const REMOVE_MY_PAYMENT_METHOD = gql`
   mutation RemoveMyPaymentMethod($paymentMethodId: String, $studioId: ID) {
-    removeMyPaymentMethod(input: { paymentMethodId: $paymentMethodId, studioId: $studioId }) {
+    removeMyPaymentMethod(
+      input: { paymentMethodId: $paymentMethodId, studioId: $studioId }
+    ) {
       client {
         id
         stripeDefaultPaymentMethodId
@@ -738,11 +988,13 @@ export const REMOVE_MY_PAYMENT_METHOD = gql`
       errors
     }
   }
-`
+`;
 
 export const SET_MY_DEFAULT_PAYMENT_METHOD = gql`
   mutation SetMyDefaultPaymentMethod($paymentMethodId: String!, $studioId: ID) {
-    setMyDefaultPaymentMethod(input: { paymentMethodId: $paymentMethodId, studioId: $studioId }) {
+    setMyDefaultPaymentMethod(
+      input: { paymentMethodId: $paymentMethodId, studioId: $studioId }
+    ) {
       client {
         id
         stripeDefaultPaymentMethodId
@@ -764,7 +1016,7 @@ export const SET_MY_DEFAULT_PAYMENT_METHOD = gql`
       errors
     }
   }
-`
+`;
 
 export const UPDATE_PAYMENT_SETTINGS = gql`
   mutation UpdatePaymentSettings(
@@ -805,7 +1057,7 @@ export const UPDATE_PAYMENT_SETTINGS = gql`
       errors
     }
   }
-`
+`;
 
 export const UPSERT_STUDIO_SUBSCRIPTION = gql`
   mutation UpsertStudioSubscription(
@@ -817,15 +1069,17 @@ export const UPSERT_STUDIO_SUBSCRIPTION = gql`
     $currentPeriodEnd: ISO8601DateTime
     $notes: String
   ) {
-    upsertStudioSubscription(input: {
-      studioId: $studioId
-      tier: $tier
-      status: $status
-      stripeCustomerId: $stripeCustomerId
-      stripeSubscriptionId: $stripeSubscriptionId
-      currentPeriodEnd: $currentPeriodEnd
-      notes: $notes
-    }) {
+    upsertStudioSubscription(
+      input: {
+        studioId: $studioId
+        tier: $tier
+        status: $status
+        stripeCustomerId: $stripeCustomerId
+        stripeSubscriptionId: $stripeSubscriptionId
+        currentPeriodEnd: $currentPeriodEnd
+        notes: $notes
+      }
+    ) {
       studioSubscription {
         id
         studioId
@@ -839,12 +1093,16 @@ export const UPSERT_STUDIO_SUBSCRIPTION = gql`
         priceCad
         active
         updatedAt
-        studio { id name slug }
+        studio {
+          id
+          name
+          slug
+        }
       }
       errors
     }
   }
-`
+`;
 
 export const CREATE_PLATFORM_SUBSCRIPTION_CHECKOUT = gql`
   mutation CreatePlatformSubscriptionCheckout($tier: String!) {
@@ -853,7 +1111,7 @@ export const CREATE_PLATFORM_SUBSCRIPTION_CHECKOUT = gql`
       errors
     }
   }
-`
+`;
 
 export const CREATE_BILLING_PORTAL_SESSION = gql`
   mutation CreateBillingPortalSession {
@@ -862,25 +1120,35 @@ export const CREATE_BILLING_PORTAL_SESSION = gql`
       errors
     }
   }
-`
+`;
 
 export const UPDATE_STUDIO = gql`
   mutation UpdateStudio($name: String, $slug: String) {
     updateStudio(input: { name: $name, slug: $slug }) {
-      studio { id name slug onboardingCompleted }
+      studio {
+        id
+        name
+        slug
+        onboardingCompleted
+      }
       errors
     }
   }
-`
+`;
 
 export const COMPLETE_ONBOARDING = gql`
   mutation CompleteOnboarding {
     completeOnboarding(input: {}) {
-      studio { id name slug onboardingCompleted }
+      studio {
+        id
+        name
+        slug
+        onboardingCompleted
+      }
       errors
     }
   }
-`
+`;
 
 export const INVITE_CLIENT = gql`
   mutation InviteClient($email: String!, $name: String) {
@@ -899,7 +1167,7 @@ export const INVITE_CLIENT = gql`
       errors
     }
   }
-`
+`;
 
 export const CREATE_MEMBERSHIP_PLAN = gql`
   mutation CreateMembershipPlan(
@@ -919,28 +1187,36 @@ export const CREATE_MEMBERSHIP_PLAN = gql`
     $active: Boolean
     $position: Int
   ) {
-    createMembershipPlan(input: {
-      name: $name
-      description: $description
-      priceCents: $priceCents
-      currency: $currency
-      reformerClassesPerMonth: $reformerClassesPerMonth
-      matClassesPerMonth: $matClassesPerMonth
-      includesPriorityBooking: $includesPriorityBooking
-      includesEarlyBooking: $includesEarlyBooking
-      privateSessionDiscountPercent: $privateSessionDiscountPercent
-      guestPassesPerMonth: $guestPassesPerMonth
-      includesRetailDiscount: $includesRetailDiscount
-      minCommitmentMonths: $minCommitmentMonths
-      autoRenew: $autoRenew
-      active: $active
-      position: $position
-    }) {
-      membershipPlan { id name active priceCents enrolledCount }
+    createMembershipPlan(
+      input: {
+        name: $name
+        description: $description
+        priceCents: $priceCents
+        currency: $currency
+        reformerClassesPerMonth: $reformerClassesPerMonth
+        matClassesPerMonth: $matClassesPerMonth
+        includesPriorityBooking: $includesPriorityBooking
+        includesEarlyBooking: $includesEarlyBooking
+        privateSessionDiscountPercent: $privateSessionDiscountPercent
+        guestPassesPerMonth: $guestPassesPerMonth
+        includesRetailDiscount: $includesRetailDiscount
+        minCommitmentMonths: $minCommitmentMonths
+        autoRenew: $autoRenew
+        active: $active
+        position: $position
+      }
+    ) {
+      membershipPlan {
+        id
+        name
+        active
+        priceCents
+        enrolledCount
+      }
       errors
     }
   }
-`
+`;
 
 export const UPDATE_MEMBERSHIP_PLAN = gql`
   mutation UpdateMembershipPlan(
@@ -961,29 +1237,37 @@ export const UPDATE_MEMBERSHIP_PLAN = gql`
     $active: Boolean
     $position: Int
   ) {
-    updateMembershipPlan(input: {
-      id: $id
-      name: $name
-      description: $description
-      priceCents: $priceCents
-      currency: $currency
-      reformerClassesPerMonth: $reformerClassesPerMonth
-      matClassesPerMonth: $matClassesPerMonth
-      includesPriorityBooking: $includesPriorityBooking
-      includesEarlyBooking: $includesEarlyBooking
-      privateSessionDiscountPercent: $privateSessionDiscountPercent
-      guestPassesPerMonth: $guestPassesPerMonth
-      includesRetailDiscount: $includesRetailDiscount
-      minCommitmentMonths: $minCommitmentMonths
-      autoRenew: $autoRenew
-      active: $active
-      position: $position
-    }) {
-      membershipPlan { id name active priceCents enrolledCount }
+    updateMembershipPlan(
+      input: {
+        id: $id
+        name: $name
+        description: $description
+        priceCents: $priceCents
+        currency: $currency
+        reformerClassesPerMonth: $reformerClassesPerMonth
+        matClassesPerMonth: $matClassesPerMonth
+        includesPriorityBooking: $includesPriorityBooking
+        includesEarlyBooking: $includesEarlyBooking
+        privateSessionDiscountPercent: $privateSessionDiscountPercent
+        guestPassesPerMonth: $guestPassesPerMonth
+        includesRetailDiscount: $includesRetailDiscount
+        minCommitmentMonths: $minCommitmentMonths
+        autoRenew: $autoRenew
+        active: $active
+        position: $position
+      }
+    ) {
+      membershipPlan {
+        id
+        name
+        active
+        priceCents
+        enrolledCount
+      }
       errors
     }
   }
-`
+`;
 
 export const DELETE_MEMBERSHIP_PLAN = gql`
   mutation DeleteMembershipPlan($id: ID!) {
@@ -992,7 +1276,7 @@ export const DELETE_MEMBERSHIP_PLAN = gql`
       errors
     }
   }
-`
+`;
 
 export const ENROLL_CLIENT_MEMBERSHIP = gql`
   mutation EnrollClientMembership(
@@ -1001,23 +1285,34 @@ export const ENROLL_CLIENT_MEMBERSHIP = gql`
     $startedAt: ISO8601Date
     $notes: String
   ) {
-    enrollClientMembership(input: {
-      clientId: $clientId
-      membershipPlanId: $membershipPlanId
-      startedAt: $startedAt
-      notes: $notes
-    }) {
+    enrollClientMembership(
+      input: {
+        clientId: $clientId
+        membershipPlanId: $membershipPlanId
+        startedAt: $startedAt
+        notes: $notes
+      }
+    ) {
       clientMembership {
         id
         status
         startedAt
-        client { id name email }
-        membershipPlan { id name priceCents currency }
+        client {
+          id
+          name
+          email
+        }
+        membershipPlan {
+          id
+          name
+          priceCents
+          currency
+        }
       }
       errors
     }
   }
-`
+`;
 
 export const UPDATE_CLIENT_MEMBERSHIP = gql`
   mutation UpdateClientMembership(
@@ -1027,13 +1322,15 @@ export const UPDATE_CLIENT_MEMBERSHIP = gql`
     $notes: String
     $membershipPlanId: ID
   ) {
-    updateClientMembership(input: {
-      id: $id
-      status: $status
-      endsAt: $endsAt
-      notes: $notes
-      membershipPlanId: $membershipPlanId
-    }) {
+    updateClientMembership(
+      input: {
+        id: $id
+        status: $status
+        endsAt: $endsAt
+        notes: $notes
+        membershipPlanId: $membershipPlanId
+      }
+    ) {
       clientMembership {
         id
         status
@@ -1041,19 +1338,33 @@ export const UPDATE_CLIENT_MEMBERSHIP = gql`
         endsAt
         cancelledAt
         notes
-        client { id name email }
-        membershipPlan { id name priceCents currency }
+        client {
+          id
+          name
+          email
+        }
+        membershipPlan {
+          id
+          name
+          priceCents
+          currency
+        }
       }
       errors
     }
   }
-`
+`;
 export const PURCHASE_CLIENT_MEMBERSHIP = gql`
-  mutation PurchaseClientMembership($membershipPlanId: ID!, $paymentMethodId: String) {
-    purchaseClientMembership(input: {
-      membershipPlanId: $membershipPlanId
-      paymentMethodId: $paymentMethodId
-    }) {
+  mutation PurchaseClientMembership(
+    $membershipPlanId: ID!
+    $paymentMethodId: String
+  ) {
+    purchaseClientMembership(
+      input: {
+        membershipPlanId: $membershipPlanId
+        paymentMethodId: $paymentMethodId
+      }
+    ) {
       clientMembership {
         id
         status
@@ -1061,12 +1372,17 @@ export const PURCHASE_CLIENT_MEMBERSHIP = gql`
         endsAt
         priceCents
         currency
-        membershipPlan { id name priceCents currency }
+        membershipPlan {
+          id
+          name
+          priceCents
+          currency
+        }
       }
       errors
     }
   }
-`
+`;
 
 export const CREATE_OWNER_SETUP_INTENT = gql`
   mutation CreateOwnerSetupIntent {
@@ -1075,7 +1391,7 @@ export const CREATE_OWNER_SETUP_INTENT = gql`
       errors
     }
   }
-`
+`;
 
 export const SAVE_OWNER_PAYMENT_METHOD = gql`
   mutation SaveOwnerPaymentMethod($paymentMethodId: String!) {
@@ -1084,4 +1400,14 @@ export const SAVE_OWNER_PAYMENT_METHOD = gql`
       errors
     }
   }
-`
+`;
+
+export const SEND_TEST_EMAIL = gql`
+  mutation SendTestEmail($to: String) {
+    sendTestEmail(input: { to: $to }) {
+      success
+      message
+      errors
+    }
+  }
+`;

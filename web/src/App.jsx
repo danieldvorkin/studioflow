@@ -21,18 +21,20 @@ import { useAuth } from "./auth/AuthProvider";
 import Templates from "./pages/Templates";
 import Sessions from "./pages/Sessions";
 import Booking from "./pages/Booking";
-import { PageSpinner } from "./components/Spinner";
-
-const Dashboard = lazy(() => import("./pages/Dashboard"));
 import Schedule from "./pages/Schedule";
 import Owner from "./pages/Owner";
 import LocationsPage from "./pages/Locations";
 import BookingsPage from "./pages/Bookings";
 import BookingShow from "./pages/BookingShow";
 import ClientsPage from "./pages/Clients";
-import Profile from "./pages/Profile";
 import InstructorPayoutsPage from "./pages/InstructorPayouts";
 import Favorites from "./pages/Favorites";
+import ClassDetail from "./pages/ClassDetail";
+import PublicClassDetail from "./pages/PublicClassDetail";
+import { PageSpinner } from "./components/Spinner";
+
+const Dashboard = lazy(() => import("./pages/dashboard"));
+const Profile = lazy(() => import("./pages/profile"));
 import { useTheme } from "./theme/ThemeProvider";
 import { useLocationContext } from "./location/LocationProvider";
 import { STUDIO_SETTINGS } from "./apollo/queries";
@@ -126,7 +128,7 @@ function AppShell() {
   });
   const dashboardTitle =
     studioSettingsData?.studioSettings?.dashboardTitle ||
-    "Pilates Studio Dashboard";
+    "-- Select a studio --";
   const clientsPageEnabled =
     studioSettingsData?.studioSettings?.clientsPageEnabled !== false;
 
@@ -569,6 +571,11 @@ function App() {
           path="/signup/client"
           element={<SignUpPortal accountType="CLIENT" />}
         />
+        {/* Public class landing page — no auth required */}
+        <Route
+          path="/c/:studioCode/:templateId"
+          element={<PublicClassDetail />}
+        />
         <Route element={<AppShell />}>
           <Route
             path="/dashboard"
@@ -584,7 +591,9 @@ function App() {
             path="/profile"
             element={
               <ProtectedRoute>
-                <Profile />
+                <Suspense fallback={<PageSpinner />}>
+                  <Profile />
+                </Suspense>
               </ProtectedRoute>
             }
           />
@@ -621,6 +630,14 @@ function App() {
             }
           />
           <Route path="/templates/:id/sessions" element={<Sessions />} />
+          <Route
+            path="/classes/:templateId"
+            element={
+              <ProtectedRoute>
+                <ClassDetail />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/booking/:id"
             element={

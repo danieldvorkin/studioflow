@@ -1,5 +1,5 @@
 class BookingMailer < ApplicationMailer
-  default from: "no-reply@pilates-studio.local"
+  default from: ENV.fetch("MAILER_FROM", "onboarding@resend.dev")
 
   def confirmation
     @booking = params[:booking]

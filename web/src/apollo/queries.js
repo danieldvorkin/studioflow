@@ -1,8 +1,16 @@
-import { gql } from '@apollo/client'
+import { gql } from "@apollo/client";
 
 export const CLASS_TEMPLATES = gql`
-  query ClassTemplates($instructorId: ID, $studioLocationId: ID, $studioId: ID) {
-    classTemplates(instructorId: $instructorId, studioLocationId: $studioLocationId, studioId: $studioId) {
+  query ClassTemplates(
+    $instructorId: ID
+    $studioLocationId: ID
+    $studioId: ID
+  ) {
+    classTemplates(
+      instructorId: $instructorId
+      studioLocationId: $studioLocationId
+      studioId: $studioId
+    ) {
       id
       title
       description
@@ -13,15 +21,32 @@ export const CLASS_TEMPLATES = gql`
       compensationType
       instructorSplitPercent
       instructorFlatRateCents
-      studioLocation { id name }
-      instructor { id name email }
+      studioLocation {
+        id
+        name
+      }
+      instructor {
+        id
+        name
+        email
+      }
     }
   }
-`
+`;
 
 export const CLASS_SESSIONS = gql`
-  query ClassSessions($from: ISO8601DateTime, $to: ISO8601DateTime, $studioLocationId: ID, $studioId: ID) {
-    classSessions(from: $from, to: $to, studioLocationId: $studioLocationId, studioId: $studioId) {
+  query ClassSessions(
+    $from: ISO8601DateTime
+    $to: ISO8601DateTime
+    $studioLocationId: ID
+    $studioId: ID
+  ) {
+    classSessions(
+      from: $from
+      to: $to
+      studioLocationId: $studioLocationId
+      studioId: $studioId
+    ) {
       id
       startTime
       endTime
@@ -31,12 +56,21 @@ export const CLASS_SESSIONS = gql`
       bundleSpots
       bundleSpotsTaken
       bundleSpotsAvailable
-      classTemplate { id title priceCents currency durationMinutes }
+      classTemplate {
+        id
+        title
+        priceCents
+        currency
+        durationMinutes
+      }
       seatsAvailable
-      instructor { id name }
+      instructor {
+        id
+        name
+      }
     }
   }
-`
+`;
 
 export const BUNDLE_PRODUCTS = gql`
   query BundleProducts {
@@ -48,11 +82,18 @@ export const BUNDLE_PRODUCTS = gql`
       creditsCount
       priceCents
       currency
-      classTemplate { id title }
-      instructor { id name email }
+      classTemplate {
+        id
+        title
+      }
+      instructor {
+        id
+        name
+        email
+      }
     }
   }
-`
+`;
 
 export const BUNDLE_SHOP_PRODUCTS = gql`
   query BundleShopProducts($studioId: ID!, $currency: String) {
@@ -64,11 +105,18 @@ export const BUNDLE_SHOP_PRODUCTS = gql`
       creditsCount
       priceCents
       currency
-      classTemplate { id title }
-      instructor { id name email }
+      classTemplate {
+        id
+        title
+      }
+      instructor {
+        id
+        name
+        email
+      }
     }
   }
-`
+`;
 
 export const MY_BUNDLE_PURCHASES = gql`
   query MyBundlePurchases($studioId: ID) {
@@ -89,7 +137,7 @@ export const MY_BUNDLE_PURCHASES = gql`
       }
     }
   }
-`
+`;
 
 export const BUNDLE_PRODUCTS_FOR_CLASS_SESSION = gql`
   query BundleProductsForClassSession($classSessionId: ID!) {
@@ -99,34 +147,56 @@ export const BUNDLE_PRODUCTS_FOR_CLASS_SESSION = gql`
       creditsCount
       priceCents
       currency
-      classTemplate { id title }
-      instructor { id name }
+      classTemplate {
+        id
+        title
+      }
+      instructor {
+        id
+        name
+      }
     }
   }
-`
+`;
 
 export const CURRENT_USER = gql`
   query CurrentUser {
-    currentUser { id studioId email name role roleName godmode active availableForSessions }
+    currentUser {
+      id
+      studioId
+      email
+      name
+      role
+      roleName
+      godmode
+      active
+      availableForSessions
+    }
   }
-`
+`;
 
 export const STUDIOS = gql`
   query Studios {
     studios {
       id
       name
-      studioLocations { id name }
+      studioLocations {
+        id
+        name
+      }
     }
   }
-`
+`;
 
 export const STUDIO_SHOW = gql`
   query StudioShow($id: ID!) {
     studio(id: $id) {
       id
       name
-      studioLocations { id name }
+      studioLocations {
+        id
+        name
+      }
       instructors {
         id
         name
@@ -159,31 +229,59 @@ export const STUDIO_SHOW = gql`
         seatsAvailable
         room
         bundleEnabled
-        instructor { id name }
-        classTemplate { id title durationMinutes priceCents currency }
+        instructor {
+          id
+          name
+        }
+        classTemplate {
+          id
+          title
+          durationMinutes
+          priceCents
+          currency
+        }
       }
     }
   }
-`
+`;
 
 export const UPCOMING_BOOKABLE_CLASS_SESSIONS_COUNT = gql`
-  query UpcomingBookableClassSessionsCount($studioId: ID, $studioLocationId: ID) {
-    upcomingBookableClassSessionsCount(studioId: $studioId, studioLocationId: $studioLocationId)
+  query UpcomingBookableClassSessionsCount(
+    $studioId: ID
+    $studioLocationId: ID
+  ) {
+    upcomingBookableClassSessionsCount(
+      studioId: $studioId
+      studioLocationId: $studioLocationId
+    )
   }
-`
+`;
 
 export const INSTRUCTORS_AND_CLIENTS = gql`
   query InstructorsAndClients {
-    instructors { id name email }
-    clients { id name email phone }
+    instructors {
+      id
+      name
+      email
+    }
+    clients {
+      id
+      name
+      email
+      phone
+    }
   }
-`
+`;
 
 export const INSTRUCTORS = gql`
   query Instructors {
-    instructors { id name email }
+    instructors {
+      id
+      name
+      email
+    }
   }
-`
+`;
 
 export const ALL_USERS = gql`
   query AllUsers {
@@ -203,11 +301,21 @@ export const ALL_USERS = gql`
       stripeConnectOnboardingCompleted
     }
   }
-`
+`;
 
 export const INSTRUCTOR_EARNINGS_WEEKS = gql`
-  query InstructorEarningsWeeks($weekStart: ISO8601Date!, $weekEnd: ISO8601Date, $instructorId: ID, $currency: String) {
-    instructorEarningsWeeks(weekStart: $weekStart, weekEnd: $weekEnd, instructorId: $instructorId, currency: $currency) {
+  query InstructorEarningsWeeks(
+    $weekStart: ISO8601Date!
+    $weekEnd: ISO8601Date
+    $instructorId: ID
+    $currency: String
+  ) {
+    instructorEarningsWeeks(
+      weekStart: $weekStart
+      weekEnd: $weekEnd
+      instructorId: $instructorId
+      currency: $currency
+    ) {
       instructor {
         id
         name
@@ -235,13 +343,19 @@ export const INSTRUCTOR_EARNINGS_WEEKS = gql`
         paidReference
       }
       templateBreakdown {
-        classTemplate { id title compensationType instructorSplitPercent instructorFlatRateCents }
+        classTemplate {
+          id
+          title
+          compensationType
+          instructorSplitPercent
+          instructorFlatRateCents
+        }
         grossCents
         instructorEarningsCents
       }
     }
   }
-`
+`;
 
 export const BOOKINGS = gql`
   query Bookings($studioLocationId: ID, $studioId: ID) {
@@ -266,19 +380,33 @@ export const BOOKINGS = gql`
         id
         creditsTotal
         creditsRemaining
-        bundleProduct { id title }
+        bundleProduct {
+          id
+          title
+        }
       }
-      client { id name email }
+      client {
+        id
+        name
+        email
+      }
       classSession {
         id
         startTime
         room
-        classTemplate { id title priceCents }
-        instructor { id name }
+        classTemplate {
+          id
+          title
+          priceCents
+        }
+        instructor {
+          id
+          name
+        }
       }
     }
   }
-`
+`;
 
 export const MY_BOOKINGS = gql`
   query MyBookings($studioLocationId: ID, $studioId: ID) {
@@ -303,25 +431,47 @@ export const MY_BOOKINGS = gql`
         id
         creditsTotal
         creditsRemaining
-        bundleProduct { id title }
+        bundleProduct {
+          id
+          title
+        }
       }
-      client { id name email }
+      client {
+        id
+        name
+        email
+      }
       classSession {
         id
         startTime
         room
-        classTemplate { id title priceCents }
-        instructor { id name }
+        classTemplate {
+          id
+          title
+          priceCents
+        }
+        instructor {
+          id
+          name
+        }
       }
     }
   }
-`
+`;
 
 export const CLIENTS = gql`
   query Clients {
-    clients { id name email phone user { id } }
+    clients {
+      id
+      name
+      email
+      phone
+      user {
+        id
+      }
+    }
   }
-`
+`;
 
 export const CLIENT_PROFILE = gql`
   query ClientProfile($id: ID!) {
@@ -335,7 +485,11 @@ export const CLIENT_PROFILE = gql`
         id
         body
         createdAt
-        author { id name email }
+        author {
+          id
+          name
+          email
+        }
       }
       bookings(limit: 300) {
         id
@@ -352,13 +506,19 @@ export const CLIENT_PROFILE = gql`
         classSession {
           id
           startTime
-          classTemplate { id title }
-          instructor { id name }
+          classTemplate {
+            id
+            title
+          }
+          instructor {
+            id
+            name
+          }
         }
       }
     }
   }
-`
+`;
 
 export const PAYMENT_SETTINGS = gql`
   query PaymentSettings {
@@ -374,7 +534,7 @@ export const PAYMENT_SETTINGS = gql`
       clientsPageEnabled
     }
   }
-`
+`;
 
 export const PAYMENT_PUBLIC_SETTINGS = gql`
   query PaymentPublicSettings($studioId: ID) {
@@ -385,7 +545,7 @@ export const PAYMENT_PUBLIC_SETTINGS = gql`
       configured
     }
   }
-`
+`;
 
 export const MY_CLIENT = gql`
   query MyClient($studioId: ID) {
@@ -411,7 +571,7 @@ export const MY_CLIENT = gql`
       }
     }
   }
-`
+`;
 
 export const STUDIO_SETTINGS = gql`
   query StudioSettings($studioId: ID) {
@@ -421,11 +581,14 @@ export const STUDIO_SETTINGS = gql`
       clientsPageEnabled
     }
   }
-`
+`;
 
 export const MY_FAVORITE_CLASS_SESSIONS = gql`
   query MyFavoriteClassSessions($studioId: ID, $studioLocationId: ID) {
-    myFavoriteClassSessions(studioId: $studioId, studioLocationId: $studioLocationId) {
+    myFavoriteClassSessions(
+      studioId: $studioId
+      studioLocationId: $studioLocationId
+    ) {
       id
       studioId
       startTime
@@ -433,7 +596,10 @@ export const MY_FAVORITE_CLASS_SESSIONS = gql`
       capacity
       room
       seatsAvailable
-      instructor { id name }
+      instructor {
+        id
+        name
+      }
       classTemplate {
         id
         title
@@ -441,12 +607,19 @@ export const MY_FAVORITE_CLASS_SESSIONS = gql`
         durationMinutes
         priceCents
         currency
-        studioLocation { id name }
-        instructor { id name email }
+        studioLocation {
+          id
+          name
+        }
+        instructor {
+          id
+          name
+          email
+        }
       }
     }
   }
-`
+`;
 
 export const PAYMENTS = gql`
   query Payments {
@@ -457,15 +630,22 @@ export const PAYMENTS = gql`
       status
       errorMessage
       createdAt
-      client { id name email }
+      client {
+        id
+        name
+        email
+      }
       classSession {
         id
         startTime
-        classTemplate { id title }
+        classTemplate {
+          id
+          title
+        }
       }
     }
   }
-`
+`;
 
 export const STUDIO_LOCATIONS = gql`
   query StudioLocations($studioId: ID) {
@@ -478,7 +658,7 @@ export const STUDIO_LOCATIONS = gql`
       zip
     }
   }
-`
+`;
 
 const SUBSCRIPTION_FRAGMENT = gql`
   fragment SubscriptionFields on StudioSubscription {
@@ -495,9 +675,13 @@ const SUBSCRIPTION_FRAGMENT = gql`
     active
     createdAt
     updatedAt
-    studio { id name slug }
+    studio {
+      id
+      name
+      slug
+    }
   }
-`
+`;
 
 export const STUDIO_SUBSCRIPTIONS = gql`
   ${SUBSCRIPTION_FRAGMENT}
@@ -506,7 +690,7 @@ export const STUDIO_SUBSCRIPTIONS = gql`
       ...SubscriptionFields
     }
   }
-`
+`;
 
 export const MY_STUDIO_SUBSCRIPTION = gql`
   ${SUBSCRIPTION_FRAGMENT}
@@ -515,7 +699,7 @@ export const MY_STUDIO_SUBSCRIPTION = gql`
       ...SubscriptionFields
     }
   }
-`
+`;
 
 export const MY_STUDIO = gql`
   query MyStudio {
@@ -523,10 +707,11 @@ export const MY_STUDIO = gql`
       id
       name
       slug
+      inviteCode
       onboardingCompleted
     }
   }
-`
+`;
 
 export const CLIENT_INVITATIONS = gql`
   query ClientInvitations {
@@ -541,7 +726,7 @@ export const CLIENT_INVITATIONS = gql`
       invitedByName
     }
   }
-`
+`;
 
 export const CLIENT_INVITATION_BY_TOKEN = gql`
   query ClientInvitationByToken($token: String!) {
@@ -553,7 +738,7 @@ export const CLIENT_INVITATION_BY_TOKEN = gql`
       invitedByName
     }
   }
-`
+`;
 
 export const MEMBERSHIP_PLANS = gql`
   query MembershipPlans($studioId: ID) {
@@ -580,11 +765,19 @@ export const MEMBERSHIP_PLANS = gql`
       updatedAt
     }
   }
-`
+`;
 
 export const CLIENT_MEMBERSHIPS = gql`
-  query ClientMemberships($clientId: ID, $membershipPlanId: ID, $status: String) {
-    clientMemberships(clientId: $clientId, membershipPlanId: $membershipPlanId, status: $status) {
+  query ClientMemberships(
+    $clientId: ID
+    $membershipPlanId: ID
+    $status: String
+  ) {
+    clientMemberships(
+      clientId: $clientId
+      membershipPlanId: $membershipPlanId
+      status: $status
+    ) {
       id
       studioId
       status
@@ -615,7 +808,7 @@ export const CLIENT_MEMBERSHIPS = gql`
       }
     }
   }
-`
+`;
 
 export const PLATFORM_PAYMENT_SETTINGS = gql`
   query PlatformPaymentSettings {
@@ -624,7 +817,7 @@ export const PLATFORM_PAYMENT_SETTINGS = gql`
       configured
     }
   }
-`
+`;
 
 export const PLATFORM_STATS = gql`
   query PlatformStats {
@@ -641,7 +834,7 @@ export const PLATFORM_STATS = gql`
       subscriptionsByTier
     }
   }
-`
+`;
 
 export const MODERATORS = gql`
   query Moderators {
@@ -654,7 +847,7 @@ export const MODERATORS = gql`
       createdAt
     }
   }
-`
+`;
 
 export const CREATE_MODERATOR = gql`
   mutation CreateModerator($email: String!, $name: String) {
@@ -670,4 +863,45 @@ export const CREATE_MODERATOR = gql`
       errors
     }
   }
-`
+`;
+
+export const PUBLIC_CLASS_PAGE = gql`
+  query PublicClassPage($studioInviteCode: String!, $templateId: ID!) {
+    publicClassPage(
+      studioInviteCode: $studioInviteCode
+      templateId: $templateId
+    ) {
+      studioName
+      studioInviteCode
+      template {
+        id
+        title
+        description
+        capacity
+        durationMinutes
+        priceCents
+        currency
+        instructor {
+          id
+          name
+        }
+        studioLocation {
+          id
+          name
+        }
+      }
+      upcomingSessions {
+        id
+        startTime
+        endTime
+        capacity
+        room
+        seatsAvailable
+        instructor {
+          id
+          name
+        }
+      }
+    }
+  }
+`;

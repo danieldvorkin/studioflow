@@ -27,6 +27,33 @@ module Types
       context[:current_user]
     end
 
+    # Public class landing page — no auth required
+    field :public_class_page, Types::PublicClassPageType, null: true,
+      description: "Fetch public class info by studio invite code and template ID (no auth required)" do
+      argument :studio_invite_code, String, required: true
+      argument :template_id, ID, required: true
+    end
+    def public_class_page(studio_invite_code:, template_id:)
+      studio = Studio.find_by(invite_code: studio_invite_code.to_s.strip)
+      return nil unless studio
+
+      template = studio.class_templates.find_by(id: template_id)
+      return nil unless template
+
+      sessions = studio.class_sessions
+        .where(class_template_id: template.id)
+        .where("start_time > ?", Time.current)
+        .order(:start_time)
+        .limit(30)
+
+      OpenStruct.new(
+        studio_name: studio.name,
+        studio_invite_code: studio.invite_code,
+        template: template,
+        upcoming_sessions: sessions
+      )
+    end
+
     field :studios, [ Types::StudioType ], null: false,
       description: "List all studios (for client marketplace browsing)"
     def studios

@@ -73,5 +73,8 @@ module Types
     field :purchase_client_membership, mutation: Mutations::PurchaseClientMembership, null: true
 
     field :create_moderator, mutation: Mutations::CreateModerator, null: true
+
+    # Godmode only
+    field :send_test_email, mutation: Mutations::SendTestEmail, null: true
   end
 end

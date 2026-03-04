@@ -1,11 +1,10 @@
 /**
- * Skeleton primitives for progressive dashboard loading.
+ * Dashboard-specific skeleton / loading placeholders.
  *
- * All exported components produce graceful shimmer placeholders
- * that visually match their real counterparts.
+ * Shimmer moves left→right with a white-light sweep on a muted background,
+ * matching the dark app palette.
  */
 
-/** Base shimmer block */
 function Shimmer({ className = "" }) {
   return (
     <div
@@ -48,15 +47,21 @@ export function SkeletonStatRow() {
 }
 
 /**
- * Dashboard main panel skeleton — a grid of stat cards + row list.
- * @param {number} cards - number of stat cards to render
- * @param {number} rows  - number of stat rows to render
+ * Main dashboard panel skeleton: stat card grid + row list.
+ * @param {number} cards
+ * @param {number} rows
  */
 export function SkeletonDashboardPanel({ cards = 3, rows = 5 }) {
   return (
     <div className="flex flex-col gap-4">
       <div
-        className={`grid gap-3 ${cards === 2 ? "grid-cols-2" : cards === 4 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-1 md:grid-cols-3"}`}
+        className={`grid gap-3 ${
+          cards === 2
+            ? "grid-cols-2"
+            : cards === 4
+              ? "grid-cols-2 md:grid-cols-4"
+              : "grid-cols-1 md:grid-cols-3"
+        }`}
       >
         {Array.from({ length: cards }).map((_, i) => (
           <SkeletonStatCard key={i} />
@@ -73,9 +78,7 @@ export function SkeletonDashboardPanel({ cards = 3, rows = 5 }) {
   );
 }
 
-/**
- * Sidebar / quick-glance skeleton — a single column of rows.
- */
+/** Sidebar column of rows */
 export function SkeletonSidePanel({ rows = 4 }) {
   return (
     <div className="flex flex-col gap-2">

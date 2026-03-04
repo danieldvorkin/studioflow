@@ -1,4 +1,4 @@
-import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { useDocumentTitle } from "../../hooks/useDocumentTitle";
 import { useQuery } from "@apollo/client";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -6,16 +6,16 @@ import {
   SkeletonDashboardPanel,
   SkeletonSidePanel,
   SkeletonStatCard,
-} from "../components/SkeletonCards";
+} from "./Skeleton";
 import {
   CURRENT_USER,
   CLASS_TEMPLATES,
   CLASS_SESSIONS,
   BOOKINGS,
   UPCOMING_BOOKABLE_CLASS_SESSIONS_COUNT,
-} from "../apollo/queries";
-import { useLocationContext } from "../location/LocationProvider";
-import { useStudio } from "../studio/StudioProvider";
+} from "../../apollo/queries";
+import { useLocationContext } from "../../location/LocationProvider";
+import { useStudio } from "../../studio/StudioProvider";
 
 function withinDays(dateLike, days, now = new Date()) {
   const d = new Date(dateLike);
@@ -320,14 +320,24 @@ export default function Dashboard() {
     const bookedSessionIds = new Set(
       activeBookings.map((b) => b?.classSession?.id).filter(Boolean),
     );
-    return [...sessions]
+    const available = [...sessions]
       .filter((s) => futureWithinDays(s.startTime, 14, now))
       .filter((s) => !bookedSessionIds.has(s.id))
       .filter(
         (s) => typeof s.seatsAvailable !== "number" || s.seatsAvailable > 0,
       )
-      .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
-      .slice(0, 8);
+      .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+
+    // Deduplicate by class template — show the soonest session per class
+    const seenTemplates = new Map();
+    for (const s of available) {
+      const tid = s.classTemplate?.id ?? s.id;
+      if (!seenTemplates.has(tid)) {
+        seenTemplates.set(tid, { ...s, _totalSessions: 0 });
+      }
+      seenTemplates.get(tid)._totalSessions += 1;
+    }
+    return Array.from(seenTemplates.values()).slice(0, 8);
   })();
 
   const ownerLike = isOwner || isStaff;
@@ -754,9 +764,7 @@ export default function Dashboard() {
     <div className="flex w-full flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-50">
-          {user
-            ? `Welcome back, ${user.name || user.email}`
-            : "Pilates Studio Dashboard"}
+          {user ? `Welcome back, ${user.name || user.email}` : ""}
         </h1>
         <p className="text-sm text-slate-400">
           {isClient
@@ -1326,7 +1334,7 @@ export default function Dashboard() {
                     <ul className="mt-2 flex flex-col gap-2">
                       {bookableSessions.map((s) => (
                         <li
-                          key={s.id}
+                          key={s.classTemplate?.id ?? s.id}
                           className="flex items-start justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/70 px-3 py-2.5"
                         >
                           <div className="min-w-0 flex-1">
@@ -1334,15 +1342,18 @@ export default function Dashboard() {
                               {s.classTemplate?.title || "Class"}
                             </div>
                             <div className="mt-0.5 text-xs text-slate-400">
-                              {new Date(s.startTime).toLocaleString()}
+                              Next:{" "}
+                              {new Date(s.startTime).toLocaleString(undefined, {
+                                weekday: "short",
+                                month: "short",
+                                day: "numeric",
+                                hour: "numeric",
+                                minute: "2-digit",
+                              })}
                             </div>
                             <div className="mt-1 flex flex-wrap gap-2 text-[11px] text-slate-400">
                               {s.instructor?.name && (
                                 <span>{s.instructor.name}</span>
-                              )}
-                              {s.room && <span>· Room {s.room}</span>}
-                              {typeof s.seatsAvailable === "number" && (
-                                <span>· {s.seatsAvailable} spots left</span>
                               )}
                               {typeof s.classTemplate?.priceCents ===
                                 "number" && (
@@ -1354,14 +1365,19 @@ export default function Dashboard() {
                                   )}
                                 </span>
                               )}
+                              {s._totalSessions > 1 && (
+                                <span className="inline-flex items-center rounded-full bg-sky-500/10 px-2 py-0.5 text-[11px] text-sky-300">
+                                  {s._totalSessions} times available
+                                </span>
+                              )}
                             </div>
                           </div>
                           <div className="shrink-0">
                             <Link
-                              to={`/booking/${s.id}`}
+                              to={`/classes/${s.classTemplate?.id ?? s.id}`}
                               className="inline-flex items-center rounded-full bg-sky-500 px-4 py-2 text-sm font-semibold text-on-accent hover:bg-sky-400"
                             >
-                              Book now
+                              View times
                             </Link>
                           </div>
                         </li>

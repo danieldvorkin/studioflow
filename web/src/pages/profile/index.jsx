@@ -1,4 +1,4 @@
-import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { useDocumentTitle } from "../../hooks/useDocumentTitle";
 import { useMutation, useQuery } from "@apollo/client";
 import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
@@ -16,7 +16,7 @@ import {
   CLIENT_MEMBERSHIPS,
   PLATFORM_PAYMENT_SETTINGS,
   MY_STUDIO_SUBSCRIPTION,
-} from "../apollo/queries";
+} from "../../apollo/queries";
 import {
   CREATE_SETUP_INTENT,
   REMOVE_MY_PAYMENT_METHOD,
@@ -26,13 +26,18 @@ import {
   UPDATE_CLIENT_MEMBERSHIP,
   CREATE_OWNER_SETUP_INTENT,
   SAVE_OWNER_PAYMENT_METHOD,
-} from "../apollo/mutations";
-import { useToast } from "../components/ToastProvider";
-import { useAuth } from "../auth/AuthProvider";
-import { useTheme } from "../theme/ThemeProvider";
-import { normalizeStripeEmail } from "../payments/stripeEmail";
-import { useStudio } from "../studio/StudioProvider";
-import { getStripeCardElementOptions } from "../theme/stripeElements";
+} from "../../apollo/mutations";
+import { useToast } from "../../components/ToastProvider";
+import { useAuth } from "../../auth/AuthProvider";
+import { useTheme } from "../../theme/ThemeProvider";
+import { normalizeStripeEmail } from "../../payments/stripeEmail";
+import { useStudio } from "../../studio/StudioProvider";
+import { getStripeCardElementOptions } from "../../theme/stripeElements";
+import {
+  SkeletonMembership,
+  SkeletonBillingCard,
+  SkeletonTransactionRows,
+} from "./Skeleton";
 
 function formatMoney(cents, currency) {
   const amount = (Number(cents) || 0) / 100;
@@ -390,7 +395,9 @@ export default function Profile() {
           </div>
 
           {membershipsLoading && (
-            <p className="mt-2 text-sm text-slate-400">Loading…</p>
+            <div className="mt-3">
+              <SkeletonMembership />
+            </div>
           )}
 
           {!membershipsLoading && activeMemberships.length === 0 && (
@@ -467,7 +474,7 @@ export default function Profile() {
             <h3 className="text-sm font-semibold text-slate-100">Saved card</h3>
 
             {(myClientLoading || creatingSetupIntent) && (
-              <p className="mt-2 text-sm text-slate-400">Loading…</p>
+              <SkeletonBillingCard />
             )}
 
             {!myClientLoading && !stripePublishableKey && (
@@ -514,11 +521,7 @@ export default function Profile() {
               Recent charges from your bookings.
             </p>
 
-            {myBookingsLoading && (
-              <p className="mt-2 text-sm text-slate-400">
-                Loading transactions…
-              </p>
-            )}
+            {myBookingsLoading && <SkeletonTransactionRows rows={5} />}
 
             {!myBookingsLoading && myBookings.length === 0 && (
               <p className="mt-3 rounded-xl border border-dashed border-slate-700 bg-slate-900/60 p-3 text-sm text-slate-400">
