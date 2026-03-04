@@ -286,6 +286,15 @@ module Types
       end
     end
 
+    field :moderators, [ Types::UserType ], null: false,
+      description: "List all moderator accounts (godmode only)"
+    def moderators
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authorized" unless user&.godmode?
+
+      User.where(role: User::ROLES[:moderator]).order(:email)
+    end
+
     field :bookings, [ Types::BookingType ], null: false,
     description: "Bookings visible to the current user based on role" do
     argument :studio_location_id, ID, required: false

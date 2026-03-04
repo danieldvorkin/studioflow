@@ -625,3 +625,32 @@ export const PLATFORM_PAYMENT_SETTINGS = gql`
     }
   }
 `
+
+export const MODERATORS = gql`
+  query Moderators {
+    moderators {
+      id
+      email
+      name
+      roleName
+      active
+      createdAt
+    }
+  }
+`
+
+export const CREATE_MODERATOR = gql`
+  mutation CreateModerator($email: String!, $name: String) {
+    createModerator(input: { email: $email, name: $name }) {
+      user {
+        id
+        email
+        name
+        roleName
+        active
+      }
+      plaintextPassword
+      errors
+    }
+  }
+`

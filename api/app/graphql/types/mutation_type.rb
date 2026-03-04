@@ -71,5 +71,7 @@ module Types
     field :enroll_client_membership, mutation: Mutations::EnrollClientMembership, null: true
     field :update_client_membership, mutation: Mutations::UpdateClientMembership, null: true
     field :purchase_client_membership, mutation: Mutations::PurchaseClientMembership, null: true
+
+    field :create_moderator, mutation: Mutations::CreateModerator, null: true
   end
 end

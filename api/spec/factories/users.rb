@@ -23,5 +23,9 @@ FactoryBot.define do
     trait :client do
       role { User::ROLES[:client] }
     end
+
+    trait :moderator do
+      role { User::ROLES[:moderator] }
+    end
   end
 end

@@ -28,6 +28,7 @@ import Schedule from './pages/Schedule'
 import Owner from './pages/Owner'
 import GodmodeStudio from './pages/GodmodeStudio'
 import GodmodeSubscriptions from './pages/GodmodeSubscriptions'
+import GodmodeModerators from './pages/GodmodeModerators'
 import OwnerSubscription from './pages/OwnerSubscription'
 import LocationsPage from './pages/Locations'
 import BookingsPage from './pages/Bookings'
@@ -186,6 +187,7 @@ function AppShell() {
             <NavFolder label="Godmode" defaultOpen>
               <NavItem to="/owner">Owners</NavItem>
               <NavItem to="/godmode/subscriptions">Subscriptions</NavItem>
+              <NavItem to="/godmode/moderators">Moderators</NavItem>
             </NavFolder>
           )}
           {showOwnerNav && (
@@ -321,6 +323,7 @@ function AppShell() {
                   <NavFolder label="Godmode" defaultOpen variant="mobile">
                     <NavItem to="/owner" variant="mobile" onNavigate={closeMobileNav}>Owners</NavItem>
                     <NavItem to="/godmode/subscriptions" variant="mobile" onNavigate={closeMobileNav}>Subscriptions</NavItem>
+                    <NavItem to="/godmode/moderators" variant="mobile" onNavigate={closeMobileNav}>Moderators</NavItem>
                   </NavFolder>
                 )}
                 {showOwnerNav && (
@@ -621,6 +624,14 @@ function App() {
             element={(
               <ProtectedRoute>
                 <GodmodeSubscriptions />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/godmode/moderators"
+            element={(
+              <ProtectedRoute>
+                <GodmodeModerators />
               </ProtectedRoute>
             )}
           />

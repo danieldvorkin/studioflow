@@ -5,8 +5,8 @@ class User < ApplicationRecord
          :recoverable, :rememberable, :validatable,
          :jwt_authenticatable, jwt_revocation_strategy: JwtDenylist
 
-  ROLES = { owner: 0, staff: 1, instructor: 2, client: 3 }.freeze
-    GODMODE_EMAIL = "dvorkin212@gmail.com".freeze
+  ROLES = { owner: 0, staff: 1, instructor: 2, client: 3, moderator: 4 }.freeze
+  GODMODE_EMAIL = "dvorkin212@gmail.com".freeze
 
   belongs_to :studio
 
@@ -20,6 +20,10 @@ class User < ApplicationRecord
     return "godmode" if godmode?
 
     ROLES.key(read_attribute(:role))&.to_s
+  end
+
+  def moderator?
+    read_attribute(:role) == ROLES[:moderator]
   end
 
   def owner?
@@ -36,6 +40,10 @@ class User < ApplicationRecord
 
   def client?
     read_attribute(:role) == ROLES[:client]
+  end
+
+  def platform_staff?
+    godmode? || moderator?
   end
 
   validates :instructor_compensation_type,

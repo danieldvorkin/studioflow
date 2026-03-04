@@ -17,5 +17,7 @@ module Types
 
     field :stripe_connect_account_id, String, null: true
     field :stripe_connect_onboarding_completed, Boolean, null: false
+
+    field :created_at, GraphQL::Types::ISO8601DateTime, null: false
   end
 end
