@@ -6066,6 +6066,29 @@
           null,
           1,
           0,
+          0,
+          null,
+          0,
+          null,
+          null,
+          0,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          1,
+          null,
+          1,
+          0,
           null,
           null,
           null
@@ -6178,6 +6201,26 @@
           1,
           0,
           null,
+          null,
+          null
+        ]
+      },
+      "/Users/danieldvorkin/Projects/pilates-studio/api/app/graphql/types/platform_stats_type.rb": {
+        "lines": [
+          null,
+          null,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           null,
           null
         ]
@@ -6839,6 +6882,6 @@
         "branches": {}
       }
     },
-    "timestamp": 1772582778
+    "timestamp": 1772583991
   }
 }

@@ -814,7 +814,7 @@ module Types
         total_payments_count:       Payment.where(status: "succeeded").count,
         total_revenue_cents:        Payment.where(status: "succeeded").sum(:amount_cents),
         new_studios_this_month:     Studio.where("created_at >= ?", month_start).count,
-        subscriptions_by_tier:      StudioSubscription.group(:tier).count,
+        subscriptions_by_tier:      StudioSubscription.group(:tier).count
       }
     end
 
