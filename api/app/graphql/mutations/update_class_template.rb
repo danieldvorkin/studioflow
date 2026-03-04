@@ -22,12 +22,7 @@ module Mutations
       ct = ClassTemplate.where(studio_id: user&.studio_id).find(id)
       raise Pundit::NotAuthorizedError unless Pundit.policy!(user, ct).update?
 
-      if user&.instructor?
-        attrs.delete(:instructor_id)
-        attrs[:instructor_id] = user.id
-      end
-
-      unless user&.owner?
+      unless user&.owner? || user&.moderator?
         attrs.delete(:compensation_type)
         attrs.delete(:instructor_split_percent)
         attrs.delete(:instructor_flat_rate_cents)

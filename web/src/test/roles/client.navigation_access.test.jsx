@@ -67,7 +67,7 @@ describe('Client role navigation + access guards', () => {
     )
 
     expect(await screen.findByRole('heading', { name: 'Restricted' })).toBeInTheDocument()
-    expect(screen.getByText(/only owners and instructors can view the client list/i)).toBeInTheDocument()
+    expect(screen.getByText(/only owners, staff, and moderators can view the client list/i)).toBeInTheDocument()
   })
 
   it('shows owner access only when visiting /owner as a client', async () => {

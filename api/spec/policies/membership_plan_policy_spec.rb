@@ -28,8 +28,28 @@ RSpec.describe MembershipPlanPolicy do
     include_examples "can manage", :owner
   end
 
+  describe "moderator" do
+    include_examples "can manage", :moderator
+  end
+
   describe "staff" do
-    include_examples "can manage", :staff
+    let(:staff_user) { create(:user, :staff, studio: studio) }
+
+    it "allows index? (read plans)" do
+      expect(described_class.new(staff_user, plan).index?).to eq(true)
+    end
+
+    it "denies create?" do
+      expect(described_class.new(staff_user, plan).create?).to eq(false)
+    end
+
+    it "denies update?" do
+      expect(described_class.new(staff_user, plan).update?).to eq(false)
+    end
+
+    it "denies destroy?" do
+      expect(described_class.new(staff_user, plan).destroy?).to eq(false)
+    end
   end
 
   describe "client" do

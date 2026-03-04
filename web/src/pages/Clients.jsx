@@ -20,7 +20,10 @@ export default function ClientsPage() {
   const role = (user?.roleName || "").toString().toLowerCase();
   const isGodmode = user?.godmode === true || role === "godmode";
   const isOwner = isGodmode || role === "owner" || user?.role === 0;
-  const isInstructor = isGodmode || role === "instructor";
+  const isStaff = isGodmode || role === "staff" || user?.role === 1;
+  const isModerator = isGodmode || role === "moderator" || user?.role === 4;
+  const isInstructor = role === "instructor";
+  const canViewClients = isOwner || isStaff || isModerator;
 
   const { data, loading, error } = useQuery(CLIENTS, {
     skip: !user,
@@ -42,12 +45,12 @@ export default function ClientsPage() {
     return <p className="text-sm text-slate-400">Sign in to view clients.</p>;
   }
 
-  if (!isOwner && !isInstructor) {
+  if (!canViewClients) {
     return (
       <div className="mx-auto max-w-xl rounded-2xl border border-slate-800 bg-slate-900/80 p-6 text-sm text-slate-200">
         <h1 className="mb-2 text-lg font-semibold text-slate-50">Restricted</h1>
         <p className="text-sm text-slate-400">
-          Only owners and instructors can view the client list.
+          Only owners, staff, and moderators can view the client list.
         </p>
       </div>
     );

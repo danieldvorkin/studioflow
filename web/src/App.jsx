@@ -119,7 +119,7 @@ function AppShell() {
 
   const role = (user?.roleName || "").toString().toLowerCase();
   const isClient =
-    role === "client" || user?.role === 2 || user?.role === "client";
+    role === "client" || user?.role === 3;
   const { studios, selectedStudioId, setSelectedStudioId } = useStudio();
 
   const { data: studioSettingsData } = useQuery(STUDIO_SETTINGS, {
@@ -134,11 +134,11 @@ function AppShell() {
 
   const roleRaw = user?.roleName;
   const isOwner =
-    roleRaw === "owner" || user?.role === 0 || roleRaw === "OWNER";
+    roleRaw === "owner" || user?.role === 0 || roleRaw === "OWNER" || roleRaw === "godmode" || user?.godmode === true;
   const isStaff = roleRaw === "staff" || user?.role === 1;
-  const isInstructor = roleRaw === "instructor";
+  const isModerator = roleRaw === "moderator" || user?.role === 4 || roleRaw === "godmode" || user?.godmode === true;
 
-  const canManageStudio = isOwner || isStaff || isInstructor;
+  const canManageStudio = isOwner || isStaff || isModerator;
 
   useEffect(() => {
     mobileNavOpenRef.current = mobileNavOpen;
@@ -199,7 +199,7 @@ function AppShell() {
             )}
           </NavFolder>
 
-          {isOwner && (
+          {(isOwner || isModerator) && (
             <NavFolder label="Owner" defaultOpen>
               <NavItem to="/owner">Owner</NavItem>
               <NavItem to="/owner/instructor-payouts">
@@ -353,7 +353,7 @@ function AppShell() {
                   )}
                 </NavFolder>
 
-                {isOwner && (
+                {(isOwner || isModerator) && (
                   <NavFolder label="Owner" defaultOpen variant="mobile">
                     <NavItem
                       to="/owner"
@@ -624,7 +624,7 @@ function App() {
           <Route
             path="/templates"
             element={
-              <RoleGate allow={["owner", "staff", "instructor"]}>
+              <RoleGate allow={["owner", "staff", "moderator", "godmode"]}>
                 <Templates />
               </RoleGate>
             }

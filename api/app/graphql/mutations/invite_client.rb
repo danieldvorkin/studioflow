@@ -11,7 +11,7 @@ module Mutations
 
     def resolve(email:, name: nil)
       current_user = context[:current_user]
-      unless current_user&.owner? || current_user&.staff? || current_user&.instructor?
+      unless current_user && Pundit.policy!(current_user, User).invite?
         raise GraphQL::ExecutionError, "Not authorized"
       end
 

@@ -7,6 +7,7 @@ export function roleName(user) {
   if (user.role === 1) return 'staff'
   if (user.role === 2) return 'instructor'
   if (user.role === 3) return 'client'
+  if (user.role === 4) return 'moderator'
   return null
 }
 
@@ -29,9 +30,44 @@ export function isInstructor(user) {
   return role === 'instructor' || role === 'godmode'
 }
 
+export function isClient(user) {
+  const role = roleName(user)
+  return role === 'client'
+}
+
+export function isModerator(user) {
+  const role = roleName(user)
+  return role === 'moderator' || role === 'godmode'
+}
+
 export function canManageTemplates(user) {
   const role = roleName(user)
-  return role === 'godmode' || role === 'owner' || role === 'staff' || role === 'instructor'
+  return role === 'godmode' || role === 'owner' || role === 'staff' || role === 'moderator'
+}
+
+export function canViewAllClients(user) {
+  const role = roleName(user)
+  return role === 'godmode' || role === 'owner' || role === 'staff' || role === 'moderator'
+}
+
+export function canManageMembershipPlans(user) {
+  const role = roleName(user)
+  return role === 'godmode' || role === 'owner' || role === 'moderator'
+}
+
+export function canProcessPayouts(user) {
+  const role = roleName(user)
+  return role === 'godmode' || role === 'owner' || role === 'moderator'
+}
+
+export function canUpdatePaymentSettings(user) {
+  const role = roleName(user)
+  return role === 'godmode' || role === 'owner' || role === 'moderator'
+}
+
+export function canInviteUsers(user) {
+  const role = roleName(user)
+  return role === 'godmode' || role === 'owner' || role === 'staff' || role === 'moderator'
 }
 
 export function canScheduleSessions(user) {

@@ -255,9 +255,10 @@ export default function Owner() {
     );
   }
 
-  const isOwner = roleName === "owner" || user.role === 0;
+  const isOwner = isGodmode || roleName === "owner" || user.role === 0;
+  const isModerator = isGodmode || roleName === "moderator" || user.role === 4;
 
-  if (!isOwner) {
+  if (!isOwner && !isModerator) {
     return (
       <div className="mx-auto max-w-xl rounded-2xl border border-slate-800 bg-slate-900/80 p-6 text-sm text-slate-200">
         <h1 className="mb-2 text-lg font-semibold text-slate-50">
