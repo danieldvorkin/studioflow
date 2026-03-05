@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useState } from 'react'
-import { useLazyQuery, gql } from '@apollo/client'
+import { createContext, useContext, useEffect, useState } from "react";
+import { useLazyQuery, gql, useApolloClient } from "@apollo/client";
 
 const CURRENT_USER = gql`
   query CurrentUser {
@@ -16,148 +16,180 @@ const CURRENT_USER = gql`
       availableForSessions
     }
   }
-`
+`;
 
-const AuthContext = createContext(null)
+const AuthContext = createContext(null);
 
 export function useAuth() {
-  return useContext(AuthContext)
+  return useContext(AuthContext);
 }
 
 export function AuthProvider({ children }) {
-  const [tokenChecked, setTokenChecked] = useState(false)
-  const [user, setUser] = useState(null)
-  const [impersonator, setImpersonator] = useState(null)
-  const [fetchCurrentUser, { called, loading, data, error }] = useLazyQuery(CURRENT_USER, { fetchPolicy: 'network-only' })
+  const apolloClient = useApolloClient();
+  const [tokenChecked, setTokenChecked] = useState(false);
+  const [user, setUser] = useState(null);
+  const [impersonator, setImpersonator] = useState(null);
+  const [fetchCurrentUser, { called, loading, data, error }] = useLazyQuery(
+    CURRENT_USER,
+    { fetchPolicy: "network-only" },
+  );
 
   useEffect(() => {
     // hydrate impersonator (if any) so we know when we're in a view-as session
     try {
-      const storedImpersonator = localStorage.getItem('pilates_impersonator_user')
+      const storedImpersonator = localStorage.getItem(
+        "pilates_impersonator_user",
+      );
       if (storedImpersonator) {
-        setImpersonator(JSON.parse(storedImpersonator))
+        setImpersonator(JSON.parse(storedImpersonator));
       }
     } catch (e) {
-      void e
+      void e;
     }
 
-    const token = localStorage.getItem('pilates_token')
+    const token = localStorage.getItem("pilates_token");
     // hydrate user from localStorage for immediate UI responsiveness
     try {
-      const stored = localStorage.getItem('pilates_user')
+      const stored = localStorage.getItem("pilates_user");
       if (stored) {
-        const parsed = JSON.parse(stored)
-        setUser((prev) => prev || parsed)
+        const parsed = JSON.parse(stored);
+        setUser((prev) => prev || parsed);
         // consider token checked for UI purposes; verify in background
-        setTokenChecked(true)
+        setTokenChecked(true);
       }
     } catch (e) {
-      void e
+      void e;
     }
     if (!token) {
-      setTokenChecked(true)
-      return
+      setTokenChecked(true);
+      return;
     }
 
     // If token exists but we haven't fetched the user yet, do so
     if (!called) {
       // Log token for debugging header issues
       try {
-        console.info('AuthProvider: found token, fetching current user', { token: token && token.slice ? token.slice(0, 20) : token })
-      } catch (e) { void e }
-      fetchCurrentUser().catch((e) => console.error('AuthProvider: fetchCurrentUser failed', e))
+        console.info("AuthProvider: found token, fetching current user", {
+          token: token && token.slice ? token.slice(0, 20) : token,
+        });
+      } catch (e) {
+        void e;
+      }
+      fetchCurrentUser().catch((e) =>
+        console.error("AuthProvider: fetchCurrentUser failed", e),
+      );
     }
-  }, [called, fetchCurrentUser])
+  }, [called, fetchCurrentUser]);
 
   useEffect(() => {
     if (error) {
-      console.error('AuthProvider: currentUser query error', error)
-      localStorage.removeItem('pilates_token')
-      localStorage.removeItem('pilates_user')
-      setUser(null)
-      setTokenChecked(true)
-      return
+      console.error("AuthProvider: currentUser query error", error);
+      localStorage.removeItem("pilates_token");
+      localStorage.removeItem("pilates_user");
+      setUser(null);
+      setTokenChecked(true);
+      return;
     }
 
     if (!loading && data) {
-      setUser(data?.currentUser || null)
+      setUser(data?.currentUser || null);
       try {
-        if (data?.currentUser) localStorage.setItem('pilates_user', JSON.stringify(data.currentUser))
-        else localStorage.removeItem('pilates_user')
-      } catch (e) { void e }
-      setTokenChecked(true)
+        if (data?.currentUser)
+          localStorage.setItem(
+            "pilates_user",
+            JSON.stringify(data.currentUser),
+          );
+        else localStorage.removeItem("pilates_user");
+      } catch (e) {
+        void e;
+      }
+      setTokenChecked(true);
     }
-  }, [data, loading, error])
+  }, [data, loading, error]);
 
   const signOut = () => {
-    localStorage.removeItem('pilates_token')
-    localStorage.removeItem('pilates_user')
-    localStorage.removeItem('pilates_impersonator_token')
-    localStorage.removeItem('pilates_impersonator_user')
-    setUser(null)
-    setImpersonator(null)
-    window.location.href = '/signin'
-  }
+    localStorage.removeItem("pilates_token");
+    localStorage.removeItem("pilates_user");
+    localStorage.removeItem("pilates_impersonator_token");
+    localStorage.removeItem("pilates_impersonator_user");
+    setUser(null);
+    setImpersonator(null);
+    window.location.href = "/signin";
+  };
 
   // Accept optional initialUser to avoid an extra round-trip if the signin mutation returned the user
   const signInWithToken = async (token, initialUser = null) => {
-    localStorage.setItem('pilates_token', token)
-    setTokenChecked(false)
+    localStorage.setItem("pilates_token", token);
+    setTokenChecked(false);
     if (initialUser) {
-      setUser(initialUser)
+      setUser(initialUser);
       // still verify/fill user data in background to keep role checks consistent
     }
     try {
-      try { console.info('AuthProvider.signInWithToken: token set', { token: token && token.slice ? token.slice(0, 20) : token }) } catch (e) { void e }
-      const res = await fetchCurrentUser()
-      setUser(res?.data?.currentUser || null)
+      try {
+        console.info("AuthProvider.signInWithToken: token set", {
+          token: token && token.slice ? token.slice(0, 20) : token,
+        });
+      } catch (e) {
+        void e;
+      }
+      // Clear Apollo cache so stale data from the previous identity is gone.
+      // Use clearStore() (not resetStore()) to avoid re-running active queries mid-flight,
+      // which would cause resetStore() to reject and fall into the catch that strips the token.
+      await apolloClient.clearStore();
+      const res = await fetchCurrentUser();
+      setUser(res?.data?.currentUser || null);
     } catch (e) {
-      console.error('AuthProvider: fetchCurrentUser after sign-in failed', e)
-      localStorage.removeItem('pilates_token')
-      setUser(null)
+      console.error("AuthProvider: fetchCurrentUser after sign-in failed", e);
+      localStorage.removeItem("pilates_token");
+      setUser(null);
     } finally {
-      setTokenChecked(true)
+      setTokenChecked(true);
     }
-  }
+  };
 
-  const refetch = async () => fetchCurrentUser()
+  const refetch = async () => fetchCurrentUser();
   const beginImpersonation = async (token, impersonatedUser) => {
     try {
-      const existingImpersonatorToken = localStorage.getItem('pilates_impersonator_token')
+      const existingImpersonatorToken = localStorage.getItem(
+        "pilates_impersonator_token",
+      );
       if (!existingImpersonatorToken) {
-        const originalToken = localStorage.getItem('pilates_token')
-        const originalUser = localStorage.getItem('pilates_user')
-        if (originalToken) localStorage.setItem('pilates_impersonator_token', originalToken)
-        if (originalUser) localStorage.setItem('pilates_impersonator_user', originalUser)
-        if (originalUser) setImpersonator(JSON.parse(originalUser))
+        const originalToken = localStorage.getItem("pilates_token");
+        const originalUser = localStorage.getItem("pilates_user");
+        if (originalToken)
+          localStorage.setItem("pilates_impersonator_token", originalToken);
+        if (originalUser)
+          localStorage.setItem("pilates_impersonator_user", originalUser);
+        if (originalUser) setImpersonator(JSON.parse(originalUser));
       }
     } catch (e) {
-      void e
+      void e;
     }
 
-    await signInWithToken(token, impersonatedUser || null)
-  }
+    await signInWithToken(token, impersonatedUser || null);
+  };
 
   const stopImpersonation = async () => {
-    const originalToken = localStorage.getItem('pilates_impersonator_token')
-    const originalUserRaw = localStorage.getItem('pilates_impersonator_user')
-    if (!originalToken) return
+    const originalToken = localStorage.getItem("pilates_impersonator_token");
+    const originalUserRaw = localStorage.getItem("pilates_impersonator_user");
+    if (!originalToken) return;
 
-    localStorage.removeItem('pilates_impersonator_token')
-    localStorage.removeItem('pilates_impersonator_user')
+    localStorage.removeItem("pilates_impersonator_token");
+    localStorage.removeItem("pilates_impersonator_user");
 
-    let originalUser = null
+    let originalUser = null;
     try {
-      if (originalUserRaw) originalUser = JSON.parse(originalUserRaw)
+      if (originalUserRaw) originalUser = JSON.parse(originalUserRaw);
     } catch (e) {
-      void e
+      void e;
     }
 
-    setImpersonator(null)
-    await signInWithToken(originalToken, originalUser)
-  }
+    setImpersonator(null);
+    await signInWithToken(originalToken, originalUser);
+  };
 
-  const isImpersonating = !!impersonator
+  const isImpersonating = !!impersonator;
 
   const value = {
     user,
@@ -169,6 +201,6 @@ export function AuthProvider({ children }) {
     stopImpersonation,
     isImpersonating,
     impersonator,
-  }
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  };
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
