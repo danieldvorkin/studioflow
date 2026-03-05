@@ -17,9 +17,6 @@ class WebhookHandlerService
   private
 
   def handle_event
-    case @event_type
-    else
-      Rails.logger.info("[Webhook] No handler for event type '#{@event_type}' — logged and ignored")
-    end
+    Rails.logger.info("[Webhook] No handler for event type '#{@event_type}' — logged and ignored")
   end
 end
