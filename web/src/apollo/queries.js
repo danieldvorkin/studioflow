@@ -1042,3 +1042,35 @@ export const MY_SHOP_ORDERS = gql`
     }
   }
 `;
+
+// ── Notifications ──────────────────────────────────────────────────────────
+
+const NOTIFICATION_FRAGMENT = gql`
+  fragment NotificationFields on Notification {
+    id
+    kind
+    title
+    body
+    actionUrl
+    read
+    dismissed
+    readAt
+    dismissedAt
+    createdAt
+  }
+`;
+
+export const MY_NOTIFICATIONS = gql`
+  ${NOTIFICATION_FRAGMENT}
+  query MyNotifications {
+    myNotifications {
+      ...NotificationFields
+    }
+  }
+`;
+
+export const MY_UNREAD_NOTIFICATION_COUNT = gql`
+  query MyUnreadNotificationCount {
+    myUnreadNotificationCount
+  }
+`;

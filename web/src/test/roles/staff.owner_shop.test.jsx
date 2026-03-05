@@ -33,26 +33,6 @@ const stripeNotConfiguredMock = {
   },
 };
 
-const stripeConfiguredMock = {
-  request: { query: PAYMENT_SETTINGS, variables: {} },
-  result: {
-    data: {
-      paymentSettings: {
-        __typename: "PaymentSetting",
-        id: "ps-1",
-        stripePublishableKey: "pk_test_abc",
-        defaultCurrency: "cad",
-        enabled: true,
-        configured: true,
-        dashboardTitle: "StudioFlow",
-        defaultTheme: "dark",
-        ownerPageLayout: {},
-        clientsPageEnabled: true,
-      },
-    },
-  },
-};
-
 function renderPage(user, extraMocks = []) {
   return render(
     <MockedProvider

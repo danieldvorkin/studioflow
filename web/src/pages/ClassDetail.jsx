@@ -8,20 +8,7 @@ import {
 import { useStudio } from "../studio/StudioProvider";
 import { useAuth } from "../auth/AuthProvider";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
-
-function formatCents(cents, currency) {
-  const amount = Number(cents);
-  if (!Number.isFinite(amount)) return null;
-  const cur = (currency || "cad").toUpperCase();
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: cur,
-    }).format(amount / 100);
-  } catch {
-    return `${(amount / 100).toFixed(2)} ${cur}`;
-  }
-}
+import { useCurrency } from "../currency/CurrencyProvider";
 
 function SlotCard({ session, booking }) {
   const d = new Date(session.startTime);
@@ -121,6 +108,7 @@ export default function ClassDetail() {
   const navigate = useNavigate();
   const { selectedStudioId } = useStudio();
   const { user } = useAuth();
+  const { formatPrice } = useCurrency();
   const roleName = (user?.roleName || "").toString().toLowerCase();
   const isClientUser = roleName === "client";
 
@@ -185,7 +173,7 @@ export default function ClassDetail() {
 
   const priceDisplay =
     template?.priceCents != null
-      ? formatCents(template.priceCents, template.currency)
+      ? formatPrice(template.priceCents, template.currency)
       : null;
 
   return (

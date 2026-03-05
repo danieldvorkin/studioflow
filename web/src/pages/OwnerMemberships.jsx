@@ -17,6 +17,7 @@ import {
 } from "../apollo/mutations";
 import { useToast } from "../components/ToastProvider";
 import { isOwner, isStaff, isGodmode } from "../auth/permissions";
+import { useCurrency } from "../currency/CurrencyProvider";
 
 function dollarsFromCents(cents) {
   if (typeof cents !== "number") return "";
@@ -285,6 +286,7 @@ function PlanForm({ form, setForm, onSave, onCancel, saving, title }) {
 }
 
 function EnrollModal({ plans, clients, onEnroll, onClose }) {
+  const { formatPrice } = useCurrency();
   const [clientId, setClientId] = useState("");
   const [planId, setPlanId] = useState("");
   const [startedAt, setStartedAt] = useState(
@@ -336,7 +338,7 @@ function EnrollModal({ plans, clients, onEnroll, onClose }) {
               <option value="">Select plan…</option>
               {plans.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name} — ${dollarsFromCents(p.priceCents)}/
+                  {p.name} — {formatPrice(p.priceCents, p.currency)}/
                   {p.currency?.toUpperCase()}
                 </option>
               ))}
@@ -388,6 +390,7 @@ function EnrollModal({ plans, clients, onEnroll, onClose }) {
 export default function OwnerMembershipsPage() {
   useDocumentTitle("Memberships");
   const { addToast } = useToast();
+  const { formatPrice } = useCurrency();
 
   const { data: userData } = useQuery(CURRENT_USER);
   const user = userData?.currentUser;
@@ -666,9 +669,9 @@ export default function OwnerMembershipsPage() {
                       {plan.name}
                     </div>
                     <div className="text-xl font-bold text-sky-400 mt-0.5">
-                      ${dollarsFromCents(plan.priceCents)}
+                      {formatPrice(plan.priceCents, plan.currency)}
                       <span className="text-xs font-normal text-slate-500 ml-1">
-                        /{plan.currency?.toUpperCase()}/mo
+                        /mo
                       </span>
                     </div>
                   </div>
@@ -848,8 +851,11 @@ export default function OwnerMembershipsPage() {
                       <td className="px-4 py-3">
                         <div>{m.membershipPlan?.name}</div>
                         <div className="text-xs text-slate-500">
-                          ${dollarsFromCents(m.membershipPlan?.priceCents)}/
-                          {m.membershipPlan?.currency?.toUpperCase()}/mo
+                          {formatPrice(
+                            m.membershipPlan?.priceCents,
+                            m.membershipPlan?.currency,
+                          )}
+                          /{m.membershipPlan?.currency?.toUpperCase()}/mo
                         </div>
                       </td>
                       <td className="px-4 py-3">

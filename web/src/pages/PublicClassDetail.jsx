@@ -3,20 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { PUBLIC_CLASS_PAGE } from "../apollo/queries";
 import { useAuth } from "../auth/AuthProvider";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
-
-function formatCents(cents, currency) {
-  const amount = Number(cents);
-  if (!Number.isFinite(amount)) return null;
-  const cur = (currency || "CAD").toUpperCase();
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: cur,
-    }).format(amount / 100);
-  } catch {
-    return `${(amount / 100).toFixed(2)} ${cur}`;
-  }
-}
+import { useCurrency } from "../currency/CurrencyProvider";
 
 function InstructorAvatar({ instructor, size = "sm" }) {
   const sizeClass = size === "sm" ? "h-6 w-6 text-[10px]" : "h-8 w-8 text-xs";
@@ -138,6 +125,7 @@ export default function PublicClassDetail() {
   const { studioCode, templateId } = useParams();
   const { user } = useAuth();
   const isLoggedIn = !!user;
+  const { formatPrice } = useCurrency();
 
   const { data, loading, error } = useQuery(PUBLIC_CLASS_PAGE, {
     variables: { studioInviteCode: studioCode, templateId },
@@ -161,7 +149,7 @@ export default function PublicClassDetail() {
 
   const priceDisplay =
     template?.priceCents != null
-      ? formatCents(template.priceCents, template.currency)
+      ? formatPrice(template.priceCents, template.currency)
       : null;
 
   const durationLabel = template?.durationMinutes

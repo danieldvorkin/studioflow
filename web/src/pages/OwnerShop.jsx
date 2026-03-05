@@ -16,13 +16,7 @@ import {
 } from "../apollo/mutations";
 import { useToast } from "../components/ToastProvider";
 import { isOwner, isStaff } from "../auth/permissions";
-
-function formatCents(cents, currency = "cad") {
-  return new Intl.NumberFormat("en-CA", {
-    style: "currency",
-    currency: currency.toUpperCase(),
-  }).format(cents / 100);
-}
+import { useCurrency } from "../currency/CurrencyProvider";
 
 function centsFromDollars(val) {
   const n = Number(val);
@@ -246,6 +240,7 @@ function OrderStatusBadge({ status }) {
 export default function OwnerShopPage() {
   useDocumentTitle("Shop Management");
   const { addToast } = useToast();
+  const { formatPrice } = useCurrency();
 
   const { data: userData, loading: userLoading } = useQuery(CURRENT_USER);
   const user = userData?.currentUser;
@@ -517,7 +512,7 @@ export default function OwnerShopPage() {
                       )}
                     </div>
                     <span className="text-slate-400">
-                      {formatCents(item.priceCents, item.currency)} ·{" "}
+                      {formatPrice(item.priceCents, item.currency)} ·{" "}
                       {item.stockQuantity === null
                         ? "Unlimited stock"
                         : `${item.stockQuantity} in stock`}
@@ -588,8 +583,8 @@ export default function OwnerShopPage() {
                 </div>
                 <span className="text-slate-400">
                   {order.quantity} ×{" "}
-                  {formatCents(order.shopItem?.priceCents, order.currency)} ={" "}
-                  {formatCents(order.totalCents, order.currency)} ·{" "}
+                  {formatPrice(order.shopItem?.priceCents, order.currency)} ={" "}
+                  {formatPrice(order.totalCents, order.currency)} ·{" "}
                   {new Date(order.createdAt).toLocaleDateString()}
                   {order.rentalDueDate && ` · Due: ${order.rentalDueDate}`}
                   {order.rentalAgreementAcceptedAt && (

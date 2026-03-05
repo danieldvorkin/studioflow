@@ -1116,8 +1116,18 @@ export const UPSERT_STUDIO_SUBSCRIPTION = gql`
 `;
 
 export const CREATE_PLATFORM_SUBSCRIPTION_CHECKOUT = gql`
-  mutation CreatePlatformSubscriptionCheckout($tier: String!) {
-    createPlatformSubscriptionCheckout(input: { tier: $tier }) {
+  mutation CreatePlatformSubscriptionCheckout(
+    $tier: String!
+    $currency: String
+    $billingInterval: String
+  ) {
+    createPlatformSubscriptionCheckout(
+      input: {
+        tier: $tier
+        currency: $currency
+        billingInterval: $billingInterval
+      }
+    ) {
       checkoutUrl
       errors
     }
@@ -1586,6 +1596,43 @@ export const UPDATE_SHOP_ORDER = gql`
         returnedAt
         rentalDueDate
         notes
+      }
+      errors
+    }
+  }
+`;
+
+// ── Notification mutations ─────────────────────────────────────────────────
+
+export const MARK_NOTIFICATION_READ = gql`
+  mutation MarkNotificationRead($id: ID!) {
+    markNotificationRead(input: { id: $id }) {
+      notification {
+        id
+        read
+        readAt
+      }
+      errors
+    }
+  }
+`;
+
+export const MARK_ALL_NOTIFICATIONS_READ = gql`
+  mutation MarkAllNotificationsRead {
+    markAllNotificationsRead(input: {}) {
+      updatedCount
+      errors
+    }
+  }
+`;
+
+export const DISMISS_NOTIFICATION = gql`
+  mutation DismissNotification($id: ID!) {
+    dismissNotification(input: { id: $id }) {
+      notification {
+        id
+        dismissed
+        dismissedAt
       }
       errors
     }

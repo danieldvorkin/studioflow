@@ -23,11 +23,7 @@ import { useToast } from "../components/ToastProvider";
 import { useTheme } from "../theme/ThemeProvider";
 import { getStripeCardElementOptions } from "../theme/stripeElements";
 import { normalizeStripeEmail } from "../payments/stripeEmail";
-
-function dollarsFromCents(cents) {
-  if (typeof cents !== "number") return "0.00";
-  return (cents / 100).toFixed(2);
-}
+import { useCurrency } from "../currency/CurrencyProvider";
 
 const STATUS_COLORS = {
   active: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30",
@@ -87,6 +83,7 @@ function PurchaseMembershipCard({
 }) {
   const { user } = useAuth();
   const { addToast } = useToast();
+  const { formatPrice } = useCurrency();
   const stripe = useStripe();
   const elements = useElements();
   const [purchaseClientMembership] = useMutation(PURCHASE_CLIENT_MEMBERSHIP);
@@ -208,11 +205,9 @@ function PurchaseMembershipCard({
       )}
       <div className="text-base font-semibold text-slate-100">{plan.name}</div>
       <div className="text-2xl font-bold text-sky-400">
-        {isFree ? "Free" : `$${dollarsFromCents(plan.priceCents)}`}
+        {isFree ? "Free" : formatPrice(plan.priceCents, plan.currency)}
         {!isFree && (
-          <span className="text-xs font-normal text-slate-500 ml-1">
-            /{plan.currency?.toUpperCase()}/mo
-          </span>
+          <span className="text-xs font-normal text-slate-500 ml-1">/mo</span>
         )}
       </div>
       {plan.description && (
@@ -347,6 +342,7 @@ export default function MyMembershipsPage() {
   const { selectedStudioId } = useStudio();
   const { addToast } = useToast();
   const { theme } = useTheme();
+  const { formatPrice } = useCurrency();
   const cardElementOptions = useMemo(
     () => getStripeCardElementOptions(theme),
     [theme],
@@ -476,9 +472,12 @@ export default function MyMembershipsPage() {
                     </span>
                   </div>
                   <div className="text-xl font-bold text-sky-400">
-                    ${dollarsFromCents(m.membershipPlan?.priceCents)}
+                    {formatPrice(
+                      m.membershipPlan?.priceCents,
+                      m.membershipPlan?.currency,
+                    )}
                     <span className="text-xs font-normal text-slate-500 ml-1">
-                      /{m.membershipPlan?.currency?.toUpperCase()}/mo
+                      /mo
                     </span>
                   </div>
                   {m.membershipPlan && <PerkList plan={m.membershipPlan} />}
