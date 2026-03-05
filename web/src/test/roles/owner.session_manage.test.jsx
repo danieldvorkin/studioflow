@@ -257,10 +257,12 @@ describe("SessionManage — owner/staff session detail panel", () => {
     renderSessionManage([sessionBookingsMock([paid])]);
     await screen.findByText("Jane Doe");
 
-    expect(screen.queryByRole('button', { name: 'Send reminder' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'No-Show' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
-  
+    expect(
+      screen.queryByRole("button", { name: "Send reminder" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "No-Show" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
+
     expect(
       screen.queryByRole("button", { name: "Send reminder" }),
     ).not.toBeInTheDocument();
