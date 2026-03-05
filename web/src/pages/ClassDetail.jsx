@@ -41,7 +41,7 @@ function SlotCard({ session, booking }) {
     booking
       ? "border-emerald-800/50 bg-emerald-950/30"
       : soldOut
-        ? "border-slate-800 bg-slate-900/30 opacity-50"
+        ? "border-amber-800/30 bg-amber-950/10"
         : "border-slate-700/60 bg-slate-900/70 hover:border-sky-500/40 hover:bg-slate-900",
   ].join(" ");
 
@@ -73,6 +73,11 @@ function SlotCard({ session, booking }) {
                   {session.seatsAvailable !== 1 ? "s" : ""} left
                 </span>
               )}
+            {soldOut && !booking && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] text-amber-300">
+                Waitlist open
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -92,9 +97,12 @@ function SlotCard({ session, booking }) {
             </Link>
           </>
         ) : soldOut ? (
-          <span className="inline-flex items-center rounded-full border border-slate-700 px-3 py-1.5 text-xs text-slate-500">
-            Sold out
-          </span>
+          <Link
+            to={`/booking/${session.id}`}
+            className="inline-flex items-center rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-200 hover:bg-amber-500/20 transition-all"
+          >
+            Join waitlist
+          </Link>
         ) : (
           <Link
             to={`/booking/${session.id}`}
@@ -134,6 +142,7 @@ export default function ClassDetail() {
       },
       skip: isClientUser && !selectedStudioId,
       fetchPolicy: "cache-and-network",
+      pollInterval: 30_000,
     },
   );
 

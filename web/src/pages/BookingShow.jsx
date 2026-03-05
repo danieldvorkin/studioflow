@@ -481,13 +481,23 @@ export default function BookingShow() {
                 {template?.title || "Class"}
               </p>
             </div>
-            <span className="inline-flex items-center rounded-full bg-slate-800 px-2 py-0.5 text-[10px] uppercase tracking-[0.15em] text-slate-300">
+            <span
+              className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.15em] ${
+                booking.status === "booked"
+                  ? "bg-emerald-500/15 text-emerald-300"
+                  : booking.status === "waitlisted"
+                    ? "bg-amber-500/15 text-amber-300"
+                    : booking.status === "cancelled"
+                      ? "bg-rose-500/15 text-rose-300"
+                      : "bg-slate-800 text-slate-300"
+              }`}
+            >
               {booking.status}
             </span>
           </div>
           <div className="space-y-1 text-xs text-slate-300">
             <div className="flex justify-between">
-              <span>Date & time</span>
+              <span>Date &amp; time</span>
               <span>{new Date(session.startTime).toLocaleString()}</span>
             </div>
             {session.room && (
@@ -503,6 +513,15 @@ export default function BookingShow() {
               </div>
             )}
           </div>
+
+          {booking.status === "waitlisted" && (
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2.5 text-xs text-amber-200">
+              <div className="font-semibold text-amber-100">You're on the waitlist</div>
+              <p className="mt-0.5 text-amber-300/80">
+                You'll be automatically confirmed if a spot opens up.
+              </p>
+            </div>
+          )}
 
           <div className="mt-3 border-t border-slate-800 pt-3 text-xs text-slate-300">
             <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-400/70">

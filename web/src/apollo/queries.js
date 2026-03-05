@@ -67,6 +67,7 @@ export const CLASS_SESSIONS = gql`
       instructor {
         id
         name
+        avatarUrl
       }
     }
   }
@@ -929,6 +930,7 @@ export const PUBLIC_CLASS_PAGE = gql`
         instructor {
           id
           name
+          avatarUrl
         }
         studioLocation {
           id
@@ -945,6 +947,7 @@ export const PUBLIC_CLASS_PAGE = gql`
         instructor {
           id
           name
+          avatarUrl
         }
       }
     }

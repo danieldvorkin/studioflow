@@ -18,6 +18,34 @@ function formatCents(cents, currency) {
   }
 }
 
+function InstructorAvatar({ instructor, size = "sm" }) {
+  const sizeClass = size === "sm" ? "h-6 w-6 text-[10px]" : "h-8 w-8 text-xs";
+  if (!instructor) return null;
+  if (instructor.avatarUrl) {
+    return (
+      <img
+        src={instructor.avatarUrl}
+        alt={instructor.name || "Instructor"}
+        className={`${sizeClass} rounded-full object-cover ring-1 ring-slate-700`}
+      />
+    );
+  }
+  const initials = (instructor.name || "?")
+    .split(" ")
+    .filter((s) => s)
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+  return (
+    <span
+      className={`${sizeClass} inline-flex items-center justify-center rounded-full bg-sky-500/20 font-semibold text-sky-300`}
+    >
+      {initials}
+    </span>
+  );
+}
+
 function SlotRow({ session, studioCode, isLoggedIn }) {
   const d = new Date(session.startTime);
   const weekday = d.toLocaleDateString(undefined, { weekday: "short" });
@@ -41,7 +69,7 @@ function SlotRow({ session, studioCode, isLoggedIn }) {
     <div
       className={`flex items-center justify-between gap-4 rounded-2xl border px-4 py-3.5 transition-colors ${
         soldOut
-          ? "border-slate-800 bg-slate-900/30 opacity-50"
+          ? "border-amber-800/30 bg-amber-950/10"
           : "border-slate-700/60 bg-slate-900/70 hover:border-sky-500/40 hover:bg-slate-900"
       }`}
     >
@@ -62,7 +90,12 @@ function SlotRow({ session, studioCode, isLoggedIn }) {
         <div className="min-w-0">
           <div className="text-sm font-semibold text-slate-50">{time}</div>
           <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
-            {session.instructor?.name && <span>{session.instructor.name}</span>}
+            {session.instructor && (
+              <span className="inline-flex items-center gap-1.5">
+                <InstructorAvatar instructor={session.instructor} size="sm" />
+                {session.instructor.name}
+              </span>
+            )}
             {session.room && <span>· Room {session.room}</span>}
             {!soldOut && typeof session.seatsAvailable === "number" && (
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-300">
@@ -71,15 +104,23 @@ function SlotRow({ session, studioCode, isLoggedIn }) {
                 {session.seatsAvailable !== 1 ? "s" : ""} left
               </span>
             )}
+            {soldOut && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] text-amber-300">
+                Waitlist open
+              </span>
+            )}
           </div>
         </div>
       </div>
 
       <div className="shrink-0">
         {soldOut ? (
-          <span className="inline-flex items-center rounded-full border border-slate-700 px-3 py-1.5 text-xs text-slate-500">
-            Sold out
-          </span>
+          <Link
+            to={bookHref}
+            className="inline-flex items-center rounded-full border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-sm font-semibold text-amber-200 hover:bg-amber-500/20 transition-all"
+          >
+            Join waitlist
+          </Link>
         ) : (
           <Link
             to={bookHref}
@@ -101,6 +142,7 @@ export default function PublicClassDetail() {
   const { data, loading, error } = useQuery(PUBLIC_CLASS_PAGE, {
     variables: { studioInviteCode: studioCode, templateId },
     fetchPolicy: "cache-and-network",
+    pollInterval: 30_000,
   });
 
   const page = data?.publicClassPage;
@@ -217,9 +259,7 @@ export default function PublicClassDetail() {
                 <div className="mt-6 flex flex-wrap gap-2.5">
                   {template?.instructor?.name && (
                     <div className="flex items-center gap-2 rounded-full border border-slate-700/80 bg-slate-800/60 px-3.5 py-1.5">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-sky-500/20 text-[10px] text-sky-300">
-                        ✦
-                      </span>
+                      <InstructorAvatar instructor={template.instructor} size="sm" />
                       <span className="text-xs font-medium text-slate-200">
                         {template.instructor.name}
                       </span>

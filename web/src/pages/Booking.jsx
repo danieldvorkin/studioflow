@@ -20,6 +20,7 @@ import { getStripeCardElementOptions } from '../theme/stripeElements'
 import { normalizeStripeEmail } from '../payments/stripeEmail'
 import { useStudio } from '../studio/StudioProvider'
 import { useAuth } from '../auth/AuthProvider'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 function BookingForm({ session, studioIdForBooking, stripeConfigured }) {
   const { id } = useParams() // classSessionId
@@ -559,24 +560,58 @@ function BookingForm({ session, studioIdForBooking, stripeConfigured }) {
         </button>
         </form>
         <aside className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 text-sm">
-          {submitting
-            ? 'Processing…'
-            : priceDollars
-              ? `Pay ${currencySymbol}${priceDollars} ${currencyLabel} & book`
-              : 'Confirm booking'}
-          <div className="mt-2 space-y-2 text-xs text-slate-300">
+          <h2 className="text-sm font-semibold text-slate-50">
+            {submitting
+              ? 'Processing…'
+              : priceDollars
+                ? `Pay ${currencySymbol}${priceDollars} ${currencyLabel} & book`
+                : 'Confirm booking'}
+          </h2>
+          <div className="mt-3 space-y-2 text-xs text-slate-300">
             <div className="flex justify-between">
               <span>Class</span>
-              <span className="font-medium">{session.classTemplate?.title || 'Session'}</span>
+              <span className="font-medium text-slate-100">{session.classTemplate?.title || 'Session'}</span>
             </div>
             <div className="flex justify-between">
-              <span>Date & time</span>
+              <span>Date &amp; time</span>
               <span>{new Date(session.startTime).toLocaleString()}</span>
             </div>
-            <div className="flex justify-between">
-              <span>Instructor</span>
-              <span>{session.instructor?.name || 'TBA'}</span>
-            </div>
+            {session.instructor?.name && (
+              <div className="flex justify-between">
+                <span>Instructor</span>
+                <span>{session.instructor.name}</span>
+              </div>
+            )}
+            {session.classTemplate?.durationMinutes && (
+              <div className="flex justify-between">
+                <span>Duration</span>
+                <span>{session.classTemplate.durationMinutes} min</span>
+              </div>
+            )}
+            {session.room && (
+              <div className="flex justify-between">
+                <span>Room</span>
+                <span>{session.room}</span>
+              </div>
+            )}
+            {typeof session.seatsAvailable === 'number' && (
+              <div className="flex justify-between">
+                <span>Spots remaining</span>
+                <span
+                  className={
+                    session.seatsAvailable <= 0
+                      ? 'font-semibold text-amber-300'
+                      : session.seatsAvailable <= 3
+                        ? 'font-semibold text-amber-200'
+                        : 'text-emerald-300'
+                  }
+                >
+                  {session.seatsAvailable <= 0
+                    ? 'Full — joining waitlist'
+                    : `${session.seatsAvailable} spot${session.seatsAvailable !== 1 ? 's' : ''}`}
+                </span>
+              </div>
+            )}
             {priceDollars && (
               <>
                 <div className="mt-2 h-px bg-slate-800" />
@@ -600,6 +635,8 @@ export default function Booking() {
   const roleName = (user?.roleName || '').toString().toLowerCase()
   const isClientUser = roleName === 'client'
   const { selectedStudioId } = useStudio()
+
+  useDocumentTitle('Book session')
 
   const studioIdForBooking = location?.state?.studioId || selectedStudioId
 
