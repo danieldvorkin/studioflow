@@ -51,7 +51,7 @@ module Mutations
 
       if booking.save
         # Enqueue notification job for booking confirmation or waitlist
-        NotificationJob.perform_later(:booking_confirmation, booking.id)
+        NotificationJob.perform_now(:booking_confirmation, booking.id)
         { booking: booking, errors: [] }
       else
         { booking: nil, errors: booking.errors.full_messages }

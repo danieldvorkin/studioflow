@@ -67,6 +67,7 @@ export const CLASS_SESSIONS = gql`
       instructor {
         id
         name
+        avatarUrl
       }
     }
   }
@@ -561,16 +562,21 @@ export const MY_CLIENT = gql`
       stripeDefaultPaymentMethodLast4
       stripeDefaultPaymentMethodExpMonth
       stripeDefaultPaymentMethodExpYear
-      clientPaymentMethods {
-        id
-        stripePaymentMethodId
-        brand
-        last4
-        expMonth
-        expYear
-        default
-        createdAt
-      }
+    }
+  }
+`;
+
+export const MY_PAYMENT_METHODS = gql`
+  query MyPaymentMethods {
+    myPaymentMethods {
+      id
+      stripePaymentMethodId
+      brand
+      last4
+      expMonth
+      expYear
+      default
+      createdAt
     }
   }
 `;
@@ -929,6 +935,7 @@ export const PUBLIC_CLASS_PAGE = gql`
         instructor {
           id
           name
+          avatarUrl
         }
         studioLocation {
           id
@@ -945,6 +952,7 @@ export const PUBLIC_CLASS_PAGE = gql`
         instructor {
           id
           name
+          avatarUrl
         }
       }
     }

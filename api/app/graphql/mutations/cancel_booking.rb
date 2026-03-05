@@ -26,12 +26,12 @@ module Mutations
         if next_wait
           next_wait.update!(status: Booking.statuses[:booked])
           # Notify the promoted booking
-          NotificationJob.perform_later(:waitlist_promotion, next_wait.id)
+          NotificationJob.perform_now(:waitlist_promotion, next_wait.id)
         end
       end
 
       # Notify cancellation
-      NotificationJob.perform_later(:booking_cancellation, booking.id)
+      NotificationJob.perform_now(:booking_cancellation, booking.id)
 
       errors = []
 

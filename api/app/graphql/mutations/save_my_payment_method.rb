@@ -2,6 +2,8 @@
 
 module Mutations
   class SaveMyPaymentMethod < BaseMutation
+    include BillingStudioResolver
+
     argument :payment_method_id, String, required: true
     argument :studio_id, ID, required: false
 
@@ -12,16 +14,11 @@ module Mutations
       user = context[:current_user]
       return { client: nil, errors: [ "Not authenticated" ] } unless user
 
-      effective_studio_id = user.client? ? (studio_id.presence || user.studio_id) : user.studio_id
-      studio = Studio.find(effective_studio_id)
+      client, settings, _studio = resolve_billing_studio(user, studio_id: studio_id)
 
-      settings = PaymentSetting.instance_for(studio)
-      unless settings.configured?
-        return { client: nil, errors: [ "Stripe is not configured" ] }
+      unless client && settings&.configured?
+        return { client: nil, errors: [ "No Stripe-configured studio found for your account" ] }
       end
-
-      client = Client.find_by(user_id: user.id, studio_id: effective_studio_id)
-      return { client: nil, errors: [ "Client record not found" ] } unless client
 
       return { client: nil, errors: [ "Stripe customer is not initialized" ] } if client.stripe_customer_id.blank?
 
@@ -53,10 +50,13 @@ module Mutations
 
       begin
         Client.transaction do
-          record = client.client_payment_methods.find_or_initialize_by(
+          record = ClientPaymentMethod.find_or_initialize_by(
+            user_id: user.id,
             stripe_payment_method_id: payment_method_id
           )
-          record.studio_id ||= effective_studio_id
+          # Keep client_id so booking flows can access payment methods via the Client association,
+          # but do NOT stamp studio_id — payment methods are user-scoped, not studio-scoped.
+          record.client_id ||= client.id
           record.assign_attributes(
             brand: card&.brand,
             last4: card&.last4,
@@ -66,7 +66,7 @@ module Mutations
           )
           record.save!
 
-          client.client_payment_methods.where.not(id: record.id).update_all(default: false)
+          ClientPaymentMethod.where(user_id: user.id).where.not(id: record.id).update_all(default: false)
 
           client.update!(
             stripe_default_payment_method_id: payment_method_id,

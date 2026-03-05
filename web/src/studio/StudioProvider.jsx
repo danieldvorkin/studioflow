@@ -19,7 +19,7 @@ export function useStudio() {
 }
 
 export function StudioProvider({ children }) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const role = (user?.roleName || "").toString().toLowerCase();
   const isClient =
     role === "client" || user?.role === 3 || user?.role === "client";
@@ -43,15 +43,19 @@ export function StudioProvider({ children }) {
   });
 
   // If role changes away from client/godmode, clear selection.
+  // Guard with authLoading so we don't wipe the stored value on first render
+  // before the user object has been hydrated from localStorage/network.
   useEffect(() => {
+    if (authLoading) return;
     if (isClient || isGodmode) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedStudioIdState(null);
-  }, [isClient, isGodmode]);
+  }, [authLoading, isClient, isGodmode]);
 
   // Choose a default studio for clients if none selected.
   // Godmode intentionally starts at null ("All studios") and only picks one when the user explicitly chooses.
   useEffect(() => {
+    if (authLoading) return;
     if (!isClient) return;
     if (loading) return;
     if (!studios.length) return;
@@ -69,7 +73,7 @@ export function StudioProvider({ children }) {
     } catch {
       // ignore
     }
-  }, [isClient, loading, studios, selectedStudioId]);
+  }, [authLoading, isClient, loading, studios, selectedStudioId]);
 
   const setSelectedStudioId = (id) => {
     const next = id || null;

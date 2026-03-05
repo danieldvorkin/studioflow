@@ -432,17 +432,31 @@ module Types
       user = context[:current_user]
       raise GraphQL::ExecutionError, "Not authorized" unless user
 
-      effective_studio_id =
-        if user.godmode?
-          studio_id.presence || user.studio_id
-        elsif user.client?
-          studio_id.presence || user.studio_id
-        else
-          user.studio_id
-        end
-      studio = Studio.find(effective_studio_id)
+      # When a specific studio is requested (e.g. booking page), always use that studio exactly.
+      if studio_id.present?
+        return PaymentSetting.instance_for(Studio.find(studio_id))
+      end
 
-      PaymentSetting.instance_for(studio)
+      # Non-client roles always operate within their own studio.
+      unless user.client?
+        return PaymentSetting.instance_for(Studio.find(user.studio_id))
+      end
+
+      # Client with no explicit studio (e.g. profile page): scan across all of the
+      # user's studios and return the first one that has Stripe configured.
+      # This prevents the profile billing section from being blocked just because
+      # the user's primary studio hasn't set up Stripe yet.
+      studio_ids = ([ user.studio_id ] + Client.where(user_id: user.id).pluck(:studio_id)).uniq.compact
+      studio_ids.each do |sid|
+        studio   = Studio.find_by(id: sid)
+        next unless studio
+        settings = PaymentSetting.instance_for(studio)
+        return settings if settings.configured?
+      end
+
+      # No configured studio found — return the primary studio's (unconfigured) settings
+      # so the frontend gets a consistent object shape.
+      PaymentSetting.instance_for(Studio.find(user.studio_id))
     end
 
     field :my_client, Types::ClientType, null: true,
@@ -463,6 +477,15 @@ module Types
         end
 
       Client.find_by(user_id: user.id, studio_id: effective_studio_id)
+    end
+
+    field :my_payment_methods, [ Types::ClientPaymentMethodType ], null: false,
+      description: "All saved payment methods for the current user across all studios"
+    def my_payment_methods
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authorized" unless user
+
+      ClientPaymentMethod.where(user_id: user.id).order(default: :desc, created_at: :desc)
     end
 
     field :studio_settings, Types::StudioSettingType, null: false,

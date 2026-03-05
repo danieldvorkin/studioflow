@@ -142,7 +142,7 @@ module Mutations
           raw_response: intent.to_hash
         )
 
-        NotificationJob.perform_later(:booking_confirmation, booking.id)
+        NotificationJob.perform_now(:booking_confirmation, booking.id)
       end
 
       { booking: booking, payment: payment, errors: [] }

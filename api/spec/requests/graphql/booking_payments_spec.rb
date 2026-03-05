@@ -15,7 +15,7 @@ RSpec.describe 'Booking payments', type: :request do
     )
 
     sign_in(staff)
-    allow(NotificationJob).to receive(:perform_later)
+    allow(NotificationJob).to receive(:perform_now)
   end
 
   describe 'createBookingWithPayment mutation' do
@@ -45,7 +45,7 @@ RSpec.describe 'Booking payments', type: :request do
       expect(payload['errors']).to eq([])
       expect(payload.dig('booking', 'paid')).to eq(true)
       expect(payload.dig('payment', 'stripePaymentIntentId')).to eq('pi_123')
-      expect(NotificationJob).to have_received(:perform_later)
+      expect(NotificationJob).to have_received(:perform_now)
     end
 
     it 'rejects blocked instructor/client combinations before charging Stripe' do

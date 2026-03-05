@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_03_190000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_04_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -166,11 +166,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_190000) do
     t.integer "exp_year"
     t.string "last4"
     t.string "stripe_payment_method_id", null: false
-    t.bigint "studio_id", null: false
+    t.bigint "studio_id"
     t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
     t.index ["client_id", "default"], name: "index_client_payment_methods_on_client_id_and_default"
-    t.index ["client_id", "stripe_payment_method_id"], name: "index_client_payment_methods_on_client_and_stripe_pm", unique: true
     t.index ["client_id"], name: "index_client_payment_methods_on_client_id"
+    t.index ["user_id", "stripe_payment_method_id"], name: "index_client_payment_methods_on_user_and_stripe_pm", unique: true
   end
 
   create_table "clients", force: :cascade do |t|
@@ -394,6 +395,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_190000) do
   add_foreign_key "client_notes", "users", column: "author_id"
   add_foreign_key "client_payment_methods", "clients"
   add_foreign_key "client_payment_methods", "studios"
+  add_foreign_key "client_payment_methods", "users"
   add_foreign_key "clients", "studios"
   add_foreign_key "clients", "users"
   add_foreign_key "favorite_class_sessions", "class_sessions"

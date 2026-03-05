@@ -32,7 +32,7 @@ module Mutations
       end
 
       template = booking.class_session.class_template
-      amount_cents = booking.price_cents.presence || template.price_cents
+      amount_cents = booking.price_cents.to_i > 0 ? booking.price_cents : template.price_cents
       if amount_cents.to_i <= 0
         return { success: false, checkout_url: nil, errors: [ "Class has no price configured" ] }
       end
@@ -77,7 +77,7 @@ module Mutations
         return { success: false, checkout_url: nil, errors: [ e.message ] }
       end
 
-      BookingMailer.with(booking: booking, checkout_url: checkout_session.url).payment_reminder.deliver_later
+      BookingMailer.with(booking: booking, checkout_url: checkout_session.url).payment_reminder.deliver_now
 
       { success: true, checkout_url: checkout_session.url, errors: [] }
     rescue ActiveRecord::RecordNotFound

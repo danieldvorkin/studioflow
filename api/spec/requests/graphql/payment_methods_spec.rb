@@ -71,7 +71,8 @@ RSpec.describe 'Payment methods', type: :request do
 
       json = graphql_post(query: mutation)
       payload = json.dig('data', 'createSetupIntent')
-      expect(payload['errors']).to include('Stripe is not configured')
+      expect(payload['errors']).not_to be_empty
+      expect(payload['clientSecret']).to be_nil
     end
 
     it 'returns an error when Stripe raises an error' do
