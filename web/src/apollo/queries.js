@@ -958,3 +958,87 @@ export const PUBLIC_CLASS_PAGE = gql`
     }
   }
 `;
+
+// ── Shop ────────────────────────────────────────────────────────────────────
+
+export const SHOP_ITEMS = gql`
+  query ShopItems($studioId: ID, $studioLocationId: ID) {
+    shopItems(studioId: $studioId, studioLocationId: $studioLocationId) {
+      id
+      studioId
+      studioLocationId
+      title
+      description
+      priceCents
+      currency
+      itemType
+      stockQuantity
+      active
+      inStock
+      imageUrl
+      rentalAgreementText
+      createdAt
+    }
+  }
+`;
+
+export const SHOP_ORDERS = gql`
+  query ShopOrders {
+    shopOrders {
+      id
+      quantity
+      totalCents
+      currency
+      status
+      rentalDueDate
+      returnedAt
+      notes
+      rentalAgreementAcceptedAt
+      stripePaymentIntentId
+      createdAt
+      shopItem {
+        id
+        title
+        itemType
+        priceCents
+        currency
+      }
+      client {
+        id
+        name
+        email
+      }
+    }
+  }
+`;
+
+export const MY_SHOP_ORDERS = gql`
+  query MyShopOrders {
+    myShopOrders {
+      id
+      quantity
+      totalCents
+      currency
+      status
+      rentalDueDate
+      returnedAt
+      notes
+      rentalAgreementAcceptedAt
+      stripePaymentIntentId
+      createdAt
+      shopItem {
+        id
+        title
+        itemType
+        priceCents
+        currency
+        imageUrl
+      }
+      client {
+        id
+        name
+        email
+      }
+    }
+  }
+`;

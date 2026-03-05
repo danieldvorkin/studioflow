@@ -1,0 +1,19 @@
+Your order is confirmed!
+
+Hi <%= @client.name.presence || @client.email %>,
+
+Thanks for your order. Here are the details:
+
+Item:      <%= @item.title %>
+Type:      <%= @item.item_type.capitalize %>
+Quantity:  <%= @order.quantity %>
+Total:     <%= sprintf("%.2f", @order.total_cents / 100.0) %> <%= @order.currency.upcase %>
+Status:    <%= @order.status.capitalize %>
+<% if @order.rental_due_date %>
+Return by: <%= @order.rental_due_date.strftime('%B %-d, %Y') %>
+<% end %>
+
+View your orders: <%= @orders_url %>
+
+Thanks,
+StudioFlow
