@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 function ClientBookingMockup() {
   const [step, setStep] = useState(0);

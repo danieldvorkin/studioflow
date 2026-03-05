@@ -45,6 +45,11 @@ import MyMembershipsPage from "./pages/MyMemberships";
 import ShopPage from "./pages/Shop";
 import OwnerShopPage from "./pages/OwnerShop";
 import MyOrdersPage from "./pages/MyOrders";
+import ForOwners from "./pages/ForOwners";
+import ForInstructors from "./pages/ForInstructors";
+import ForClients from "./pages/ForClients";
+import Contact from "./pages/Contact";
+import Team from "./pages/Team";
 const Dashboard = lazy(() => import("./pages/dashboard"));
 const Profile = lazy(() => import("./pages/profile"));
 import { useTheme } from "./theme/ThemeProvider";
@@ -625,6 +630,12 @@ function App() {
           path="/signup/client"
           element={<SignUpPortal accountType="CLIENT" />}
         />
+        {/* Public marketing pages */}
+        <Route path="/for-owners" element={<ForOwners />} />
+        <Route path="/for-instructors" element={<ForInstructors />} />
+        <Route path="/for-clients" element={<ForClients />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/team" element={<Team />} />
         {/* Public class landing page — no auth required */}
         <Route
           path="/c/:studioCode/:templateId"
