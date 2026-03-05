@@ -22,22 +22,22 @@ class MakePaymentMethodsUserScoped < ActiveRecord::Migration[8.0]
     change_column_null :client_payment_methods, :studio_id, true
 
     # Replace the unique index from (client_id, stripe_pm_id) → (user_id, stripe_pm_id)
-    if index_exists?(:client_payment_methods, [:client_id, :stripe_payment_method_id],
+    if index_exists?(:client_payment_methods, [ :client_id, :stripe_payment_method_id ],
                      name: "index_client_payment_methods_on_client_and_stripe_pm")
       remove_index :client_payment_methods,
                    name: "index_client_payment_methods_on_client_and_stripe_pm"
     end
 
-    unless index_exists?(:client_payment_methods, [:user_id, :stripe_payment_method_id],
+    unless index_exists?(:client_payment_methods, [ :user_id, :stripe_payment_method_id ],
                          name: "index_client_payment_methods_on_user_and_stripe_pm")
-      add_index :client_payment_methods, [:user_id, :stripe_payment_method_id],
+      add_index :client_payment_methods, [ :user_id, :stripe_payment_method_id ],
                 unique: true, name: "index_client_payment_methods_on_user_and_stripe_pm"
     end
   end
 
   def down
     remove_index :client_payment_methods, name: "index_client_payment_methods_on_user_and_stripe_pm" rescue nil
-    add_index :client_payment_methods, [:client_id, :stripe_payment_method_id],
+    add_index :client_payment_methods, [ :client_id, :stripe_payment_method_id ],
               unique: true, name: "index_client_payment_methods_on_client_and_stripe_pm"
     change_column_null :client_payment_methods, :studio_id, false
     change_column_null :client_payment_methods, :user_id, true
