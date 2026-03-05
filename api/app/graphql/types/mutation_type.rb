@@ -75,6 +75,9 @@ module Types
 
     field :create_moderator, mutation: Mutations::CreateModerator, null: true
 
+    field :forgot_password, mutation: Mutations::ForgotPassword, null: true
+    field :reset_password,  mutation: Mutations::ResetPassword,  null: true
+
     # Godmode only
     field :send_test_email, mutation: Mutations::SendTestEmail, null: true
   end

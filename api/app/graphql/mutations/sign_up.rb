@@ -64,6 +64,10 @@ module Mutations
           invitation&.accept! if invitation&.pending?
         end
 
+        if account_type == "OWNER"
+          UserMailer.with(user: user, studio: studio).signup_confirmation.deliver_later
+        end
+
         { user: user, errors: [] }
       else
         { user: nil, errors: user.errors.full_messages }
