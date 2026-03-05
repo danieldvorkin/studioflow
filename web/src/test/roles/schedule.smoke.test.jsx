@@ -11,7 +11,11 @@ import { render, screen, cleanup } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 // ── Stable mock objects (identity must not change between renders) ─────────────
-const EMPTY_RESULT = Object.freeze({ data: {}, loading: false, error: undefined });
+const EMPTY_RESULT = Object.freeze({
+  data: {},
+  loading: false,
+  error: undefined,
+});
 const MUTATION_STUB = Object.freeze([vi.fn(), { loading: false }]);
 
 vi.mock("@apollo/client", () => ({
@@ -30,12 +34,21 @@ vi.mock("../../components/ToastProvider", () => ({
 }));
 
 vi.mock("../../location/LocationProvider", () => ({
-  useLocationContext: () => ({ locations: [], locationId: null, setLocationId: vi.fn() }),
+  useLocationContext: () => ({
+    locations: [],
+    locationId: null,
+    setLocationId: vi.fn(),
+  }),
   LocationProvider: ({ children }) => children,
 }));
 
 vi.mock("../../theme/ThemeProvider", () => ({
-  useTheme: () => ({ theme: "dark", toggleTheme: vi.fn(), applyTheme: vi.fn(), clearThemeOverride: vi.fn() }),
+  useTheme: () => ({
+    theme: "dark",
+    toggleTheme: vi.fn(),
+    applyTheme: vi.fn(),
+    clearThemeOverride: vi.fn(),
+  }),
   ThemeProvider: ({ children }) => children,
 }));
 
@@ -133,8 +146,12 @@ describe("Schedule page — owner", () => {
   it("shows Week and Month view toggle buttons", async () => {
     renderSchedule();
     await screen.findByRole("heading", { name: /Weekly calendar/i });
-    expect(screen.getAllByRole("button", { name: /Week/i }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("button", { name: /Month/i }).length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByRole("button", { name: /Week/i }).length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getAllByRole("button", { name: /Month/i }).length,
+    ).toBeGreaterThan(0);
   });
 });
 

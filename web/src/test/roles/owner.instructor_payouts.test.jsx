@@ -7,14 +7,23 @@ import { MemoryRouter } from "react-router-dom";
 
 import "../mocks/baseMocks";
 import { setMockAuth } from "../mocks/baseMocks";
-import { ownerUser, staffUser, clientUser, instructorUser } from "../helpers/users";
+import {
+  ownerUser,
+  staffUser,
+  clientUser,
+  instructorUser,
+} from "../helpers/users";
 import { currentUserMock } from "../helpers/apolloMocks";
 
 // Mock the complex InstructorPayoutsModule sub-component to keep tests focused
 // on the page-level access control, not the module's own queries.
 vi.mock("../../components/InstructorPayoutsModule", () => ({
   default: () =>
-    React.createElement("div", { "data-testid": "payouts-module" }, "Payouts module"),
+    React.createElement(
+      "div",
+      { "data-testid": "payouts-module" },
+      "Payouts module",
+    ),
 }));
 
 import InstructorPayoutsPage from "../../pages/InstructorPayouts.jsx";
