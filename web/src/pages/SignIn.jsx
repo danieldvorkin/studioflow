@@ -35,8 +35,16 @@ export default function SignIn() {
   const [signIn, { loading }] = useMutation(SIGN_IN);
   const navigate = useNavigate();
   const location = useLocation();
+  const notice = location?.state?.notice || null;
   const auth = useAuth();
   const didConsumeDevSeed = useRef(false);
+
+  // Clear location state notice after showing it once
+  useEffect(() => {
+    if (location?.state?.notice) {
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const devSeedAccount =
     import.meta.env.DEV &&
@@ -254,6 +262,15 @@ export default function SignIn() {
                   className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none ring-0 focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                 />
               </div>
+              <div className="flex justify-end">
+                <Link
+                  to="/forgot-password"
+                  className="text-[11px] text-slate-400 hover:text-slate-200"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              {notice && <p className="text-xs text-emerald-400">{notice}</p>}
               {error && <p className="text-xs text-rose-400">{error}</p>}
               <button
                 type="submit"

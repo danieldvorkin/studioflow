@@ -20,14 +20,10 @@ const STATUS_LABELS = {
 };
 
 const STATUS_BADGE_CLASS = {
-  booked:
-    "bg-emerald-500/10 text-emerald-300 border border-emerald-500/30",
-  waitlisted:
-    "bg-amber-500/10 text-amber-300 border border-amber-500/30",
-  cancelled:
-    "bg-slate-700/60 text-slate-400 border border-slate-600/30",
-  no_show:
-    "bg-rose-500/10 text-rose-300 border border-rose-500/30",
+  booked: "bg-emerald-500/10 text-emerald-300 border border-emerald-500/30",
+  waitlisted: "bg-amber-500/10 text-amber-300 border border-amber-500/30",
+  cancelled: "bg-slate-700/60 text-slate-400 border border-slate-600/30",
+  no_show: "bg-rose-500/10 text-rose-300 border border-rose-500/30",
 };
 
 const ALL_STATUSES = ["booked", "waitlisted", "cancelled", "no_show"];
@@ -45,8 +41,7 @@ export default function SessionManage() {
   const { user } = useAuth();
   const { addToast } = useToast();
 
-  const canManage =
-    isGodmode(user) || isOwner(user) || isStaff(user);
+  const canManage = isGodmode(user) || isOwner(user) || isStaff(user);
 
   const [statusFilter, setStatusFilter] = useState("");
 
@@ -78,14 +73,13 @@ export default function SessionManage() {
     const confirmed = confirmedBookings.length;
     const paidRevenueCents = allBookings
       .filter((b) => b.paid && b.status !== "cancelled")
-      .reduce((sum, b) => sum + (b.payment?.amountCents || b.priceCents || 0), 0);
-    const unpaidBalanceCents = allBookings
-      .filter((b) => !b.paid && b.status === "booked")
       .reduce(
-        (sum, b) =>
-          sum + (b.priceCents || template?.priceCents || 0),
+        (sum, b) => sum + (b.payment?.amountCents || b.priceCents || 0),
         0,
       );
+    const unpaidBalanceCents = allBookings
+      .filter((b) => !b.paid && b.status === "booked")
+      .reduce((sum, b) => sum + (b.priceCents || template?.priceCents || 0), 0);
     const currency =
       template?.currency ||
       allBookings.find((b) => b.payment?.currency)?.payment?.currency ||

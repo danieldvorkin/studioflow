@@ -49,7 +49,7 @@
 /web/*.njsproj
 /web/*.sln
 /web/*.sw?
-/api/coverage/*
+/api/coverage/
 # Local Netlify folder
 .netlify
 
