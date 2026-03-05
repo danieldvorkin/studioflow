@@ -362,11 +362,19 @@ RSpec.describe "Bundle bookings", type: :request do
     context "as a client user (marketplace flow)" do
       let(:marketplace_studio)  { create(:studio) }
       let(:marketplace_client_user) { create(:user, :client, studio: marketplace_studio) }
+      let(:marketplace_instructor) { create(:user, :instructor, studio: marketplace_studio) }
       let(:marketplace_template) do
         create(:class_template,
-          instructor: create(:user, :instructor, studio: marketplace_studio),
+          instructor: marketplace_instructor,
           price_cents: 3_000,
-          currency: "cad",
+          currency: "cad"
+        )
+      end
+      let(:marketplace_session) do
+        create(:class_session,
+          class_template: marketplace_template,
+          instructor: marketplace_instructor,
+          start_time: 3.days.from_now.change(sec: 0),
           bundle_enabled: true,
           bundle_spots: 6
         )

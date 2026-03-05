@@ -109,20 +109,22 @@ RSpec.describe "Toggle client block", type: :request do
   # ─────────────────────────────────────────────────────────────────────────
   describe "authorization" do
     it "rejects unauthenticated callers" do
-      json = graphql_post(query: mutation, variables: { clientId: client.id.to_s, blocked: true })
+      json    = graphql_post(query: mutation, variables: { clientId: client.id.to_s, blocked: true })
+      payload = json.dig("data", "toggleClientBlock")
 
-      expect(json["errors"]).to be_present
-      expect(json["errors"].first["message"]).to match(/not authorized/i)
+      expect(payload["errors"]).to be_present
+      expect(payload["errors"].join).to match(/not authorized/i)
     end
 
     it "rejects a client user from blocking another client" do
       client_user = create(:user, :client, studio: studio)
       sign_in(client_user)
 
-      json = graphql_post(query: mutation, variables: { clientId: client.id.to_s, blocked: true })
+      json    = graphql_post(query: mutation, variables: { clientId: client.id.to_s, blocked: true })
+      payload = json.dig("data", "toggleClientBlock")
 
-      expect(json["errors"]).to be_present
-      expect(json["errors"].first["message"]).to match(/not authorized/i)
+      expect(payload["errors"]).to be_present
+      expect(payload["errors"].join).to match(/not authorized/i)
     end
 
     it "returns not_found for a client in another studio" do
