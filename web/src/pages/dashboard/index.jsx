@@ -1,6 +1,6 @@
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
 import { useQuery } from "@apollo/client";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
   SkeletonDashboardPanel,
@@ -759,6 +759,10 @@ export default function Dashboard() {
   const anyTemplateSessionsLink = firstTemplateId
     ? `/templates/${firstTemplateId}/sessions`
     : "/templates";
+
+  if (isGodmode && userData) {
+    return <Navigate to="/godmode/dashboard" replace />;
+  }
 
   return (
     <div className="flex w-full flex-col gap-6">

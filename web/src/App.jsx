@@ -33,7 +33,11 @@ import Favorites from "./pages/Favorites";
 import ClassDetail from "./pages/ClassDetail";
 import PublicClassDetail from "./pages/PublicClassDetail";
 import { PageSpinner } from "./components/Spinner";
-
+import GodmodeDashboard from "./pages/GodmodeDashboard";
+import GodmodeModerators from "./pages/GodmodeModerators";
+import GodmodeSubscriptions from "./pages/GodmodeSubscriptions";
+import GodmodeStudio from "./pages/GodmodeStudio";
+import GodmodeStudios from "./pages/GodmodeStudios";
 const Dashboard = lazy(() => import("./pages/dashboard"));
 const Profile = lazy(() => import("./pages/profile"));
 import { useTheme } from "./theme/ThemeProvider";
@@ -209,6 +213,16 @@ function AppShell() {
               <NavItem to="/locations">Locations</NavItem>
             </NavFolder>
           )}
+
+          {isGodmode && (
+            <NavFolder label="Platform" defaultOpen>
+              <NavItem to="/godmode/studios" end={false}>
+                Studios
+              </NavItem>
+              <NavItem to="/godmode/subscriptions">Subscriptions</NavItem>
+              <NavItem to="/godmode/moderators">Moderators</NavItem>
+            </NavFolder>
+          )}
         </nav>
         <div className="mt-auto text-xs text-slate-500">
           © {new Date().getFullYear()} StudioFlow
@@ -376,6 +390,33 @@ function AppShell() {
                       onNavigate={() => setMobileNavOpen(false)}
                     >
                       Locations
+                    </NavItem>
+                  </NavFolder>
+                )}
+
+                {isGodmode && (
+                  <NavFolder label="Platform" defaultOpen variant="mobile">
+                    <NavItem
+                      to="/godmode/studios"
+                      end={false}
+                      variant="mobile"
+                      onNavigate={() => setMobileNavOpen(false)}
+                    >
+                      Studios
+                    </NavItem>
+                    <NavItem
+                      to="/godmode/subscriptions"
+                      variant="mobile"
+                      onNavigate={() => setMobileNavOpen(false)}
+                    >
+                      Subscriptions
+                    </NavItem>
+                    <NavItem
+                      to="/godmode/moderators"
+                      variant="mobile"
+                      onNavigate={() => setMobileNavOpen(false)}
+                    >
+                      Moderators
                     </NavItem>
                   </NavFolder>
                 )}
@@ -694,6 +735,46 @@ function App() {
             element={
               <ProtectedRoute>
                 <ClientsRouteGate />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/godmode/dashboard"
+            element={
+              <ProtectedRoute>
+                <GodmodeDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/godmode/subscriptions"
+            element={
+              <ProtectedRoute>
+                <GodmodeSubscriptions />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/godmode/moderators"
+            element={
+              <ProtectedRoute>
+                <GodmodeModerators />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/godmode/studios"
+            element={
+              <ProtectedRoute>
+                <GodmodeStudios />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/godmode/studios/:studioId"
+            element={
+              <ProtectedRoute>
+                <GodmodeStudio />
               </ProtectedRoute>
             }
           />
