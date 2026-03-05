@@ -143,11 +143,11 @@ RSpec.describe "Booking actions", type: :request do
       booking      = create(:booking, client: other_client, class_session: session)
       sign_in(other_user)
 
-      json    = graphql_post(query: mutation, variables: { id: booking.id.to_s })
-      payload = json.dig("data", "archiveBooking")
+      json = graphql_post(query: mutation, variables: { id: booking.id.to_s })
 
-      # Client user without ownership is not authorised
-      expect(payload["success"]).to be false
+      # Pundit raises NotAuthorizedError → GraphQL::ExecutionError in json["errors"]
+      expect(json["errors"]).to be_present
+      expect(json["errors"].first["message"]).to match(/not authorized/i)
     end
 
     it "returns not_found for a booking in another studio" do
