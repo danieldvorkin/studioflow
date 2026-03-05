@@ -17,7 +17,7 @@ module Mutations
           booking.client.user_id == user.id
         else
           booking.studio_id == user.studio_id && (
-            user.owner? || user.staff? || (user.instructor? && booking.class_session.instructor_id == user.id)
+            user.godmode? || user.owner? || user.staff? || (user.instructor? && booking.class_session.instructor_id == user.id)
           )
         end
 

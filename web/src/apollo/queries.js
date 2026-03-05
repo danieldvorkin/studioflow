@@ -284,8 +284,8 @@ export const INSTRUCTORS = gql`
 `;
 
 export const ALL_USERS = gql`
-  query AllUsers {
-    users {
+  query AllUsers($studioId: ID) {
+    users(studioId: $studioId) {
       id
       studioId
       email
@@ -309,12 +309,14 @@ export const INSTRUCTOR_EARNINGS_WEEKS = gql`
     $weekEnd: ISO8601Date
     $instructorId: ID
     $currency: String
+    $studioId: ID
   ) {
     instructorEarningsWeeks(
       weekStart: $weekStart
       weekEnd: $weekEnd
       instructorId: $instructorId
       currency: $currency
+      studioId: $studioId
     ) {
       instructor {
         id

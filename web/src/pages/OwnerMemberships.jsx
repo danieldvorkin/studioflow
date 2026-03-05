@@ -16,7 +16,7 @@ import {
   UPDATE_CLIENT_MEMBERSHIP,
 } from "../apollo/mutations";
 import { useToast } from "../components/ToastProvider";
-import { isOwner, isStaff } from "../auth/permissions";
+import { isOwner, isStaff, isGodmode } from "../auth/permissions";
 
 function dollarsFromCents(cents) {
   if (typeof cents !== "number") return "";
@@ -392,7 +392,7 @@ export default function OwnerMembershipsPage() {
   const { data: userData } = useQuery(CURRENT_USER);
   const user = userData?.currentUser;
 
-  const canManage = isOwner(user) || isStaff(user);
+  const canManage = isGodmode(user) || isOwner(user) || isStaff(user);
 
   const {
     data: plansData,

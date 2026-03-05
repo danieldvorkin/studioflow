@@ -19,7 +19,7 @@ module Mutations
 
     def resolve(id:, **attrs)
       current_user = context[:current_user]
-      raise GraphQL::ExecutionError, "Not authorized" unless current_user&.owner? || current_user&.moderator?
+      raise GraphQL::ExecutionError, "Not authorized" unless current_user&.godmode? || current_user&.owner? || current_user&.moderator?
 
       user =
         if current_user.respond_to?(:platform_staff?) && current_user.platform_staff?

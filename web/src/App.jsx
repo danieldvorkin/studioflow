@@ -28,6 +28,7 @@ import BookingsPage from "./pages/Bookings";
 import BookingShow from "./pages/BookingShow";
 import ClientsPage from "./pages/Clients";
 import InstructorPayoutsPage from "./pages/InstructorPayouts";
+import StudioShowPage from "./pages/StudioShowPage";
 import Favorites from "./pages/Favorites";
 import ClassDetail from "./pages/ClassDetail";
 import PublicClassDetail from "./pages/PublicClassDetail";
@@ -132,20 +133,13 @@ function AppShell() {
     studioSettingsData?.studioSettings?.clientsPageEnabled !== false;
 
   const roleRaw = user?.roleName;
+  const isGodmode = roleRaw === "godmode" || user?.godmode === true;
   const isOwner =
-    roleRaw === "owner" ||
-    user?.role === 0 ||
-    roleRaw === "OWNER" ||
-    roleRaw === "godmode" ||
-    user?.godmode === true;
+    roleRaw === "owner" || user?.role === 0 || roleRaw === "OWNER";
   const isStaff = roleRaw === "staff" || user?.role === 1;
-  const isModerator =
-    roleRaw === "moderator" ||
-    user?.role === 4 ||
-    roleRaw === "godmode" ||
-    user?.godmode === true;
+  const isModerator = roleRaw === "moderator" || user?.role === 4;
 
-  const canManageStudio = isOwner || isStaff || isModerator;
+  const canManageStudio = isGodmode || isOwner || isStaff || isModerator;
 
   useEffect(() => {
     mobileNavOpenRef.current = mobileNavOpen;
@@ -206,7 +200,7 @@ function AppShell() {
             )}
           </NavFolder>
 
-          {(isOwner || isModerator) && (
+          {(isGodmode || isOwner || isModerator) && (
             <NavFolder label="Owner" defaultOpen>
               <NavItem to="/owner">Owner</NavItem>
               <NavItem to="/owner/instructor-payouts">
@@ -360,7 +354,7 @@ function AppShell() {
                   )}
                 </NavFolder>
 
-                {(isOwner || isModerator) && (
+                {(isGodmode || isOwner || isModerator) && (
                   <NavFolder label="Owner" defaultOpen variant="mobile">
                     <NavItem
                       to="/owner"
@@ -617,6 +611,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <InstructorPayoutsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/owner/studios/:id"
+            element={
+              <ProtectedRoute>
+                <StudioShowPage />
               </ProtectedRoute>
             }
           />

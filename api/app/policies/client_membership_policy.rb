@@ -1,10 +1,10 @@
 class ClientMembershipPolicy < ApplicationPolicy
   def index?
-    user && (user.owner? || user.staff? || user.client?)
+    user && (user.godmode? || user.owner? || user.staff? || user.client?)
   end
 
   def create?
-    user && (user.owner? || user.staff?)
+    user && (user.godmode? || user.owner? || user.staff?)
   end
 
   def update?

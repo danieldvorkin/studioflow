@@ -12,7 +12,7 @@ module Mutations
     def resolve(id:, status: nil, ends_at: nil, notes: nil, membership_plan_id: nil)
       user = context[:current_user]
       raise GraphQL::ExecutionError, "Not authenticated" unless user
-      raise Pundit::NotAuthorizedError unless user.owner? || user.staff?
+      raise Pundit::NotAuthorizedError unless user.godmode? || user.owner? || user.staff?
 
       membership = ClientMembership.joins(:membership_plan)
                                    .where(id: id, membership_plans: { studio_id: user.studio_id })

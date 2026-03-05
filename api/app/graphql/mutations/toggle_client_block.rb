@@ -9,7 +9,7 @@ module Mutations
 
     def resolve(client_id:, blocked:)
       user = context[:current_user]
-      unless user&.instructor? || user&.owner? || user&.staff? || user&.moderator?
+      unless user&.godmode? || user&.instructor? || user&.owner? || user&.staff? || user&.moderator?
         raise GraphQL::ExecutionError, "Not authorized"
       end
 

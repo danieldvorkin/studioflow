@@ -7,7 +7,7 @@ module Mutations
 
     def resolve
       user = context[:current_user]
-      raise GraphQL::ExecutionError, "Not authorized" unless user&.owner?
+      raise GraphQL::ExecutionError, "Not authorized" unless user&.godmode? || user&.owner?
 
       studio = user.studio
       return { studio: nil, errors: [ "Studio not found" ] } unless studio

@@ -1,10 +1,11 @@
 class BookingPolicy < ApplicationPolicy
   def create?
-    user && (user.client? || user.owner? || user.staff? || user.instructor? || user.moderator?)
+    user && (user.godmode? || user.client? || user.owner? || user.staff? || user.instructor? || user.moderator?)
   end
 
   def cancel?
     user && (
+      user.godmode? ||
       user.owner? ||
       user.staff? ||
       user.moderator? ||
@@ -15,6 +16,7 @@ class BookingPolicy < ApplicationPolicy
 
   def archive?
     user && (
+      user.godmode? ||
       user.owner? ||
       user.staff? ||
       user.moderator? ||

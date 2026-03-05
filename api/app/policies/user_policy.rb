@@ -1,6 +1,6 @@
 class UserPolicy < ApplicationPolicy
   def invite?
-    user && (user.owner? || user.moderator?)
+    user && (user.godmode? || user.owner? || user.moderator?)
   end
 
   def create_moderator?
@@ -8,6 +8,6 @@ class UserPolicy < ApplicationPolicy
   end
 
   def update?
-    user && (user.owner? || user.moderator?)
+    user && (user.godmode? || user.owner? || user.moderator?)
   end
 end

@@ -7,7 +7,7 @@ module Mutations
 
     def resolve(instructor_id:)
       user = context[:current_user]
-      raise Pundit::NotAuthorizedError unless user&.owner?
+      raise Pundit::NotAuthorizedError unless user&.godmode? || user&.owner?
 
       instructor = User.where(studio_id: user.studio_id).find_by(id: instructor_id)
       return { instructor: nil, errors: [ "Instructor not found" ] } unless instructor&.instructor?

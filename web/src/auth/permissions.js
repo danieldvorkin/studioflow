@@ -17,17 +17,17 @@ export function isGodmode(user) {
 
 export function isOwner(user) {
   const role = roleName(user);
-  return role === "owner" || role === "godmode";
+  return role === "owner";
 }
 
 export function isStaff(user) {
   const role = roleName(user);
-  return role === "staff" || role === "godmode";
+  return role === "staff";
 }
 
 export function isInstructor(user) {
   const role = roleName(user);
-  return role === "instructor" || role === "godmode";
+  return role === "instructor";
 }
 
 export function isClient(user) {
@@ -37,7 +37,7 @@ export function isClient(user) {
 
 export function isModerator(user) {
   const role = roleName(user);
-  return role === "moderator" || role === "godmode";
+  return role === "moderator";
 }
 
 export function canManageTemplates(user) {

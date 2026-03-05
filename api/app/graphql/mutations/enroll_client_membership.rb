@@ -11,7 +11,7 @@ module Mutations
     def resolve(client_id:, membership_plan_id:, started_at: nil, notes: nil)
       user = context[:current_user]
       raise GraphQL::ExecutionError, "Not authenticated" unless user
-      raise Pundit::NotAuthorizedError unless user.owner? || user.staff?
+      raise Pundit::NotAuthorizedError unless user.godmode? || user.owner? || user.staff?
 
       plan = MembershipPlan.find_by(id: membership_plan_id, studio_id: user.studio_id)
       return { client_membership: nil, errors: [ "Membership plan not found" ] } unless plan

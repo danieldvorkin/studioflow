@@ -75,6 +75,7 @@ export const CREATE_STUDIO_LOCATION = gql`
     $city: String
     $state: String
     $zip: String
+    $studioId: ID
   ) {
     createStudioLocation(
       input: {
@@ -83,6 +84,7 @@ export const CREATE_STUDIO_LOCATION = gql`
         city: $city
         state: $state
         zip: $zip
+        studioId: $studioId
       }
     ) {
       studioLocation {

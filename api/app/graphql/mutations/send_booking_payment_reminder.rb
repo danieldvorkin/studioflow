@@ -13,7 +13,7 @@ module Mutations
       booking = Booking.includes(:studio, :client, class_session: :class_template).find(booking_id)
 
       authorized = booking.studio_id == user.studio_id && (
-        user.owner? || user.staff? || (user.instructor? && booking.class_session.instructor_id == user.id)
+        user.godmode? || user.owner? || user.staff? || (user.instructor? && booking.class_session.instructor_id == user.id)
       )
 
       return { success: false, checkout_url: nil, errors: [ "Not authorized" ] } unless authorized

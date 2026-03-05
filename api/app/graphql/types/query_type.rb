@@ -85,7 +85,7 @@ module Types
       description: "Returns the current owner's studio with onboarding status"
     def my_studio
       user = context[:current_user]
-      raise GraphQL::ExecutionError, "Not authorized" unless user&.owner?
+      raise GraphQL::ExecutionError, "Not authorized" unless user&.godmode? || user&.owner?
 
       user.studio
     end
@@ -308,13 +308,17 @@ module Types
     end
 
     field :users, [ Types::UserType ], null: false,
-      description: "List all users (owner only)"
-    def users
+      description: "List all users (owner only)" do
+      argument :studio_id, ID, required: false
+    end
+    def users(studio_id: nil)
       user = context[:current_user]
       require_owner_access!(user)
 
       if user.platform_staff?
-        User.order(:email)
+        scope = User.order(:email)
+        scope = scope.where(studio_id: studio_id) if studio_id.present?
+        scope
       else
         # Regular owners see only staff and instructors from their studio.
         # Other owners are excluded (owners cannot manage peers) and clients
@@ -503,10 +507,11 @@ module Types
       argument :week_end, GraphQL::Types::ISO8601Date, required: false
       argument :instructor_id, ID, required: false
       argument :currency, String, required: false
+      argument :studio_id, ID, required: false
     end
-    def instructor_earnings_weeks(week_start:, week_end: nil, instructor_id: nil, currency: nil)
+    def instructor_earnings_weeks(week_start:, week_end: nil, instructor_id: nil, currency: nil, studio_id: nil)
       user = context[:current_user]
-      raise GraphQL::ExecutionError, "Not authorized" unless user&.owner?
+      raise GraphQL::ExecutionError, "Not authorized" unless user&.godmode? || user&.owner?
 
       build_snapshot_from_result = lambda do |result|
         {
@@ -537,7 +542,7 @@ module Types
         ids = raw_rows.map { |row| row.is_a?(Hash) ? (row["classTemplateId"] || row[:classTemplateId]) : nil }.compact
         return nil if ids.empty?
 
-        templates_by_id = ClassTemplate.where(studio_id: user.studio_id, id: ids).index_by { |t| t.id.to_s }
+        templates_by_id = ClassTemplate.where(studio_id: effective_studio_id, id: ids).index_by { |t| t.id.to_s }
         return nil unless ids.all? { |id| templates_by_id.key?(id.to_s) }
 
         raw_rows.map do |row|
@@ -550,17 +555,24 @@ module Types
         end
       end
 
+      effective_studio_id =
+        if user.godmode? && studio_id.present?
+          studio_id
+        else
+          user.studio_id
+        end
+
       calculator = InstructorPayouts::WeeklyEarningsCalculator.new(
         week_start: week_start,
         week_end: week_end,
         instructor_id: instructor_id,
         currency: currency,
-        studio_id: user.studio_id
+        studio_id: effective_studio_id
       )
       results = calculator.call
 
       existing = InstructorPayout
-        .where(studio_id: user.studio_id, week_start: week_start.to_date)
+        .where(studio_id: effective_studio_id, week_start: week_start.to_date)
       existing = existing.where(instructor_id: instructor_id) if instructor_id
       existing = existing.where(currency: currency) if currency.present?
 
@@ -775,7 +787,7 @@ module Types
       description: "All invitations sent by this studio (owner/staff/instructor)"
     def client_invitations
       user = context[:current_user]
-      unless user&.owner? || user&.staff? || user&.instructor?
+      unless user&.godmode? || user&.owner? || user&.staff? || user&.instructor?
         raise GraphQL::ExecutionError, "Not authorized"
       end
 
@@ -826,7 +838,7 @@ module Types
         return [] unless client
         scope = ClientMembership.where(client_id: client.id)
       else
-        raise Pundit::NotAuthorizedError unless user.owner? || user.staff?
+        raise Pundit::NotAuthorizedError unless user.godmode? || user.owner? || user.staff?
         scope = ClientMembership.where(studio_id: user.studio_id)
         scope = scope.where(client_id: client_id) if client_id.present?
         scope = scope.where(membership_plan_id: membership_plan_id) if membership_plan_id.present?

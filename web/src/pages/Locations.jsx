@@ -1,7 +1,7 @@
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { useMutation, useQuery } from "@apollo/client";
 import { Navigate } from "react-router-dom";
-import { STUDIO_LOCATIONS, CURRENT_USER } from "../apollo/queries";
+import { STUDIO_LOCATIONS, CURRENT_USER, STUDIOS } from "../apollo/queries";
 import {
   CREATE_STUDIO_LOCATION,
   UPDATE_STUDIO_LOCATION,
@@ -9,20 +9,26 @@ import {
 } from "../apollo/mutations";
 import { useState } from "react";
 import { useToast } from "../components/ToastProvider";
-import { useAuth } from "../auth/AuthProvider";
 
 export default function LocationsPage() {
   useDocumentTitle("Locations");
-  const auth = useAuth();
   const { data: userData, loading: userLoading } = useQuery(CURRENT_USER);
   const user = userData?.currentUser;
   const roleName = (user?.roleName || "").toString().toLowerCase();
   const isGodmode = user?.godmode === true || roleName === "godmode";
-  const isOwner = isGodmode || roleName === "owner" || user?.role === 0;
-  const isModerator = isGodmode || roleName === "moderator" || user?.role === 4;
+  const isOwner = roleName === "owner" || user?.role === 0;
+  const isModerator = roleName === "moderator" || user?.role === 4;
+
+  const [selectedStudioId, setSelectedStudioId] = useState("");
+
+  const { data: studiosData } = useQuery(STUDIOS, { skip: !isGodmode });
+  const studios = studiosData?.studios || [];
+
+  const effectiveStudioId = isGodmode ? selectedStudioId || null : null;
 
   const { data, loading, refetch } = useQuery(STUDIO_LOCATIONS, {
     skip: !user,
+    variables: effectiveStudioId ? { studioId: effectiveStudioId } : {},
     fetchPolicy: "network-only",
   });
 
@@ -53,11 +59,7 @@ export default function LocationsPage() {
 
   if (!user) return <Navigate to="/signin" replace />;
 
-  if (isGodmode && !auth.isImpersonating) {
-    return <Navigate to="/owner" replace />;
-  }
-
-  if (!isOwner && !isModerator) {
+  if (!isGodmode && !isOwner && !isModerator) {
     return (
       <div className="mx-auto max-w-xl rounded-2xl border border-slate-800 bg-slate-900/80 p-6 text-sm text-slate-200">
         <h1 className="mb-2 text-lg font-semibold text-slate-50">
@@ -97,6 +99,7 @@ export default function LocationsPage() {
           city: createForm.city || null,
           state: createForm.state || null,
           zip: createForm.zip || null,
+          studioId: effectiveStudioId || undefined,
         },
       });
       const payload = res.data?.createStudioLocation;
@@ -159,6 +162,26 @@ export default function LocationsPage() {
           Create, rename, and maintain studio locations.
         </p>
       </header>
+
+      {isGodmode && studios.length > 0 && (
+        <div className="flex items-center gap-3">
+          <label className="text-xs font-medium text-slate-400">Studio</label>
+          <select
+            className="rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+            value={selectedStudioId}
+            onChange={(e) => setSelectedStudioId(e.target.value)}
+          >
+            <option value="">All studios</option>
+            {[...studios]
+              .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+              .map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+          </select>
+        </div>
+      )}
 
       <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-sm shadow-black/20">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">

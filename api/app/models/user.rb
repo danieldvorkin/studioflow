@@ -27,11 +27,11 @@ class User < ApplicationRecord
   end
 
   def owner?
-    godmode? || read_attribute(:role) == ROLES[:owner]
+    read_attribute(:role) == ROLES[:owner]
   end
 
   def staff?
-    godmode? || read_attribute(:role) == ROLES[:staff]
+    read_attribute(:role) == ROLES[:staff]
   end
 
   def instructor?
