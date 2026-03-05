@@ -45,8 +45,8 @@ RSpec.describe "Studio subscriptions GraphQL", type: :request do
       subs = json.dig("data", "studioSubscriptions")
       prices = subs.map { |s| [ s["tier"], s["priceCad"] ] }.to_h
 
-      expect(prices["basic"]).to eq(150)
-      expect(prices["premium"]).to eq(300)
+      expect(prices["basic"]).to eq((59 * 1.35).round)
+      expect(prices["premium"]).to eq((129 * 1.35).round)
     end
 
     it "raises not authorized for a regular owner" do
@@ -87,7 +87,7 @@ RSpec.describe "Studio subscriptions GraphQL", type: :request do
       expect(json["errors"]).to be_nil
       expect(data["id"]).to eq(sub.id.to_s)
       expect(data["tier"]).to eq("premium")
-      expect(data["priceCad"]).to eq(300)
+      expect(data["priceCad"]).to eq((129 * 1.35).round)
       expect(data["active"]).to eq(true)
     end
 
