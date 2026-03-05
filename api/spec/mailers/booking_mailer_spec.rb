@@ -12,7 +12,7 @@ RSpec.describe BookingMailer, type: :mailer do
     mail = described_class.with(booking: booking).confirmation
     expect(mail.to).to eq([ 'client@example.com' ])
     expect(mail.subject).to eq('Your booking is confirmed')
-    expect(mail.from).to eq([ 'onboarding@resend.dev' ])
+    expect(mail.from).to eq([ 'noreply@joinstudioflow.com' ])
     expect(mail.body.encoded).to include("/bookings/#{booking.id}")
   end
 

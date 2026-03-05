@@ -3,11 +3,24 @@ import { gql, useMutation } from "@apollo/client";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { useAuth } from "../auth/AuthProvider";
 
 const RESET_PASSWORD = gql`
   mutation ResetPassword($token: String!, $password: String!) {
     resetPassword(input: { token: $token, password: $password }) {
       success
+      token
+      user {
+        id
+        studioId
+        email
+        name
+        role
+        roleName
+        godmode
+        active
+        availableForSessions
+      }
       errors
     }
   }
@@ -20,6 +33,7 @@ export default function ResetPassword() {
   const navigate = useNavigate();
   const [resetPassword, { loading }] = useMutation(RESET_PASSWORD);
   const [error, setError] = useState(null);
+  const auth = useAuth();
   const { register, handleSubmit } = useForm();
 
   const onSubmit = async ({ password: pw, confirm }) => {
@@ -31,10 +45,9 @@ export default function ResetPassword() {
     try {
       const res = await resetPassword({ variables: { token, password: pw } });
       const payload = res?.data?.resetPassword;
-      if (payload?.success) {
-        navigate("/signin", {
-          state: { notice: "Password updated — please sign in." },
-        });
+      if (payload?.success && payload?.token) {
+        await auth.signInWithToken(payload.token, payload.user || null);
+        navigate("/dashboard");
       } else {
         setError(
           (payload?.errors || []).join(", ") ||

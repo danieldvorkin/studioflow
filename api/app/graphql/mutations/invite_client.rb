@@ -38,12 +38,12 @@ module Mutations
       web_url  = ENV.fetch("WEB_APP_URL", "http://localhost:5173")
       signup_url = "#{web_url}/signup/client?token=#{invitation.token}"
 
-      # Send email only in production; in other environments just return the URL
-      if Rails.env.production?
+      # Send invitation email in all non-test environments
+      unless Rails.env.test?
         ClientInvitationMailer.with(
           invitation: invitation,
           signup_url: signup_url
-        ).invite.deliver_now
+        ).invite.deliver_later
       end
 
       { invitation: invitation, signup_url: signup_url, errors: [] }

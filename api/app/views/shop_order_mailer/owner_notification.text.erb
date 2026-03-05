@@ -1,0 +1,19 @@
+New shop order received!
+
+Hi <%= @owner.name.presence || @owner.email %>,
+
+A client just placed an order through your studio shop. Here are the details:
+
+Client:    <%= @client.name.presence || @client.email %>
+Item:      <%= @item.title %>
+Type:      <%= @item.item_type.capitalize %>
+Quantity:  <%= @order.quantity %>
+Total:     <%= sprintf("%.2f", @order.total_cents / 100.0) %> <%= @order.currency.upcase %>
+Status:    <%= @order.status.capitalize %>
+<% if @order.rental_due_date %>
+Return by: <%= @order.rental_due_date.strftime('%B %-d, %Y') %>
+<% end %>
+
+View all orders: <%= @orders_url %>
+
+— StudioFlow

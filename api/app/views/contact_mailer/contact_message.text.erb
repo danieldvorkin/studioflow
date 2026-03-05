@@ -1,0 +1,14 @@
+New contact message — StudioFlow
+
+Someone submitted the contact form on joinstudioflow.com.
+Reply directly to this email to reach them.
+
+Name:    <%= @name %>
+Email:   <%= @email %>
+<% if @subject.present? %>Subject: <%= @subject %>
+<% end %>
+Message:
+<%= @message %>
+
+---
+Sent by StudioFlow · joinstudioflow.com

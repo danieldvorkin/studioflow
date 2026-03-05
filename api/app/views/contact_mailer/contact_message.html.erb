@@ -29,6 +29,11 @@
         <div class="label">Email</div>
         <div class="value"><%= @email %></div>
 
+        <% if @subject.present? %>
+        <div class="label">Subject</div>
+        <div class="value"><%= @subject %></div>
+        <% end %>
+
         <div class="label">Message</div>
         <div class="value"><%= @message %></div>
       </div>

@@ -6,6 +6,7 @@ class ContactsController < ApplicationController
   def create
     name    = params[:name].to_s.strip
     email   = params[:email].to_s.strip
+    subject = params[:subject].to_s.strip
     message = params[:message].to_s.strip
 
     if name.blank? || email.blank? || message.blank?
@@ -13,7 +14,7 @@ class ContactsController < ApplicationController
       return
     end
 
-    ContactMailer.contact_message(name: name, email: email, message: message).deliver_later
+    ContactMailer.contact_message(name: name, email: email, subject: subject, message: message).deliver_later
 
     Rails.logger.info("[Contact] Message from #{name} <#{email}>")
     render json: { sent: true }, status: :ok

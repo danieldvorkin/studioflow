@@ -15,3 +15,10 @@ if ENV["RESEND_API_KEY"].present? && !Rails.env.test?
     enable_starttls_auto: true
   }
 end
+
+# In development, intercept all outgoing mail and redirect recipients to
+# <name-slug>@phooyon.resend.app so we never hit real inboxes.
+# Defer until after Rails autoloads app/ so DevMailInterceptor is defined.
+Rails.application.config.to_prepare do
+  ActionMailer::Base.register_interceptor(DevMailInterceptor) if Rails.env.development?
+end
