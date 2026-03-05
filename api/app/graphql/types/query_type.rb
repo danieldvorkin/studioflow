@@ -513,6 +513,13 @@ module Types
       user = context[:current_user]
       raise GraphQL::ExecutionError, "Not authorized" unless user&.godmode? || user&.owner?
 
+      effective_studio_id =
+        if user.godmode? && studio_id.present?
+          studio_id
+        else
+          user.studio_id
+        end
+
       build_snapshot_from_result = lambda do |result|
         {
           weekStart: result.week_start,
@@ -554,13 +561,6 @@ module Types
           }
         end
       end
-
-      effective_studio_id =
-        if user.godmode? && studio_id.present?
-          studio_id
-        else
-          user.studio_id
-        end
 
       calculator = InstructorPayouts::WeeklyEarningsCalculator.new(
         week_start: week_start,

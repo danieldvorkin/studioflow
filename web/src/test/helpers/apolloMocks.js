@@ -12,7 +12,7 @@ import {
   CLASS_SESSIONS,
   PAYMENT_PUBLIC_SETTINGS,
   MY_CLIENT,
-} from '../../apollo/queries'
+} from "../../apollo/queries";
 
 export function studioSettingsMock(overrides = {}) {
   return {
@@ -20,14 +20,15 @@ export function studioSettingsMock(overrides = {}) {
     result: {
       data: {
         studioSettings: {
-          dashboardTitle: 'StudioFlow',
-          defaultTheme: 'dark',
-          __typename: 'StudioSetting',
+          dashboardTitle: "StudioFlow",
+          defaultTheme: "dark",
+          clientsPageEnabled: true,
+          __typename: "StudioSetting",
           ...overrides,
         },
       },
     },
-  }
+  };
 }
 
 export function currentUserMock(user) {
@@ -36,26 +37,34 @@ export function currentUserMock(user) {
     result: {
       data: {
         currentUser: {
-          __typename: 'User',
+          __typename: "User",
           ...user,
         },
       },
     },
-  }
+  };
 }
 
-export function classTemplatesMock({ templates = [], studioLocationId = null, instructorId } = {}) {
-  const variables = { studioLocationId }
-  if (typeof instructorId !== 'undefined') variables.instructorId = instructorId
+export function classTemplatesMock({
+  templates = [],
+  studioLocationId = null,
+  instructorId,
+} = {}) {
+  const variables = { studioLocationId };
+  if (typeof instructorId !== "undefined")
+    variables.instructorId = instructorId;
 
   return {
     request: { query: CLASS_TEMPLATES, variables },
     result: {
       data: {
-        classTemplates: templates.map((t) => ({ __typename: 'ClassTemplate', ...t })),
+        classTemplates: templates.map((t) => ({
+          __typename: "ClassTemplate",
+          ...t,
+        })),
       },
     },
-  }
+  };
 }
 
 export function instructorsMock(instructors = []) {
@@ -63,10 +72,10 @@ export function instructorsMock(instructors = []) {
     request: { query: INSTRUCTORS, variables: {} },
     result: {
       data: {
-        instructors: instructors.map((i) => ({ __typename: 'User', ...i })),
+        instructors: instructors.map((i) => ({ __typename: "User", ...i })),
       },
     },
-  }
+  };
 }
 
 export function ownerDashboardDataMocks() {
@@ -88,15 +97,15 @@ export function ownerDashboardDataMocks() {
       result: {
         data: {
           paymentSettings: {
-            id: 'ps-1',
+            id: "ps-1",
             stripePublishableKey: null,
-            defaultCurrency: 'cad',
+            defaultCurrency: "cad",
             enabled: false,
             configured: false,
-            dashboardTitle: 'StudioFlow',
-            defaultTheme: 'dark',
+            dashboardTitle: "StudioFlow",
+            defaultTheme: "dark",
             ownerPageLayout: {},
-            __typename: 'PaymentSetting',
+            __typename: "PaymentSetting",
           },
         },
       },
@@ -105,7 +114,7 @@ export function ownerDashboardDataMocks() {
       request: { query: PAYMENTS, variables: {} },
       result: { data: { payments: [] } },
     },
-  ]
+  ];
 }
 
 export function studioLocationsMock(locations = []) {
@@ -113,21 +122,30 @@ export function studioLocationsMock(locations = []) {
     request: { query: STUDIO_LOCATIONS, variables: {} },
     result: {
       data: {
-        studioLocations: locations.map((l) => ({ __typename: 'StudioLocation', ...l })),
+        studioLocations: locations.map((l) => ({
+          __typename: "StudioLocation",
+          ...l,
+        })),
       },
     },
-  }
+  };
 }
 
-export function classSessionsMock({ sessions = [], variables = { from: null, to: null } } = {}) {
+export function classSessionsMock({
+  sessions = [],
+  variables = { from: null, to: null },
+} = {}) {
   return {
     request: { query: CLASS_SESSIONS, variables },
     result: {
       data: {
-        classSessions: sessions.map((s) => ({ __typename: 'ClassSession', ...s })),
+        classSessions: sessions.map((s) => ({
+          __typename: "ClassSession",
+          ...s,
+        })),
       },
     },
-  }
+  };
 }
 
 export function paymentPublicSettingsMock(overrides = {}, variables = {}) {
@@ -136,16 +154,16 @@ export function paymentPublicSettingsMock(overrides = {}, variables = {}) {
     result: {
       data: {
         paymentPublicSettings: {
-          stripePublishableKey: 'pk_test_123',
-          defaultCurrency: 'cad',
+          stripePublishableKey: "pk_test_123",
+          defaultCurrency: "cad",
           enabled: true,
           configured: true,
-          __typename: 'PaymentPublicSetting',
+          __typename: "PaymentPublicSetting",
           ...overrides,
         },
       },
     },
-  }
+  };
 }
 
 export function myClientMock(client = null, variables = {}) {
@@ -155,12 +173,14 @@ export function myClientMock(client = null, variables = {}) {
       data: {
         myClient: client
           ? {
-              __typename: 'Client',
+              __typename: "Client",
               ...client,
-              clientPaymentMethods: (client.clientPaymentMethods || []).map((m) => ({ __typename: 'ClientPaymentMethod', ...m })),
+              clientPaymentMethods: (client.clientPaymentMethods || []).map(
+                (m) => ({ __typename: "ClientPaymentMethod", ...m }),
+              ),
             }
           : null,
       },
     },
-  }
+  };
 }

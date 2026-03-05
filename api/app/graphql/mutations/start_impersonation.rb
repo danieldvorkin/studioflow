@@ -9,7 +9,7 @@ module Mutations
     def resolve(user_id:)
       actor = context[:current_user]
 
-      unless actor&.owner? || actor&.moderator?
+      unless actor&.godmode? || actor&.owner? || actor&.moderator?
         return { token: nil, user: nil, errors: [ "Not authorized" ] }
       end
 

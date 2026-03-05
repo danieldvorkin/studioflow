@@ -432,7 +432,11 @@ function OwnerModules({
 
   const persistToLocalStorage = useCallback(
     (next) => {
-      window.localStorage.setItem(layoutStorageKey, JSON.stringify(next));
+      try {
+        window.localStorage.setItem(layoutStorageKey, JSON.stringify(next));
+      } catch {
+        // storage unavailable (private browsing, test env, etc.)
+      }
     },
     [layoutStorageKey],
   );

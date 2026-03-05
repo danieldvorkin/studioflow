@@ -5,6 +5,7 @@ export function makeUser(overrides = {}) {
     name: "Test User",
     role: 0,
     roleName: "owner",
+    godmode: false,
     active: true,
     availableForSessions: true,
     ...overrides,

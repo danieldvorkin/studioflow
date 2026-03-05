@@ -200,7 +200,7 @@ s1_slots = [
   { hour: 7,  min: 30, tmpl: tmpl1a, room: "Reformer Room A", instructor: instr1a },
   { hour: 10, min: 0,  tmpl: tmpl1b, room: "Mat Room",        instructor: instr1b },
   { hour: 12, min: 0,  tmpl: tmpl1c, room: "Reformer Room B", instructor: instr1c },
-  { hour: 18, min: 30, tmpl: tmpl1d, room: "Main Studio",     instructor: instr1a },
+  { hour: 18, min: 30, tmpl: tmpl1d, room: "Main Studio",     instructor: instr1a }
 ]
 s1_sessions = []
 (-3..2).each do |wo|
@@ -216,8 +216,8 @@ s1_sessions = []
   end
 end
 
-[[c1a, 0], [c1a, 4], [c1a, 8], [c1b, 1], [c1b, 5],
- [c1c, 2], [c1c, 6], [c1c, 10], [c1d, 3], [c1d, 7], [c1e, 0]].each do |(cl, idx)|
+[ [ c1a, 0 ], [ c1a, 4 ], [ c1a, 8 ], [ c1b, 1 ], [ c1b, 5 ],
+  [ c1c, 2 ], [ c1c, 6 ], [ c1c, 10 ], [ c1d, 3 ], [ c1d, 7 ], [ c1e, 0 ] ].each do |(cl, idx)|
   status_val = (cl == c1e) ? :cancelled : :booked
   upsert_booking!(client: cl, session: s1_sessions[idx], status: status_val) rescue nil
 end
