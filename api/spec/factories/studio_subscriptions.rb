@@ -9,8 +9,23 @@ FactoryBot.define do
     cancelled_at { nil }
     notes { nil }
 
+    trait :starter do
+      tier { "starter" }
+      stripe_customer_id { nil }
+      stripe_subscription_id { nil }
+      current_period_end { nil }
+    end
+
     trait :basic do
       tier { "basic" }
+    end
+
+    trait :pro do
+      tier { "pro" }
+    end
+
+    trait :studio do
+      tier { "studio" }
     end
 
     trait :premium do

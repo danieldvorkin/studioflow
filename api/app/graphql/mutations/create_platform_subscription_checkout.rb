@@ -25,12 +25,6 @@ module Mutations
         return { checkout_url: nil, errors: [ "Invalid tier" ] }
       end
 
-      platform_key = ENV["PLATFORM_STRIPE_SECRET_KEY"].presence
-      return { checkout_url: nil, errors: [ "Platform Stripe is not configured" ] } unless platform_key
-
-      price_id = ENV[TIER_PRICE_ENV[tier]].presence
-      return { checkout_url: nil, errors: [ "Stripe price for #{tier} tier is not configured" ] } unless price_id
-
       studio = user.studio
       sub = StudioSubscription.find_or_initialize_by(studio_id: studio.id)
 
@@ -39,9 +33,27 @@ module Mutations
         return { checkout_url: nil, errors: [ "You already have an active #{tier} subscription" ] }
       end
 
-      Stripe.api_key = platform_key
-
       web_url = ENV["WEB_APP_URL"].presence || "http://localhost:5173"
+
+      # Starter is free — skip Stripe, update record directly and redirect back
+      if tier == "starter"
+        sub.tier = "starter"
+        sub.status = "active"
+        sub.stripe_subscription_id = nil
+        sub.current_period_end = nil
+        sub.cancelled_at = nil
+        sub.save!
+        return { checkout_url: "#{web_url}/owner/subscription?checkout_success=1", errors: [] }
+      end
+
+      platform_key = ENV["PLATFORM_STRIPE_SECRET_KEY"].presence
+      return { checkout_url: nil, errors: [ "Platform Stripe is not configured" ] } unless platform_key
+
+      price_env_key = TIER_PRICE_ENV[tier]
+      price_id = price_env_key && ENV[price_env_key].presence
+      return { checkout_url: nil, errors: [ "Stripe price for #{tier} tier is not configured" ] } unless price_id
+
+      Stripe.api_key = platform_key
 
       begin
         # Create or reuse Stripe customer
@@ -65,8 +77,8 @@ module Mutations
           line_items: [
             { price: price_id, quantity: 1 }
           ],
-          success_url: "#{web_url}/subscription?checkout_success=1&session_id={CHECKOUT_SESSION_ID}",
-          cancel_url: "#{web_url}/subscription?checkout_cancelled=1",
+          success_url: "#{web_url}/owner/subscription?checkout_success=1&session_id={CHECKOUT_SESSION_ID}",
+          cancel_url: "#{web_url}/owner/subscription?checkout_cancelled=1",
           subscription_data: {
             trial_period_days: 7,
             metadata: {

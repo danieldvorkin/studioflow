@@ -23,7 +23,7 @@ module Mutations
 
       session = Stripe::BillingPortal::Session.create(
         customer: customer_id,
-        return_url: "#{web_url}/subscription"
+        return_url: "#{web_url}/owner/subscription"
       )
 
       { portal_url: session.url, errors: [] }
