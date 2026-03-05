@@ -1,12 +1,15 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { useCurrency } from "../currency/CurrencyProvider";
 
 const PLANS = [
   {
     name: "Starter",
     monthlyPrice: 0,
     yearlyPrice: 0,
+    monthlyPriceUsd: 0,
+    yearlyPriceUsd: 0,
     tagline: "Free forever. Really.",
     accent: "text-slate-300",
     border: "border-slate-700",
@@ -39,6 +42,8 @@ const PLANS = [
     name: "Pro",
     monthlyPrice: 59,
     yearlyPrice: 49,
+    monthlyPriceUsd: 44,
+    yearlyPriceUsd: 36,
     tagline: "For studios ready to grow.",
     accent: "text-sky-300",
     border: "border-sky-500/40",
@@ -66,6 +71,8 @@ const PLANS = [
     name: "Studio",
     monthlyPrice: 129,
     yearlyPrice: 109,
+    monthlyPriceUsd: 96,
+    yearlyPriceUsd: 81,
     tagline: "For multi-location operations.",
     accent: "text-violet-300",
     border: "border-violet-500/40",
@@ -167,6 +174,7 @@ export default function Pricing() {
   useDocumentTitle("Pricing · StudioFlow");
   const [yearly, setYearly] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
+  const { isCAD } = useCurrency();
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-slate-950 text-slate-100">
@@ -260,7 +268,14 @@ export default function Pricing() {
         <section className="mx-auto mt-10 max-w-6xl px-4">
           <div className="grid gap-4 md:grid-cols-3">
             {PLANS.map((plan) => {
-              const price = yearly ? plan.yearlyPrice : plan.monthlyPrice;
+              const price = yearly
+                ? isCAD
+                  ? plan.yearlyPrice
+                  : plan.yearlyPriceUsd
+                : isCAD
+                  ? plan.monthlyPrice
+                  : plan.monthlyPriceUsd;
+              const currencyLabel = isCAD ? "CAD" : "USD";
               return (
                 <div
                   key={plan.name}
@@ -285,7 +300,7 @@ export default function Pricing() {
                     </span>
                     {price > 0 && (
                       <span className="mb-1 text-sm text-slate-500">
-                        / mo{yearly ? ", billed yearly" : ""}
+                        {currencyLabel} / mo{yearly ? ", billed yearly" : ""}
                       </span>
                     )}
                   </div>

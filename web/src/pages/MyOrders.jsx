@@ -5,13 +5,7 @@ import { useState } from "react";
 import { CURRENT_USER, MY_SHOP_ORDERS } from "../apollo/queries";
 import { UPDATE_SHOP_ORDER } from "../apollo/mutations";
 import { useToast } from "../components/ToastProvider";
-
-function formatCents(cents, currency = "cad") {
-  return new Intl.NumberFormat("en-CA", {
-    style: "currency",
-    currency: currency.toUpperCase(),
-  }).format(cents / 100);
-}
+import { useCurrency } from "../currency/CurrencyProvider";
 
 function formatDate(dateStr) {
   if (!dateStr) return null;
@@ -135,6 +129,7 @@ function RentalActions({ order, onUpdate }) {
 export default function MyOrdersPage() {
   useDocumentTitle("My Orders");
   const { addToast } = useToast();
+  const { formatPrice } = useCurrency();
 
   const { data: userData, loading: userLoading } = useQuery(CURRENT_USER);
   const user = userData?.currentUser;
@@ -255,7 +250,7 @@ export default function MyOrdersPage() {
                           Total
                         </span>
                         <span className="font-semibold text-sky-400">
-                          {formatCents(order.totalCents, order.currency)}
+                          {formatPrice(order.totalCents, order.currency)}
                         </span>
                       </div>
                       <div>

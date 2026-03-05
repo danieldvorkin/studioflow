@@ -350,7 +350,7 @@ end
     body:  "Add a payment method to avoid losing access to analytics, payout tracking, and more.",
     action_url: "/owner/subscription",
     read: false,
-    created_at: 1.hour.ago,
+    created_at: 1.hour.ago
   },
   {
     user: owner1, studio: studio1,
@@ -359,7 +359,7 @@ end
     body:  "Your Pro subscription was renewed successfully. Next renewal on #{2.months.from_now.strftime('%B %-d, %Y')}.",
     action_url: "/owner/subscription",
     read: true,
-    created_at: 35.days.ago,
+    created_at: 35.days.ago
   },
   {
     user: owner1, studio: studio1,
@@ -368,7 +368,7 @@ end
     body:  "Your studio is all set up. Explore the dashboard, invite clients, and schedule your first class.",
     action_url: "/dashboard",
     read: true,
-    created_at: 60.days.ago,
+    created_at: 60.days.ago
   },
 
   # ── Zen Movement owner (past_due scenario) ────────────────────────────────
@@ -379,7 +379,7 @@ end
     body:  "We couldn't process your payment. Please update your payment method to avoid interruption.",
     action_url: "/owner/subscription",
     read: false,
-    created_at: 3.hours.ago,
+    created_at: 3.hours.ago
   },
   {
     user: owner2, studio: studio2,
@@ -388,7 +388,7 @@ end
     body:  "This is our second attempt. Please update your card before your subscription is suspended.",
     action_url: "/owner/subscription",
     read: false,
-    created_at: 6.days.ago,
+    created_at: 6.days.ago
   },
   {
     user: owner2, studio: studio2,
@@ -397,7 +397,7 @@ end
     body:  "You upgraded from Pro to Studio. Enjoy unlimited locations, the built-in shop, and white-label portal.",
     action_url: "/owner/subscription",
     read: true,
-    created_at: 45.days.ago,
+    created_at: 45.days.ago
   },
 
   # ── CoreHouse owner (free Starter, cancelled scenario) ───────────────────
@@ -408,7 +408,7 @@ end
     body:  "Your 14-day Pro trial expired. You've been moved to the free Starter plan. Upgrade anytime to restore access.",
     action_url: "/owner/subscription",
     read: false,
-    created_at: 2.days.ago,
+    created_at: 2.days.ago
   },
   {
     user: owner3, studio: studio3,
@@ -417,7 +417,7 @@ end
     body:  "Your Pro subscription was cancelled at the end of your billing period. You're now on Starter.",
     action_url: "/owner/subscription",
     read: true,
-    created_at: 5.days.ago,
+    created_at: 5.days.ago
   },
   {
     user: owner3, studio: studio3,
@@ -426,7 +426,7 @@ end
     body:  "Your studio is ready. Start by inviting your first client or scheduling a class.",
     action_url: "/dashboard",
     read: true,
-    created_at: 20.days.ago,
+    created_at: 20.days.ago
   },
 
   # ── New notification kinds examples ──────────────────────────────────────
@@ -437,7 +437,7 @@ end
     body:  "8/12 clients booked for Tue 10 Jun at 8:00 AM.",
     action_url: "/schedule",
     read: false,
-    created_at: 2.hours.ago,
+    created_at: 2.hours.ago
   },
   {
     user: owner1, studio: studio1,
@@ -446,7 +446,7 @@ end
     body:  "Jordan Blake booked Morning Flow on Tue 10 Jun at 8:00 AM.",
     action_url: "/schedule",
     read: false,
-    created_at: 30.minutes.ago,
+    created_at: 30.minutes.ago
   },
   {
     user: owner1, studio: studio1,
@@ -455,7 +455,7 @@ end
     body:  "Taylor Kim cancelled their booking for Thu 12 Jun at 6:00 PM.",
     action_url: "/schedule",
     read: true,
-    created_at: 4.hours.ago,
+    created_at: 4.hours.ago
   },
   {
     user: owner2, studio: studio2,
@@ -464,7 +464,7 @@ end
     body:  "Alex Rivera just created an account at your studio.",
     action_url: "/clients",
     read: false,
-    created_at: 15.minutes.ago,
+    created_at: 15.minutes.ago
   },
   {
     user: owner2, studio: studio2,
@@ -473,7 +473,7 @@ end
     body:  "Sam Chen was automatically promoted from the waitlist when a spot opened in Pilates Basics.",
     action_url: "/schedule",
     read: true,
-    created_at: 1.day.ago,
+    created_at: 1.day.ago
   },
   {
     user: owner3, studio: studio3,
@@ -482,7 +482,7 @@ end
     body:  "Emma Carter's \"Unlimited Monthly\" membership expires in 3 days.",
     action_url: "/clients",
     read: false,
-    created_at: 6.hours.ago,
+    created_at: 6.hours.ago
   },
   {
     user: owner1, studio: studio1,
@@ -491,8 +491,8 @@ end
     body:  "Your studio just hit 100 total bookings. Keep up the great work!",
     action_url: "/dashboard",
     read: true,
-    created_at: 10.days.ago,
-  },
+    created_at: 10.days.ago
+  }
 ].each { |attrs| seed_notification!(**attrs) }
 
 puts "  #{Notification.count} example notifications seeded"

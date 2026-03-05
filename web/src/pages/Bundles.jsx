@@ -20,6 +20,7 @@ import {
   isOwner,
   isStaff,
 } from "../auth/permissions";
+import { useCurrency } from "../currency/CurrencyProvider";
 
 function dollarsFromCents(cents) {
   if (typeof cents !== "number") return "";
@@ -36,6 +37,7 @@ export default function BundlesPage() {
   useDocumentTitle("Session Bundles");
   const auth = useAuth();
   const { addToast } = useToast();
+  const { formatPrice } = useCurrency();
 
   const { data: userData, loading: userLoading } = useQuery(CURRENT_USER);
   const user = userData?.currentUser;
@@ -483,7 +485,7 @@ export default function BundlesPage() {
                             className="w-24 rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                           />
                         ) : typeof bp.priceCents === "number" ? (
-                          dollarsFromCents(bp.priceCents)
+                          formatPrice(bp.priceCents, bp.currency || "cad")
                         ) : (
                           "—"
                         )}

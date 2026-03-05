@@ -1,15 +1,21 @@
-import { useState } from 'react'
-import { useMutation, useQuery } from '@apollo/client'
-import { useNavigate } from 'react-router-dom'
-import { MY_STUDIO } from '../apollo/queries'
-import { UPDATE_STUDIO, COMPLETE_ONBOARDING, CREATE_STUDIO_LOCATION, CREATE_PLATFORM_SUBSCRIPTION_CHECKOUT } from '../apollo/mutations'
-import { useAuth } from '../auth/AuthProvider'
+import { useState } from "react";
+import { useMutation, useQuery } from "@apollo/client";
+import { useNavigate } from "react-router-dom";
+import { MY_STUDIO } from "../apollo/queries";
+import {
+  UPDATE_STUDIO,
+  COMPLETE_ONBOARDING,
+  CREATE_STUDIO_LOCATION,
+  CREATE_PLATFORM_SUBSCRIPTION_CHECKOUT,
+} from "../apollo/mutations";
+import { useAuth } from "../auth/AuthProvider";
+import { useCurrency } from "../currency/CurrencyProvider";
 
 const STEPS = [
-  { id: 'profile',      label: 'Studio profile' },
-  { id: 'location',     label: 'First location' },
-  { id: 'subscription', label: 'Choose plan' },
-]
+  { id: "profile", label: "Studio profile" },
+  { id: "location", label: "First location" },
+  { id: "subscription", label: "Choose plan" },
+];
 
 function StepDots({ current }) {
   return (
@@ -19,38 +25,51 @@ function StepDots({ current }) {
           <div
             className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-colors ${
               i < current
-                ? 'bg-sky-600 text-white'
+                ? "bg-sky-600 text-white"
                 : i === current
-                  ? 'bg-sky-500 text-white ring-2 ring-sky-400/40'
-                  : 'bg-slate-800 text-slate-500'
+                  ? "bg-sky-500 text-white ring-2 ring-sky-400/40"
+                  : "bg-slate-800 text-slate-500"
             }`}
           >
             {i < current ? (
-              <svg className="h-3.5 w-3.5" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M2 6l3 3 5-5" strokeLinecap="round" strokeLinejoin="round" />
+              <svg
+                className="h-3.5 w-3.5"
+                viewBox="0 0 12 12"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              >
+                <path
+                  d="M2 6l3 3 5-5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             ) : (
               i + 1
             )}
           </div>
           {i < STEPS.length - 1 && (
-            <div className={`h-px w-8 transition-colors ${i < current ? 'bg-sky-600' : 'bg-slate-700'}`} />
+            <div
+              className={`h-px w-8 transition-colors ${i < current ? "bg-sky-600" : "bg-slate-700"}`}
+            />
           )}
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 function FieldGroup({ label, required, children }) {
   return (
     <div className="space-y-1.5">
       <label className="block text-xs font-semibold uppercase tracking-widest text-slate-400">
-        {label}{required && <span className="ml-1 text-rose-400">*</span>}
+        {label}
+        {required && <span className="ml-1 text-rose-400">*</span>}
       </label>
       {children}
     </div>
-  )
+  );
 }
 
 function Input({ ...props }) {
@@ -59,49 +78,64 @@ function Input({ ...props }) {
       className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
       {...props}
     />
-  )
+  );
 }
 
 // ─── Step 1: Studio Profile ───────────────────────────────────────────────────
 
 function ProfileStep({ studio, onNext, onSkip }) {
-  const [name, setName] = useState(studio?.name || '')
-  const [slug, setSlug] = useState(studio?.slug || '')
-  const [errors, setErrors] = useState([])
-  const [saving, setSaving] = useState(false)
-  const [updateStudio] = useMutation(UPDATE_STUDIO)
+  const [name, setName] = useState(studio?.name || "");
+  const [slug, setSlug] = useState(studio?.slug || "");
+  const [errors, setErrors] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [updateStudio] = useMutation(UPDATE_STUDIO);
 
   const handleNameChange = (e) => {
-    const val = e.target.value
-    setName(val)
-    if (!slug || slug === studio?.name?.toLowerCase().replace(/\s+/g, '-')) {
-      setSlug(val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''))
+    const val = e.target.value;
+    setName(val);
+    if (!slug || slug === studio?.name?.toLowerCase().replace(/\s+/g, "-")) {
+      setSlug(
+        val
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, ""),
+      );
     }
-  }
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setErrors([])
-    if (!name.trim()) { setErrors(['Studio name is required']); return }
-
-    setSaving(true)
-    try {
-      const res = await updateStudio({ variables: { name: name.trim(), slug: slug.trim() || null } })
-      const errs = res.data?.updateStudio?.errors || []
-      if (errs.length > 0) { setErrors(errs); return }
-      onNext()
-    } catch (e) {
-      setErrors([e.message])
-    } finally {
-      setSaving(false)
+    e.preventDefault();
+    setErrors([]);
+    if (!name.trim()) {
+      setErrors(["Studio name is required"]);
+      return;
     }
-  }
+
+    setSaving(true);
+    try {
+      const res = await updateStudio({
+        variables: { name: name.trim(), slug: slug.trim() || null },
+      });
+      const errs = res.data?.updateStudio?.errors || [];
+      if (errs.length > 0) {
+        setErrors(errs);
+        return;
+      }
+      onNext();
+    } catch (e) {
+      setErrors([e.message]);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div>
         <h2 className="text-xl font-bold text-white">Name your studio</h2>
-        <p className="mt-1 text-sm text-slate-400">This is what clients and staff will see everywhere in the app.</p>
+        <p className="mt-1 text-sm text-slate-400">
+          This is what clients and staff will see everywhere in the app.
+        </p>
       </div>
 
       <FieldGroup label="Studio name" required>
@@ -118,22 +152,33 @@ function ProfileStep({ studio, onNext, onSkip }) {
           <input
             className="min-w-0 flex-1 rounded-l-lg bg-transparent px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none"
             value={slug}
-            onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+            onChange={(e) =>
+              setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))
+            }
             placeholder="sunrise-pilates"
           />
-          <span className="shrink-0 text-xs text-slate-500">.studioflow.app</span>
+          <span className="shrink-0 text-xs text-slate-500">
+            .studioflow.app
+          </span>
         </div>
-        <p className="mt-1 text-[11px] text-slate-500">Lowercase letters, numbers, and hyphens only. You can change this later.</p>
+        <p className="mt-1 text-[11px] text-slate-500">
+          Lowercase letters, numbers, and hyphens only. You can change this
+          later.
+        </p>
       </FieldGroup>
 
       {errors.length > 0 && (
         <div className="rounded-lg border border-rose-700 bg-rose-900/30 px-4 py-2 text-sm text-rose-200">
-          {errors.join(', ')}
+          {errors.join(", ")}
         </div>
       )}
 
       <div className="flex items-center justify-between pt-2">
-        <button type="button" onClick={onSkip} className="text-xs text-slate-500 hover:text-slate-300 transition">
+        <button
+          type="button"
+          onClick={onSkip}
+          className="text-xs text-slate-500 hover:text-slate-300 transition"
+        >
           Skip for now
         </button>
         <button
@@ -141,34 +186,54 @@ function ProfileStep({ studio, onNext, onSkip }) {
           disabled={saving}
           className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-5 py-2 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-60 transition"
         >
-          {saving ? 'Saving…' : 'Continue'}
+          {saving ? "Saving…" : "Continue"}
           {!saving && (
-            <svg className="h-3.5 w-3.5" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M2 6h8M6 2l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
+            <svg
+              className="h-3.5 w-3.5"
+              viewBox="0 0 12 12"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path
+                d="M2 6h8M6 2l4 4-4 4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           )}
         </button>
       </div>
     </form>
-  )
+  );
 }
 
 // ─── Step 2: First Location ───────────────────────────────────────────────────
 
 function LocationStep({ onNext, onSkip }) {
-  const [form, setForm] = useState({ name: '', address: '', city: '', state: '', zip: '' })
-  const [errors, setErrors] = useState([])
-  const [saving, setSaving] = useState(false)
-  const [createLocation] = useMutation(CREATE_STUDIO_LOCATION)
+  const [form, setForm] = useState({
+    name: "",
+    address: "",
+    city: "",
+    state: "",
+    zip: "",
+  });
+  const [errors, setErrors] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [createLocation] = useMutation(CREATE_STUDIO_LOCATION);
 
-  const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }))
+  const set = (field) => (e) =>
+    setForm((f) => ({ ...f, [field]: e.target.value }));
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setErrors([])
-    if (!form.name.trim()) { setErrors(['Location name is required']); return }
+    e.preventDefault();
+    setErrors([]);
+    if (!form.name.trim()) {
+      setErrors(["Location name is required"]);
+      return;
+    }
 
-    setSaving(true)
+    setSaving(true);
     try {
       const res = await createLocation({
         variables: {
@@ -178,55 +243,89 @@ function LocationStep({ onNext, onSkip }) {
           state: form.state.trim() || null,
           zip: form.zip.trim() || null,
         },
-      })
-      const errs = res.data?.createStudioLocation?.errors || []
-      if (errs.length > 0) { setErrors(errs); return }
-      onNext()
+      });
+      const errs = res.data?.createStudioLocation?.errors || [];
+      if (errs.length > 0) {
+        setErrors(errs);
+        return;
+      }
+      onNext();
     } catch (e) {
-      setErrors([e.message])
+      setErrors([e.message]);
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <h2 className="text-xl font-bold text-white">Add your first location</h2>
-        <p className="mt-1 text-sm text-slate-400">Locations help organise your schedule and classes. You can add more later.</p>
+        <h2 className="text-xl font-bold text-white">
+          Add your first location
+        </h2>
+        <p className="mt-1 text-sm text-slate-400">
+          Locations help organise your schedule and classes. You can add more
+          later.
+        </p>
       </div>
 
       <FieldGroup label="Location name" required>
-        <Input value={form.name} onChange={set('name')} placeholder="e.g. Downtown Studio" autoFocus />
+        <Input
+          value={form.name}
+          onChange={set("name")}
+          placeholder="e.g. Downtown Studio"
+          autoFocus
+        />
       </FieldGroup>
 
       <FieldGroup label="Street address">
-        <Input value={form.address} onChange={set('address')} placeholder="123 Main St" />
+        <Input
+          value={form.address}
+          onChange={set("address")}
+          placeholder="123 Main St"
+        />
       </FieldGroup>
 
       <div className="grid grid-cols-3 gap-3">
         <div className="col-span-2 space-y-1.5">
-          <label className="block text-xs font-semibold uppercase tracking-widest text-slate-400">City</label>
-          <Input value={form.city} onChange={set('city')} placeholder="Toronto" />
+          <label className="block text-xs font-semibold uppercase tracking-widest text-slate-400">
+            City
+          </label>
+          <Input
+            value={form.city}
+            onChange={set("city")}
+            placeholder="Toronto"
+          />
         </div>
         <div className="space-y-1.5">
-          <label className="block text-xs font-semibold uppercase tracking-widest text-slate-400">Province</label>
-          <Input value={form.state} onChange={set('state')} placeholder="ON" />
+          <label className="block text-xs font-semibold uppercase tracking-widest text-slate-400">
+            Province
+          </label>
+          <Input value={form.state} onChange={set("state")} placeholder="ON" />
         </div>
       </div>
 
       <FieldGroup label="Postal code">
-        <Input value={form.zip} onChange={set('zip')} placeholder="M5V 2T6" className="max-w-[180px] w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition" />
+        <Input
+          value={form.zip}
+          onChange={set("zip")}
+          placeholder="M5V 2T6"
+          className="max-w-[180px] w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
+        />
       </FieldGroup>
 
       {errors.length > 0 && (
         <div className="rounded-lg border border-rose-700 bg-rose-900/30 px-4 py-2 text-sm text-rose-200">
-          {errors.join(', ')}
+          {errors.join(", ")}
         </div>
       )}
 
       <div className="flex items-center justify-between pt-2">
-        <button type="button" onClick={onSkip} className="text-xs text-slate-500 hover:text-slate-300 transition">
+        <button
+          type="button"
+          onClick={onSkip}
+          className="text-xs text-slate-500 hover:text-slate-300 transition"
+        >
           Skip for now
         </button>
         <button
@@ -234,72 +333,105 @@ function LocationStep({ onNext, onSkip }) {
           disabled={saving}
           className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-5 py-2 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-60 transition"
         >
-          {saving ? 'Saving…' : 'Continue'}
+          {saving ? "Saving…" : "Continue"}
           {!saving && (
-            <svg className="h-3.5 w-3.5" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M2 6h8M6 2l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
+            <svg
+              className="h-3.5 w-3.5"
+              viewBox="0 0 12 12"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path
+                d="M2 6h8M6 2l4 4-4 4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           )}
         </button>
       </div>
     </form>
-  )
+  );
 }
 
 // ─── Step 3: Subscription ─────────────────────────────────────────────────────
 
 const PLAN_TIERS = [
   {
-    id: 'basic',
-    name: 'Basic',
+    id: "basic",
+    name: "Basic",
     price: 150,
-    highlight: 'bg-sky-600 hover:bg-sky-500',
+    priceUsd: 110,
+    highlight: "bg-sky-600 hover:bg-sky-500",
     badge: null,
-    features: ['Unlimited bookings & sessions', 'Client management', 'Bundle products', 'Email reminders', 'Custom subdomain'],
+    features: [
+      "Unlimited bookings & sessions",
+      "Client management",
+      "Bundle products",
+      "Email reminders",
+      "Custom subdomain",
+    ],
   },
   {
-    id: 'premium',
-    name: 'Premium',
+    id: "premium",
+    name: "Premium",
     price: 300,
-    highlight: 'bg-purple-600 hover:bg-purple-500',
-    badge: 'Best value',
-    features: ['Everything in Basic', 'Full analytics & trends', 'Instructor payout management', 'Stripe Connect', 'Priority support'],
+    priceUsd: 222,
+    highlight: "bg-purple-600 hover:bg-purple-500",
+    badge: "Best value",
+    features: [
+      "Everything in Basic",
+      "Full analytics & trends",
+      "Instructor payout management",
+      "Stripe Connect",
+      "Priority support",
+    ],
   },
-]
+];
 
 function SubscriptionStep({ onFinish }) {
-  const [loadingTier, setLoadingTier] = useState(null)
-  const [error, setError] = useState(null)
-  const [createCheckout] = useMutation(CREATE_PLATFORM_SUBSCRIPTION_CHECKOUT)
-  const [completeOnboarding] = useMutation(COMPLETE_ONBOARDING)
+  const [loadingTier, setLoadingTier] = useState(null);
+  const [error, setError] = useState(null);
+  const [createCheckout] = useMutation(CREATE_PLATFORM_SUBSCRIPTION_CHECKOUT);
+  const [completeOnboarding] = useMutation(COMPLETE_ONBOARDING);
+  const { isCAD } = useCurrency();
 
   const handleSubscribe = async (tier) => {
-    setError(null)
-    setLoadingTier(tier)
+    setError(null);
+    setLoadingTier(tier);
     try {
       // Mark onboarding complete before redirecting to Stripe
-      await completeOnboarding()
-      const res = await createCheckout({ variables: { tier } })
-      const errs = res.data?.createPlatformSubscriptionCheckout?.errors || []
-      const url = res.data?.createPlatformSubscriptionCheckout?.checkoutUrl
-      if (errs.length > 0) { setError(errs.join(', ')); setLoadingTier(null); return }
-      if (url) { window.location.assign(url) }
+      await completeOnboarding();
+      const res = await createCheckout({ variables: { tier } });
+      const errs = res.data?.createPlatformSubscriptionCheckout?.errors || [];
+      const url = res.data?.createPlatformSubscriptionCheckout?.checkoutUrl;
+      if (errs.length > 0) {
+        setError(errs.join(", "));
+        setLoadingTier(null);
+        return;
+      }
+      if (url) {
+        window.location.assign(url);
+      }
     } catch (e) {
-      setError(e.message)
-      setLoadingTier(null)
+      setError(e.message);
+      setLoadingTier(null);
     }
-  }
+  };
 
   const handleSkip = async () => {
-    await completeOnboarding().catch(() => {})
-    onFinish()
-  }
+    await completeOnboarding().catch(() => {});
+    onFinish();
+  };
 
   return (
     <div className="space-y-5">
       <div>
         <h2 className="text-xl font-bold text-white">Choose your plan</h2>
-        <p className="mt-1 text-sm text-slate-400">Start with a 7-day free trial. No charge until the trial ends.</p>
+        <p className="mt-1 text-sm text-slate-400">
+          Start with a 7-day free trial. No charge until the trial ends.
+        </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -316,8 +448,13 @@ function SubscriptionStep({ onFinish }) {
             <div>
               <h3 className="font-semibold text-white">{tier.name}</h3>
               <div className="mt-1">
-                <span className="text-2xl font-bold text-white">${tier.price}</span>
-                <span className="text-xs text-slate-400"> CAD/mo</span>
+                <span className="text-2xl font-bold text-white">
+                  ${isCAD ? tier.price : tier.priceUsd}
+                </span>
+                <span className="text-xs text-slate-400">
+                  {" "}
+                  {isCAD ? "CAD" : "USD"}/mo
+                </span>
               </div>
             </div>
             <ul className="space-y-1.5 text-xs text-slate-300 flex-1">
@@ -347,7 +484,9 @@ function SubscriptionStep({ onFinish }) {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-rose-700 bg-rose-900/30 px-4 py-2 text-sm text-rose-200">{error}</div>
+        <div className="rounded-lg border border-rose-700 bg-rose-900/30 px-4 py-2 text-sm text-rose-200">
+          {error}
+        </div>
       )}
 
       <div className="text-center pt-1">
@@ -360,40 +499,41 @@ function SubscriptionStep({ onFinish }) {
         </button>
       </div>
     </div>
-  )
+  );
 }
 
 // ─── Main modal ───────────────────────────────────────────────────────────────
 
 export default function OnboardingModal({ onComplete }) {
-  const { user } = useAuth()
-  const navigate = useNavigate()
-  const roleRaw = (user?.roleName || '').toString().toLowerCase()
-  const isOwner = roleRaw === 'owner' || user?.role === 0
-  const isGodmode = user?.godmode === true || roleRaw === 'godmode'
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const roleRaw = (user?.roleName || "").toString().toLowerCase();
+  const isOwner = roleRaw === "owner" || user?.role === 0;
+  const isGodmode = user?.godmode === true || roleRaw === "godmode";
 
   const { data, loading } = useQuery(MY_STUDIO, {
     skip: !user || !isOwner || isGodmode,
-    fetchPolicy: 'network-only',
-  })
+    fetchPolicy: "network-only",
+  });
 
-  const [step, setStep] = useState(0)
-  const [dismissed, setDismissed] = useState(false)
+  const [step, setStep] = useState(0);
+  const [dismissed, setDismissed] = useState(false);
 
-  const studio = data?.myStudio
+  const studio = data?.myStudio;
 
-  const visible = !dismissed && !loading && studio?.onboardingCompleted === false
+  const visible =
+    !dismissed && !loading && studio?.onboardingCompleted === false;
 
-  const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1))
-  const skip = () => next()
+  const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  const skip = () => next();
 
   const finish = () => {
-    setDismissed(true)
-    onComplete?.()
-    navigate('/dashboard')
-  }
+    setDismissed(true);
+    onComplete?.();
+    navigate("/dashboard");
+  };
 
-  if (!visible) return null
+  if (!visible) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 px-4 backdrop-blur-sm">
@@ -404,7 +544,9 @@ export default function OnboardingModal({ onComplete }) {
             <div className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400/80">
               Studio<strong className="text-slate-300">Flow</strong>
             </div>
-            <p className="mt-0.5 text-xs text-slate-500">Let&apos;s get your studio set up — takes about 2 minutes.</p>
+            <p className="mt-0.5 text-xs text-slate-500">
+              Let&apos;s get your studio set up — takes about 2 minutes.
+            </p>
           </div>
           <div className="text-[11px] text-slate-500">
             Step {step + 1} of {STEPS.length}
@@ -413,10 +555,12 @@ export default function OnboardingModal({ onComplete }) {
 
         <StepDots current={step} />
 
-        {step === 0 && <ProfileStep studio={studio} onNext={next} onSkip={skip} />}
+        {step === 0 && (
+          <ProfileStep studio={studio} onNext={next} onSkip={skip} />
+        )}
         {step === 1 && <LocationStep onNext={next} onSkip={skip} />}
         {step === 2 && <SubscriptionStep onFinish={finish} />}
       </div>
     </div>
-  )
+  );
 }

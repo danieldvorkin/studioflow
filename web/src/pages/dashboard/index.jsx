@@ -16,6 +16,7 @@ import {
 } from "../../apollo/queries";
 import { useLocationContext } from "../../location/LocationProvider";
 import { useStudio } from "../../studio/StudioProvider";
+import { useCurrency } from "../../currency/CurrencyProvider";
 
 function withinDays(dateLike, days, now = new Date()) {
   const d = new Date(dateLike);
@@ -71,20 +72,6 @@ function pct(numerator, denominator) {
   const d = Number(denominator);
   if (!Number.isFinite(n) || !Number.isFinite(d) || d <= 0) return null;
   return n / d;
-}
-
-function formatCents(cents, currency) {
-  const amount = Number(cents);
-  if (!Number.isFinite(amount)) return "—";
-  const cur = (currency || "cad").toUpperCase();
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: cur,
-    }).format(amount / 100);
-  } catch {
-    return `${(amount / 100).toFixed(2)} ${cur}`;
-  }
 }
 
 function StatCard({ label, value, helper, to, onClick }) {
@@ -180,6 +167,8 @@ export default function Dashboard() {
   const { data: userData } = useQuery(CURRENT_USER);
   const { selectedStudioId } = useStudio();
   const { locationId, locations } = useLocationContext();
+  // shadow the module-level formatCents with a hook-driven version that respects the currency toggle
+  const { formatPrice: formatCents } = useCurrency();
   const roleName = (userData?.currentUser?.roleName || "")
     .toString()
     .toLowerCase();

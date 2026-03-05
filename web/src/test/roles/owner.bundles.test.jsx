@@ -1,11 +1,29 @@
 import React from "react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { MockedProvider } from "@apollo/client/testing";
 import { InMemoryCache } from "@apollo/client";
 import { MemoryRouter } from "react-router-dom";
 
 // ─── Module mocks ─────────────────────────────────────────────────────────────
+vi.mock("../../currency/CurrencyProvider", () => ({
+  useCurrency: () => ({
+    currency: "cad",
+    setCurrency: vi.fn(),
+    isCAD: true,
+    priceDisplay: (cadAmount, _usdAmount) => ({
+      symbol: "$",
+      amount: cadAmount,
+      label: "CAD",
+    }),
+    formatPrice: (cents, _storedCurrency) => {
+      if (typeof cents !== "number" || !Number.isFinite(cents)) return "—";
+      return `CA$${(cents / 100).toFixed(2)}`;
+    },
+  }),
+  CurrencyProvider: ({ children }) => children,
+}));
+
 vi.mock("../../components/ToastProvider", () => ({
   useToast: () => ({ addToast: vi.fn() }),
   ToastProvider: ({ children }) => children,

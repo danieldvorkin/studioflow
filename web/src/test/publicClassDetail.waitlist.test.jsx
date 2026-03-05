@@ -10,6 +10,24 @@ vi.mock("../auth/AuthProvider", () => ({
   AuthProvider: ({ children }) => children,
 }));
 
+vi.mock("../currency/CurrencyProvider", () => ({
+  useCurrency: () => ({
+    currency: "cad",
+    setCurrency: vi.fn(),
+    isCAD: true,
+    priceDisplay: (cadAmount, _usdAmount) => ({
+      symbol: "$",
+      amount: cadAmount,
+      label: "CAD",
+    }),
+    formatPrice: (cents, _storedCurrency) => {
+      if (typeof cents !== "number" || !Number.isFinite(cents)) return "—";
+      return `CA$${(cents / 100).toFixed(2)}`;
+    },
+  }),
+  CurrencyProvider: ({ children }) => children,
+}));
+
 import PublicClassDetail from "../pages/PublicClassDetail.jsx";
 import { PUBLIC_CLASS_PAGE } from "../apollo/queries.js";
 

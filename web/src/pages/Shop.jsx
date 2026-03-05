@@ -14,13 +14,7 @@ import { useToast } from "../components/ToastProvider";
 import { useStudio } from "../studio/StudioProvider";
 import CheckoutModal from "../components/shop/CheckoutModal";
 import RentalWizard from "../components/shop/RentalWizard";
-
-function formatCents(cents, currency = "cad") {
-  return new Intl.NumberFormat("en-CA", {
-    style: "currency",
-    currency: currency.toUpperCase(),
-  }).format(cents / 100);
-}
+import { useCurrency } from "../currency/CurrencyProvider";
 
 function ItemTypeBadge({ type }) {
   return (
@@ -37,6 +31,7 @@ function ItemTypeBadge({ type }) {
 }
 
 function ShopItemCard({ item, onSelect }) {
+  const { formatPrice } = useCurrency();
   return (
     <div className="flex flex-col rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-sm shadow-black/20">
       {item.imageUrl && (
@@ -63,7 +58,7 @@ function ShopItemCard({ item, onSelect }) {
 
       <div className="mt-3 flex items-center justify-between gap-2">
         <span className="text-lg font-bold text-sky-400">
-          {formatCents(item.priceCents, item.currency)}
+          {formatPrice(item.priceCents, item.currency)}
         </span>
         {item.stockQuantity !== null && (
           <span

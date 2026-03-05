@@ -21,10 +21,12 @@ import {
   isGodmode,
 } from "../auth/permissions";
 import { useStudio } from "../studio/StudioProvider";
+import { useCurrency } from "../currency/CurrencyProvider";
 
 export default function Sessions() {
   const { id } = useParams();
   const { user } = useAuth();
+  const { formatPrice } = useCurrency();
   const roleName = (user?.roleName || "").toString().toLowerCase();
   const isClientUser = roleName === "client";
   const canManageSession = isGodmode(user) || isOwner(user) || isStaff(user);
@@ -121,8 +123,7 @@ export default function Sessions() {
               ) : null}
               {typeof template?.priceCents === "number" ? (
                 <span>
-                  • {(template.priceCents / 100).toFixed(2)}{" "}
-                  {(template.currency || "cad").toUpperCase()}
+                  • {formatPrice(template.priceCents, template.currency)}
                 </span>
               ) : null}
             </div>

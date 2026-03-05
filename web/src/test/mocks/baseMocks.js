@@ -78,11 +78,15 @@ vi.mock("../../currency/CurrencyProvider", () => ({
     currency: "cad",
     setCurrency: vi.fn(),
     isCAD: true,
-    priceDisplay: (cadAmount, usdAmount) => ({
+    priceDisplay: (cadAmount, _usdAmount) => ({
       symbol: "$",
       amount: cadAmount,
       label: "CAD",
     }),
+    formatPrice: (cents, _storedCurrency) => {
+      if (typeof cents !== "number" || !Number.isFinite(cents)) return "—";
+      return `CA$${(cents / 100).toFixed(2)}`;
+    },
   }),
   CurrencyProvider: ({ children }) => children,
 }));
