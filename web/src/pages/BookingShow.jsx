@@ -516,7 +516,9 @@ export default function BookingShow() {
 
           {booking.status === "waitlisted" && (
             <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2.5 text-xs text-amber-200">
-              <div className="font-semibold text-amber-100">You're on the waitlist</div>
+              <div className="font-semibold text-amber-100">
+                You're on the waitlist
+              </div>
               <p className="mt-0.5 text-amber-300/80">
                 You'll be automatically confirmed if a spot opens up.
               </p>

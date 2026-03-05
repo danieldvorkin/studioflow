@@ -3,8 +3,27 @@ Hello <%= @booking.client.name.presence || 'there' %>,
 This is a reminder that payment is still due for your class booking:
 
 Class: <%= @booking.class_session.class_template.title %>
-When: <%= @booking.class_session.start_time.strftime('%b %d, %Y %l:%M %p') %>
+When: <%= @booking.class_session.start_time.strftime('%B %-d, %Y at %-I:%M %p') %>
+<% if (duration = @booking.class_session.class_template.duration_minutes) %>
+Duration: <%= duration %> minutes
+<% end %>
+<% if (instructor = @booking.class_session.instructor) %>
+Instructor: <%= instructor.name %>
+<% end %>
+<% if (location_name = @booking.class_session.class_template.studio_location&.name) %>
+Location: <%= location_name %>
+<% end %>
+<% if (room = @booking.class_session.room).present? %>
+Room: <%= room %>
+<% end %>
+<% if @booking.price_cents.to_i > 0 %>
+Amount due: <%= number_to_currency(@booking.price_cents / 100.0) %>
+<% end %>
 
-Pay now with secure checkout: <%= @checkout_url %>
+Pay now with secure checkout:
+<%= @checkout_url %>
+
+Or view your booking in the app:
+<%= @booking_url %>
 
 If you already paid, you can ignore this email.

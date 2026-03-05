@@ -110,7 +110,7 @@ module Mutations
         )
         payment.save!
 
-        NotificationJob.perform_later(:booking_confirmation, booking.id)
+        NotificationJob.perform_now(:booking_confirmation, booking.id)
       end
 
       { booking: booking, payment: payment, errors: [] }

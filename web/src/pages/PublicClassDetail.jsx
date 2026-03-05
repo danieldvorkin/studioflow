@@ -259,7 +259,10 @@ export default function PublicClassDetail() {
                 <div className="mt-6 flex flex-wrap gap-2.5">
                   {template?.instructor?.name && (
                     <div className="flex items-center gap-2 rounded-full border border-slate-700/80 bg-slate-800/60 px-3.5 py-1.5">
-                      <InstructorAvatar instructor={template.instructor} size="sm" />
+                      <InstructorAvatar
+                        instructor={template.instructor}
+                        size="sm"
+                      />
                       <span className="text-xs font-medium text-slate-200">
                         {template.instructor.name}
                       </span>

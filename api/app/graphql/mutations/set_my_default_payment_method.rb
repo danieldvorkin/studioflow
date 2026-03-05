@@ -2,6 +2,8 @@
 
 module Mutations
   class SetMyDefaultPaymentMethod < BaseMutation
+    include BillingStudioResolver
+
     argument :payment_method_id, String, required: true
     argument :studio_id, ID, required: false
 
@@ -12,16 +14,13 @@ module Mutations
       user = context[:current_user]
       return { client: nil, errors: [ "Not authenticated" ] } unless user
 
-      effective_studio_id = user.client? ? (studio_id.presence || user.studio_id) : user.studio_id
-      client = Client.find_by(user_id: user.id, studio_id: effective_studio_id)
-      return { client: nil, errors: [ "Client record not found" ] } unless client
-
-      record = client.client_payment_methods.find_by(stripe_payment_method_id: payment_method_id)
+      record = ClientPaymentMethod.find_by(user_id: user.id, stripe_payment_method_id: payment_method_id)
       return { client: nil, errors: [ "Payment method not found" ] } unless record
 
-      settings = PaymentSetting.instance_for(user.studio)
-      unless settings.configured?
-        return { client: nil, errors: [ "Stripe is not configured" ] }
+      # Resolve a Stripe-configured client/studio for this user
+      client, settings, _studio = resolve_billing_studio(user, studio_id: studio_id)
+      unless client && settings&.configured?
+        return { client: nil, errors: [ "No Stripe-configured studio found for your account" ] }
       end
 
       return { client: nil, errors: [ "Stripe customer is not initialized" ] } if client.stripe_customer_id.blank?
@@ -38,7 +37,7 @@ module Mutations
       end
 
       Client.transaction do
-        client.client_payment_methods.update_all(default: false)
+        ClientPaymentMethod.where(user_id: user.id).update_all(default: false)
         record.update!(default: true)
 
         client.update!(

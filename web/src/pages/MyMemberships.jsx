@@ -15,6 +15,7 @@ import {
   MEMBERSHIP_PLANS,
   CLIENT_MEMBERSHIPS,
   MY_CLIENT,
+  MY_PAYMENT_METHODS,
   PAYMENT_PUBLIC_SETTINGS,
 } from "../apollo/queries";
 import { PURCHASE_CLIENT_MEMBERSHIP } from "../apollo/mutations";
@@ -77,6 +78,7 @@ function PerkList({ plan }) {
 function PurchaseMembershipCard({
   plan,
   myClient,
+  savedMethods,
   stripeConfigured,
   stripeAvailable,
   enrolled,
@@ -89,7 +91,6 @@ function PurchaseMembershipCard({
   const elements = useElements();
   const [purchaseClientMembership] = useMutation(PURCHASE_CLIENT_MEMBERSHIP);
 
-  const savedMethods = myClient?.clientPaymentMethods || [];
   const defaultSavedMethodId =
     savedMethods.find((m) => m.default)?.stripePaymentMethodId ||
     myClient?.stripeDefaultPaymentMethodId ||
@@ -385,6 +386,16 @@ export default function MyMembershipsPage() {
 
   const myClient = myClientData?.myClient;
 
+  const { data: savedMethodsData, refetch: refetchSavedMethods } = useQuery(
+    MY_PAYMENT_METHODS,
+    {
+      skip: !user,
+      fetchPolicy: "cache-and-network",
+    },
+  );
+
+  const savedMethods = savedMethodsData?.myPaymentMethods || [];
+
   const studioId = selectedStudioId || user?.studioId;
 
   const { data: plansData, loading: plansLoading } = useQuery(
@@ -410,7 +421,11 @@ export default function MyMembershipsPage() {
 
   const onPurchased = async () => {
     try {
-      await Promise.all([refetchMemberships?.(), refetchMyClient?.()]);
+      await Promise.all([
+        refetchMemberships?.(),
+        refetchMyClient?.(),
+        refetchSavedMethods?.(),
+      ]);
     } catch (e) {
       addToast({
         message: e.message || "Could not refresh memberships",
@@ -524,6 +539,7 @@ export default function MyMembershipsPage() {
                 key={plan.id}
                 plan={plan}
                 myClient={myClient}
+                savedMethods={savedMethods}
                 stripeConfigured={stripeConfigured}
                 stripeAvailable={stripeAvailable}
                 enrolled={enrolled}

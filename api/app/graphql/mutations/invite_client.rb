@@ -43,7 +43,7 @@ module Mutations
         ClientInvitationMailer.with(
           invitation: invitation,
           signup_url: signup_url
-        ).invite.deliver_later
+        ).invite.deliver_now
       end
 
       { invitation: invitation, signup_url: signup_url, errors: [] }

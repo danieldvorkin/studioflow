@@ -39,6 +39,7 @@ import GodmodeModerators from "./pages/GodmodeModerators";
 import GodmodeSubscriptions from "./pages/GodmodeSubscriptions";
 import GodmodeStudio from "./pages/GodmodeStudio";
 import GodmodeStudios from "./pages/GodmodeStudios";
+import MyMembershipsPage from "./pages/MyMemberships";
 const Dashboard = lazy(() => import("./pages/dashboard"));
 const Profile = lazy(() => import("./pages/profile"));
 import { useTheme } from "./theme/ThemeProvider";
@@ -719,6 +720,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <BookingsPage scope="mine" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-memberships"
+            element={
+              <ProtectedRoute>
+                <MyMembershipsPage />
               </ProtectedRoute>
             }
           />

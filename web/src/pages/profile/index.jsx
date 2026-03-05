@@ -12,6 +12,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import {
   MY_BOOKINGS,
   MY_CLIENT,
+  MY_PAYMENT_METHODS,
   PAYMENT_PUBLIC_SETTINGS,
   CLIENT_MEMBERSHIPS,
   PLATFORM_PAYMENT_SETTINGS,
@@ -31,7 +32,6 @@ import { useToast } from "../../components/ToastProvider";
 import { useAuth } from "../../auth/AuthProvider";
 import { useTheme } from "../../theme/ThemeProvider";
 import { normalizeStripeEmail } from "../../payments/stripeEmail";
-import { useStudio } from "../../studio/StudioProvider";
 import { getStripeCardElementOptions } from "../../theme/stripeElements";
 import {
   SkeletonMembership,
@@ -59,7 +59,7 @@ export default function Profile() {
   const user = auth.user;
   const role = (user?.roleName || "").toString().toLowerCase();
   const isClient = role === "client";
-  const { selectedStudioId } = useStudio();
+  // Payment methods are user-scoped, not studio-scoped — no selectedStudioId needed here
 
   const [updateProfile, { loading: savingProfile }] =
     useMutation(UPDATE_PROFILE);
@@ -158,24 +158,31 @@ export default function Profile() {
     },
   );
 
-  const {
-    data: myClientData,
-    loading: myClientLoading,
-    refetch: refetchMyClient,
-  } = useQuery(MY_CLIENT, {
-    skip: !user || (isClient && !selectedStudioId),
-    variables: isClient ? { studioId: selectedStudioId } : undefined,
-  });
+  const { loading: myClientLoading, refetch: refetchMyClient } = useQuery(
+    MY_CLIENT,
+    {
+      skip: !user,
+      // No studioId — always resolve against the user's primary studio so that
+      // the billing section works regardless of which studio is currently browsed.
+    },
+  );
+
+  const { data: myPaymentMethodsData, refetch: refetchPaymentMethods } =
+    useQuery(MY_PAYMENT_METHODS, {
+      skip: !user,
+      fetchPolicy: "cache-and-network",
+    });
+
+  const myPaymentMethods = myPaymentMethodsData?.myPaymentMethods || [];
 
   const { data: paymentPublicSettingsData } = useQuery(
     PAYMENT_PUBLIC_SETTINGS,
     {
-      skip: !user || (isClient && !selectedStudioId),
-      variables: isClient ? { studioId: selectedStudioId } : undefined,
+      skip: !user,
+      // No studioId — always resolve against the user's primary studio so that
+      // the billing section works regardless of which studio is currently browsed.
     },
   );
-
-  const myClient = myClientData?.myClient;
 
   const stripePublishableKey =
     paymentPublicSettingsData?.paymentPublicSettings?.stripePublishableKey;
@@ -473,44 +480,32 @@ export default function Profile() {
           <div className="lg:col-span-1">
             <h3 className="text-sm font-semibold text-slate-100">Saved card</h3>
 
-            {(myClientLoading || creatingSetupIntent) && (
-              <SkeletonBillingCard />
-            )}
+            {myClientLoading && <SkeletonBillingCard />}
 
-            {!myClientLoading && !stripePublishableKey && (
-              <p className="mt-2 text-sm text-amber-400">
-                Payments aren’t configured yet. Please ask the studio owner to
-                enable Stripe.
-              </p>
+            {/* Always render SavedCardEditor — payment methods are user-scoped
+                and should never be blocked by whether a particular studio has Stripe
+                configured. stripePromise is passed down so the editor can gate
+                "add card" internally. */}
+            {!myClientLoading && (
+              <SavedCardEditor
+                user={user}
+                paymentMethods={myPaymentMethods}
+                stripePromise={stripePromise}
+                creatingSetupIntent={creatingSetupIntent}
+                savingCard={savingCard}
+                removingCard={removingCard}
+                settingDefaultCard={settingDefaultCard}
+                createSetupIntent={createSetupIntent}
+                saveMyPaymentMethod={saveMyPaymentMethod}
+                removeMyPaymentMethod={removeMyPaymentMethod}
+                setMyDefaultPaymentMethod={setMyDefaultPaymentMethod}
+                onUpdated={() => {
+                  refetchMyClient?.();
+                  refetchPaymentMethods?.();
+                }}
+                addToast={addToast}
+              />
             )}
-
-            {!myClientLoading && stripePublishableKey && !myClient && (
-              <p className="mt-2 text-sm text-slate-400">
-                No billing profile found for your account.
-              </p>
-            )}
-
-            {!myClientLoading &&
-              stripePublishableKey &&
-              stripePromise &&
-              myClient && (
-                <Elements stripe={stripePromise}>
-                  <SavedCardEditor
-                    user={user}
-                    myClient={myClient}
-                    creatingSetupIntent={creatingSetupIntent}
-                    savingCard={savingCard}
-                    removingCard={removingCard}
-                    settingDefaultCard={settingDefaultCard}
-                    createSetupIntent={createSetupIntent}
-                    saveMyPaymentMethod={saveMyPaymentMethod}
-                    removeMyPaymentMethod={removeMyPaymentMethod}
-                    setMyDefaultPaymentMethod={setMyDefaultPaymentMethod}
-                    onUpdated={() => refetchMyClient?.()}
-                    addToast={addToast}
-                  />
-                </Elements>
-              )}
           </div>
 
           <div className="lg:col-span-1">
@@ -596,7 +591,8 @@ export default function Profile() {
 
 function SavedCardEditor({
   user,
-  myClient,
+  paymentMethods,
+  stripePromise,
   creatingSetupIntent,
   savingCard,
   removingCard,
@@ -608,101 +604,25 @@ function SavedCardEditor({
   onUpdated,
   addToast,
 }) {
-  const role = (user?.roleName || "").toString().toLowerCase();
-  const isClient = role === "client";
-  const { selectedStudioId } = useStudio();
-
-  const stripe = useStripe();
-  const elements = useElements();
   const [showAddForm, setShowAddForm] = useState(false);
 
-  const { theme } = useTheme();
-  const cardElementOptions = useMemo(
-    () => getStripeCardElementOptions(theme),
-    [theme],
-  );
-  const [address, setAddress] = useState({
-    line1: "",
-    line2: "",
-    city: "",
-    state: "",
-    postalCode: "",
-    country: "",
-  });
+  const paymentMethods_ = paymentMethods ?? [];
+  const hasSaved = paymentMethods_.length > 0;
 
-  const paymentMethods = myClient?.clientPaymentMethods || [];
-  const hasSaved = paymentMethods.length > 0;
-
-  const onSave = async (e) => {
-    e.preventDefault();
-    try {
-      if (!stripe || !elements)
-        throw new Error("Payment form is not ready yet");
-      const cardElement = elements.getElement(CardElement);
-      if (!cardElement) throw new Error("Payment details are missing");
-
-      const res = await createSetupIntent({
-        variables: { studioId: isClient ? selectedStudioId : null },
-      });
-      const payload = res.data?.createSetupIntent;
-      const errors = payload?.errors || [];
-      const clientSecret = payload?.clientSecret;
-      if (errors.length || !clientSecret)
-        throw new Error(errors.join(", ") || "Could not start card setup");
-
-      const confirmRes = await stripe.confirmCardSetup(clientSecret, {
-        payment_method: {
-          card: cardElement,
-          billing_details: {
-            name: user?.name || undefined,
-            email: normalizeStripeEmail(user?.email),
-            address: {
-              line1: address.line1 || undefined,
-              line2: address.line2 || undefined,
-              city: address.city || undefined,
-              state: address.state || undefined,
-              postal_code: address.postalCode || undefined,
-              country: address.country || undefined,
-            },
-          },
-        },
-      });
-
-      if (confirmRes.error)
-        throw new Error(confirmRes.error.message || "Card setup failed");
-      const pm = confirmRes.setupIntent?.payment_method;
-      const paymentMethodId = typeof pm === "string" ? pm : pm?.id;
-      if (!paymentMethodId) throw new Error("No payment method returned");
-
-      const saveRes = await saveMyPaymentMethod({
-        variables: {
-          paymentMethodId,
-          studioId: isClient ? selectedStudioId : null,
-        },
-      });
-      const savePayload = saveRes.data?.saveMyPaymentMethod;
-      const saveErrors = savePayload?.errors || [];
-      if (saveErrors.length)
-        throw new Error(saveErrors.join(", ") || "Could not save card");
-
-      addToast({ message: "Card saved", type: "success" });
-      setShowAddForm(false);
-      onUpdated?.();
-    } catch (err) {
-      addToast({
-        message: err.message || "Could not save card",
-        type: "error",
-      });
-    }
+  const formatPm = (pm) => {
+    const brand = (pm.brand || "card").toString().toUpperCase();
+    const last4 = pm.last4 || "••••";
+    const exp =
+      pm.expMonth && pm.expYear
+        ? ` (exp ${String(pm.expMonth).padStart(2, "0")}/${String(pm.expYear).slice(-2)})`
+        : "";
+    return `${brand} •••• ${last4}${exp}`;
   };
 
   const onMakeDefault = async (paymentMethodId) => {
     try {
       const res = await setMyDefaultPaymentMethod({
-        variables: {
-          paymentMethodId,
-          studioId: isClient ? selectedStudioId : null,
-        },
+        variables: { paymentMethodId },
       });
       const payload = res.data?.setMyDefaultPaymentMethod;
       const errors = payload?.errors || [];
@@ -721,10 +641,7 @@ function SavedCardEditor({
   const onRemove = async (paymentMethodId) => {
     try {
       const res = await removeMyPaymentMethod({
-        variables: {
-          paymentMethodId,
-          studioId: isClient ? selectedStudioId : null,
-        },
+        variables: { paymentMethodId },
       });
       const payload = res.data?.removeMyPaymentMethod;
       const errors = payload?.errors || [];
@@ -740,22 +657,12 @@ function SavedCardEditor({
     }
   };
 
-  const formatPm = (pm) => {
-    const brand = (pm.brand || "card").toString().toUpperCase();
-    const last4 = pm.last4 || "••••";
-    const exp =
-      pm.expMonth && pm.expYear
-        ? ` (exp ${String(pm.expMonth).padStart(2, "0")}/${String(pm.expYear).slice(-2)})`
-        : "";
-    return `${brand} •••• ${last4}${exp}`;
-  };
-
   return (
     <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950/40 p-3">
-      {hasSaved ? (
-        <div className="space-y-3">
+      <div className="space-y-3">
+        {hasSaved && (
           <div className="space-y-2">
-            {paymentMethods.map((pm) => (
+            {paymentMethods_.map((pm) => (
               <div
                 key={pm.id}
                 className="flex flex-col gap-2 rounded-lg border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between"
@@ -794,87 +701,167 @@ function SavedCardEditor({
               </div>
             ))}
           </div>
+        )}
 
-          {!showAddForm && (
-            <div className="flex justify-end">
+        {!showAddForm && (
+          <div className="flex justify-end">
+            {stripePromise ? (
               <button
                 type="button"
                 onClick={() => setShowAddForm(true)}
                 className="inline-flex items-center rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200 hover:bg-slate-800"
               >
-                Add another card
+                {hasSaved ? "Add another card" : "Add a card"}
               </button>
-            </div>
-          )}
-
-          {showAddForm && (
-            <form onSubmit={onSave} className="space-y-3">
-              <div className="text-sm text-slate-200">Add a new card</div>
-              <div className="rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2 text-[11px] text-slate-300">
-                <div className="font-semibold text-slate-200">
-                  Secure storage
-                </div>
-                <div className="mt-0.5 text-slate-400">
-                  Card details are sent directly to Stripe. We don’t store your
-                  full card number.
-                </div>
-              </div>
-              <div className="rounded-md border border-slate-700 bg-slate-900 px-3 py-2">
-                <CardElement
-                  key={`card-${theme}`}
-                  options={cardElementOptions}
-                />
-              </div>
-
-              <BillingAddressFields address={address} setAddress={setAddress} />
-
-              <div className="flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAddForm(false)}
-                  className="inline-flex items-center rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200 hover:bg-slate-800"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={creatingSetupIntent || savingCard}
-                  className="inline-flex items-center rounded-full bg-sky-500 px-4 py-2 text-sm font-semibold text-on-accent hover:bg-sky-400 disabled:opacity-60"
-                >
-                  {savingCard ? "Saving…" : "Save card"}
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
-      ) : (
-        <form onSubmit={onSave} className="space-y-3">
-          <div className="text-sm text-slate-200">Add a card</div>
-          <div className="rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2 text-[11px] text-slate-300">
-            <div className="font-semibold text-slate-200">Secure storage</div>
-            <div className="mt-0.5 text-slate-400">
-              Card details are sent directly to the Payment Processor (Stripe).
-              We don’t store your full card number.
-            </div>
+            ) : (
+              <p className="text-xs text-slate-500">
+                Adding a card requires Stripe to be enabled by the studio owner.
+              </p>
+            )}
           </div>
-          <div className="rounded-md border border-slate-700 bg-slate-900 px-3 py-2">
-            <CardElement key={`card-${theme}`} options={cardElementOptions} />
-          </div>
+        )}
 
-          <BillingAddressFields address={address} setAddress={setAddress} />
-
-          <div className="flex items-center justify-end gap-2">
-            <button
-              type="submit"
-              disabled={creatingSetupIntent || savingCard}
-              className="inline-flex items-center rounded-full bg-sky-500 px-4 py-2 text-sm font-semibold text-on-accent hover:bg-sky-400 disabled:opacity-60"
-            >
-              {savingCard ? "Saving…" : "Save card"}
-            </button>
-          </div>
-        </form>
-      )}
+        {showAddForm && (
+          <Elements stripe={stripePromise}>
+            <AddCardForm
+              user={user}
+              creatingSetupIntent={creatingSetupIntent}
+              savingCard={savingCard}
+              createSetupIntent={createSetupIntent}
+              saveMyPaymentMethod={saveMyPaymentMethod}
+              onSaved={() => {
+                setShowAddForm(false);
+                onUpdated?.();
+              }}
+              onCancel={() => setShowAddForm(false)}
+              addToast={addToast}
+            />
+          </Elements>
+        )}
+      </div>
     </div>
+  );
+}
+
+function AddCardForm({
+  user,
+  creatingSetupIntent,
+  savingCard,
+  createSetupIntent,
+  saveMyPaymentMethod,
+  onSaved,
+  onCancel,
+  addToast,
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const { theme } = useTheme();
+  const cardElementOptions = useMemo(
+    () => getStripeCardElementOptions(theme),
+    [theme],
+  );
+  const [address, setAddress] = useState({
+    line1: "",
+    line2: "",
+    city: "",
+    state: "",
+    postalCode: "",
+    country: "",
+  });
+
+  const onSave = async (e) => {
+    e.preventDefault();
+    try {
+      if (!stripe || !elements)
+        throw new Error("Payment form is not ready yet");
+      const cardElement = elements.getElement(CardElement);
+      if (!cardElement) throw new Error("Payment details are missing");
+
+      const res = await createSetupIntent({ variables: {} });
+      const payload = res.data?.createSetupIntent;
+      const errors = payload?.errors || [];
+      const clientSecret = payload?.clientSecret;
+      if (errors.length || !clientSecret)
+        throw new Error(errors.join(", ") || "Could not start card setup");
+
+      const confirmRes = await stripe.confirmCardSetup(clientSecret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: {
+            name: user?.name || undefined,
+            email: normalizeStripeEmail(user?.email),
+            address: {
+              line1: address.line1 || undefined,
+              line2: address.line2 || undefined,
+              city: address.city || undefined,
+              state: address.state || undefined,
+              postal_code: address.postalCode || undefined,
+              country: address.country || undefined,
+            },
+          },
+        },
+      });
+
+      if (confirmRes.error)
+        throw new Error(confirmRes.error.message || "Card setup failed");
+      const pm = confirmRes.setupIntent?.payment_method;
+      const paymentMethodId = typeof pm === "string" ? pm : pm?.id;
+      if (!paymentMethodId) throw new Error("No payment method returned");
+
+      const saveRes = await saveMyPaymentMethod({
+        variables: { paymentMethodId },
+      });
+      const savePayload = saveRes.data?.saveMyPaymentMethod;
+      const saveErrors = savePayload?.errors || [];
+      if (saveErrors.length)
+        throw new Error(saveErrors.join(", ") || "Could not save card");
+
+      addToast({ message: "Card saved", type: "success" });
+      onSaved?.();
+    } catch (err) {
+      addToast({
+        message: err.message || "Could not save card",
+        type: "error",
+      });
+    }
+  };
+
+  return (
+    <form
+      onSubmit={onSave}
+      className="space-y-3 border-t border-slate-800 pt-3"
+    >
+      <div className="text-sm text-slate-200">Add a card</div>
+      <div className="rounded-lg border border-slate-800 bg-slate-950/40 px-3 py-2 text-[11px] text-slate-300">
+        <div className="font-semibold text-slate-200">Secure storage</div>
+        <div className="mt-0.5 text-slate-400">
+          Card details are sent directly to Stripe. We don&apos;t store your
+          full card number.
+        </div>
+      </div>
+      <div className="rounded-md border border-slate-700 bg-slate-900 px-3 py-2">
+        <CardElement key={`card-${theme}`} options={cardElementOptions} />
+      </div>
+
+      <BillingAddressFields address={address} setAddress={setAddress} />
+
+      <div className="flex items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="inline-flex items-center rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200 hover:bg-slate-800"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={creatingSetupIntent || savingCard}
+          className="inline-flex items-center rounded-full bg-sky-500 px-4 py-2 text-sm font-semibold text-on-accent hover:bg-sky-400 disabled:opacity-60"
+        >
+          {savingCard ? "Saving…" : "Save card"}
+        </button>
+      </div>
+    </form>
   );
 }
 

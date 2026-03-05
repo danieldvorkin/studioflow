@@ -23,7 +23,7 @@ module Mutations
       status = class_session.seats_available > 0 ? "booked" : "waitlisted"
 
       if booking.update(status: Booking.statuses[status], archived: false)
-        NotificationJob.perform_later(:booking_confirmation, booking.id)
+        NotificationJob.perform_now(:booking_confirmation, booking.id)
         { booking: booking, errors: [] }
       else
         { booking: nil, errors: booking.errors.full_messages }

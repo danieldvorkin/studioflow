@@ -2,6 +2,8 @@
 
 module Mutations
   class CreateSetupIntent < BaseMutation
+    include BillingStudioResolver
+
     argument :studio_id, ID, required: false
 
     field :client_secret, String, null: true
@@ -12,16 +14,11 @@ module Mutations
       user = context[:current_user]
       return { client_secret: nil, client: nil, errors: [ "Not authenticated" ] } unless user
 
-      effective_studio_id = user.client? ? (studio_id.presence || user.studio_id) : user.studio_id
-      studio = Studio.find(effective_studio_id)
+      client, settings, _studio = resolve_billing_studio(user, studio_id: studio_id)
 
-      settings = PaymentSetting.instance_for(studio)
-      unless settings.configured?
-        return { client_secret: nil, client: nil, errors: [ "Stripe is not configured" ] }
+      unless client && settings&.configured?
+        return { client_secret: nil, client: nil, errors: [ "No Stripe-configured studio found for your account" ] }
       end
-
-      client = Client.find_by(user_id: user.id, studio_id: effective_studio_id)
-      return { client_secret: nil, client: nil, errors: [ "Client record not found" ] } unless client
 
       Stripe.api_key = settings.stripe_secret_key
 
