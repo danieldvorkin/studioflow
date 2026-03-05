@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_04_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_04_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -308,6 +308,46 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_04_000001) do
     t.index ["studio_id"], name: "index_payments_on_studio_id"
   end
 
+  create_table "shop_items", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "currency", default: "cad", null: false
+    t.text "description"
+    t.string "image_url"
+    t.string "item_type", default: "sale", null: false
+    t.integer "price_cents", default: 0, null: false
+    t.text "rental_agreement_text"
+    t.integer "stock_quantity"
+    t.bigint "studio_id", null: false
+    t.bigint "studio_location_id"
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["studio_id", "active"], name: "index_shop_items_on_studio_id_and_active"
+    t.index ["studio_id"], name: "index_shop_items_on_studio_id"
+    t.index ["studio_location_id"], name: "index_shop_items_on_studio_location_id"
+  end
+
+  create_table "shop_orders", force: :cascade do |t|
+    t.bigint "client_id", null: false
+    t.datetime "created_at", null: false
+    t.string "currency", default: "cad", null: false
+    t.text "notes"
+    t.integer "quantity", default: 1, null: false
+    t.datetime "rental_agreement_accepted_at"
+    t.date "rental_due_date"
+    t.date "returned_at"
+    t.bigint "shop_item_id", null: false
+    t.string "status", default: "pending", null: false
+    t.string "stripe_payment_intent_id"
+    t.bigint "studio_id", null: false
+    t.integer "total_cents", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["client_id"], name: "index_shop_orders_on_client_id"
+    t.index ["shop_item_id"], name: "index_shop_orders_on_shop_item_id"
+    t.index ["studio_id", "status"], name: "index_shop_orders_on_studio_id_and_status"
+    t.index ["studio_id"], name: "index_shop_orders_on_studio_id"
+  end
+
   create_table "studio_locations", force: :cascade do |t|
     t.string "address"
     t.string "city"
@@ -412,6 +452,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_04_000001) do
   add_foreign_key "payments", "class_sessions"
   add_foreign_key "payments", "clients"
   add_foreign_key "payments", "studios"
+  add_foreign_key "shop_items", "studio_locations"
   add_foreign_key "studio_locations", "studios"
   add_foreign_key "studio_subscriptions", "studios"
   add_foreign_key "users", "studios"

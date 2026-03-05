@@ -906,6 +906,61 @@ module Types
       "Hello World!"
     end
 
+    # ── Shop ──────────────────────────────────────────────────────────────────
+
+    field :shop_items, [ Types::ShopItemType ], null: false,
+      description: "List shop items for the studio. Owners/staff see all; clients see active only." do
+      argument :studio_id, ID, required: false
+      argument :studio_location_id, ID, required: false
+    end
+    def shop_items(studio_id: nil, studio_location_id: nil)
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authenticated" unless user
+
+      if user.owner? || user.staff? || user.platform_staff?
+        scope = ShopItem.where(studio_id: user.studio_id)
+      elsif user.client?
+        effective_studio_id = studio_id.presence || user.studio_id
+        raise GraphQL::ExecutionError, "Studio is required" if effective_studio_id.blank?
+        scope = ShopItem.where(studio_id: effective_studio_id, active: true)
+      else
+        scope = ShopItem.where(studio_id: user.studio_id, active: true)
+      end
+
+      # Optional location filter — null-location items are global and always included
+      if studio_location_id.present?
+        scope = scope.where(studio_location_id: [ studio_location_id, nil ])
+      end
+
+      scope.order(created_at: :desc)
+    end
+
+    field :shop_orders, [ Types::ShopOrderType ], null: false,
+      description: "List shop orders. Owners/staff see all studio orders."
+    def shop_orders
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authenticated" unless user
+      raise Pundit::NotAuthorizedError unless Pundit.policy!(user, ShopOrder).index?
+
+      ShopOrder.where(studio_id: user.studio_id)
+               .includes(:shop_item, :client)
+               .order(created_at: :desc)
+    end
+
+    field :my_shop_orders, [ Types::ShopOrderType ], null: false,
+      description: "List the current user's own shop orders."
+    def my_shop_orders
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authenticated" unless user
+
+      client_ids = Client.where(user_id: user.id).select(:id)
+      return [] if client_ids.empty?
+
+      ShopOrder.where(client_id: client_ids)
+               .includes(:shop_item, :client)
+               .order(created_at: :desc)
+    end
+
     private
 
     # Management access: owner, staff, or platform staff (godmode + moderator)

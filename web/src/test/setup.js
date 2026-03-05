@@ -14,6 +14,17 @@ if (!globalThis.TextEncoder) {
   globalThis.TextDecoder = TextDecoder;
 }
 
+// JSDOM doesn't implement IntersectionObserver — stub it globally so that any
+// component using it (e.g. Landing.jsx scroll animations) doesn't throw.
+if (!globalThis.IntersectionObserver) {
+  globalThis.IntersectionObserver = class IntersectionObserver {
+    constructor() {}
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
 // Stripe.js performs async script loading that can outlive individual tests and
 // trigger React updates after the JSDOM environment is torn down.
 vi.mock("@stripe/stripe-js", () => ({
