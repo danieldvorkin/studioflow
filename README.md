@@ -1,4 +1,4 @@
-# Pilates Studio App
+# Studio Flow
 
 Monorepo containing:
 
