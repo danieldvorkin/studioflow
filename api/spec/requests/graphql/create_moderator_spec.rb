@@ -43,6 +43,20 @@ RSpec.describe 'CreateModerator mutation', type: :request do
       expect(payload['plaintextPassword']).to be_present
     end
 
+    it 'enqueues a moderator_welcome email after successful creation' do
+      expect {
+        graphql_post(query: mutation, variables: { email: 'newmod@studioflow.io', name: 'New Mod' })
+      }.to have_enqueued_mail(UserMailer, :moderator_welcome).once
+    end
+
+    it 'does not send the welcome email when creation fails' do
+      create(:user, email: 'taken@studioflow.io', studio: godmode_studio)
+
+      expect {
+        graphql_post(query: mutation, variables: { email: 'taken@studioflow.io' })
+      }.not_to have_enqueued_mail(UserMailer, :moderator_welcome)
+    end
+
     it 'persists the user with role moderator in the database' do
       graphql_post(query: mutation, variables: { email: 'newmod@studioflow.io' })
 

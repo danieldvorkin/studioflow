@@ -28,4 +28,13 @@ class UserMailer < ApplicationMailer
     role_label = User::ROLES.key(@user.role)&.to_s&.capitalize || "team member"
     mail(to: @user.email, subject: "You've been invited to join #{@studio.name} on StudioFlow")
   end
+
+  # Sent when a godmode user creates a new moderator account.
+  def moderator_welcome
+    @user              = params[:user]
+    @plaintext_password = params[:plaintext_password]
+    @login_url         = "#{ENV.fetch('WEB_APP_URL', 'http://localhost:5173')}/login"
+
+    mail(to: @user.email, subject: "You've been added as a StudioFlow Moderator")
+  end
 end
