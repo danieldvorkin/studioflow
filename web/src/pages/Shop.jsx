@@ -101,7 +101,8 @@ export default function ShopPage() {
 
   // Track whether this is the initial load to suppress the toast on first render.
   const isFirstRender = useRef(true);
-  const prevStudioId = useRef(selectedStudioId);
+  // useState instead of useRef so we can safely compare during render.
+  const [prevStudioId, setPrevStudioId] = useState(selectedStudioId);
 
   const { data: userData, loading: userLoading } = useQuery(CURRENT_USER);
   const user = userData?.currentUser;
@@ -136,15 +137,15 @@ export default function ShopPage() {
   const [search, setSearch] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
 
-  // Reset filters whenever the selected studio changes.
-  useEffect(() => {
-    if (!selectedStudioId) return;
-    if (prevStudioId.current === selectedStudioId) return;
-    prevStudioId.current = selectedStudioId;
-    setFilter("all");
-    setSearch("");
-    setSelectedItem(null);
-  }, [selectedStudioId]);
+  // Reset filters whenever the selected studio changes (derived state during render).
+  if (prevStudioId !== selectedStudioId) {
+    setPrevStudioId(selectedStudioId);
+    if (selectedStudioId) {
+      setFilter("all");
+      setSearch("");
+      setSelectedItem(null);
+    }
+  }
 
   // Show a toast when the loaded studio has no shop items.
   // Suppressed on the very first load so the empty-state UI speaks for itself.

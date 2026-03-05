@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Elements,
   CardElement,
@@ -60,28 +60,17 @@ function RentalWizardInner({ item, onConfirm, onClose, savedMethods }) {
   const [qty, setQty] = useState(1);
   const [dueDate, setDueDate] = useState(addDays(today(), 7));
   const [agreed, setAgreed] = useState(false);
-  const [paymentChoice, setPaymentChoice] = useState(
-    savedMethods.length > 0 ? "saved" : "new",
-  );
-  const [selectedMethodId, setSelectedMethodId] = useState(
-    savedMethods.find((m) => m.default)?.stripePaymentMethodId ||
-      savedMethods[0]?.stripePaymentMethodId ||
-      "",
-  );
+  // null means "no explicit user choice yet" — derived from savedMethods until user picks
+  const [paymentChoiceOverride, setPaymentChoice] = useState(null);
+  const paymentChoice =
+    paymentChoiceOverride ?? (savedMethods.length > 0 ? "saved" : "new");
 
-  // Sync when savedMethods loads asynchronously after initial render
-  useEffect(() => {
-    if (savedMethods.length > 0) {
-      setPaymentChoice((prev) => (prev === "new" ? "saved" : prev));
-      setSelectedMethodId(
-        (prev) =>
-          prev ||
-          savedMethods.find((m) => m.default)?.stripePaymentMethodId ||
-          savedMethods[0]?.stripePaymentMethodId ||
-          "",
-      );
-    }
-  }, [savedMethods.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [selectedMethodIdOverride, setSelectedMethodId] = useState(null);
+  const selectedMethodId =
+    selectedMethodIdOverride ??
+    savedMethods.find((m) => m.default)?.stripePaymentMethodId ??
+    savedMethods[0]?.stripePaymentMethodId ??
+    "";
   const [cardError, setCardError] = useState("");
   const [overlayStatus, setOverlayStatus] = useState(null);
   const [overlayMsg, setOverlayMsg] = useState("");
