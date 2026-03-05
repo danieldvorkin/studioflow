@@ -339,12 +339,8 @@ export default function OwnerShopPage() {
   const shopItems = itemsData?.shopItems || [];
   const shopOrders = ordersData?.shopOrders || [];
 
-  const handleCreate = async ({
-    priceCents,
-    stockQuantity,
-    priceDollars: _pd,
-    ...attrs
-  }) => {
+  const handleCreate = async (formData) => {
+    const { priceCents, stockQuantity, priceDollars: _, ...attrs } = formData;
     const res = await createShopItem({
       variables: { ...attrs, priceCents, stockQuantity },
     });
@@ -362,7 +358,8 @@ export default function OwnerShopPage() {
 
   const handleUpdate =
     (item) =>
-    async ({ priceCents, stockQuantity, priceDollars: _pd, ...attrs }) => {
+    async (formData) => {
+      const { priceCents, stockQuantity, priceDollars: _, ...attrs } = formData;
       const res = await updateShopItem({
         variables: { id: item.id, ...attrs, priceCents, stockQuantity },
       });

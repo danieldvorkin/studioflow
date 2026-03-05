@@ -101,7 +101,6 @@ export default function ShopPage() {
 
   // Track whether this is the initial load to suppress the toast on first render.
   const isFirstRender = useRef(true);
-  const prevStudioId = useRef(selectedStudioId);
 
   const { data: userData, loading: userLoading } = useQuery(CURRENT_USER);
   const user = userData?.currentUser;
@@ -132,19 +131,26 @@ export default function ShopPage() {
 
   const [createShopOrder] = useMutation(CREATE_SHOP_ORDER);
 
-  const [filter, setFilter] = useState("all"); // all | sale | rental
-  const [search, setSearch] = useState("");
-  const [selectedItem, setSelectedItem] = useState(null);
+  // Combine filter state with the studio it belongs to so that switching
+  // studios auto-resets filters without needing a setState-in-effect.
+  const [filterState, setFilterState] = useState({
+    studioId: selectedStudioId,
+    filter: "all",
+    search: "",
+    selectedItem: null,
+  });
 
-  // Reset filters whenever the selected studio changes.
-  useEffect(() => {
-    if (!selectedStudioId) return;
-    if (prevStudioId.current === selectedStudioId) return;
-    prevStudioId.current = selectedStudioId;
-    setFilter("all");
-    setSearch("");
-    setSelectedItem(null);
-  }, [selectedStudioId]);
+  const studioChanged = filterState.studioId !== selectedStudioId;
+  const filter = studioChanged ? "all" : filterState.filter;
+  const search = studioChanged ? "" : filterState.search;
+  const selectedItem = studioChanged ? null : filterState.selectedItem;
+
+  const setFilter = (f) =>
+    setFilterState({ studioId: selectedStudioId, filter: f, search, selectedItem });
+  const setSearch = (s) =>
+    setFilterState({ studioId: selectedStudioId, filter, search: s, selectedItem });
+  const setSelectedItem = (item) =>
+    setFilterState({ studioId: selectedStudioId, filter, search, selectedItem: item });
 
   // Show a toast when the loaded studio has no shop items.
   // Suppressed on the very first load so the empty-state UI speaks for itself.
