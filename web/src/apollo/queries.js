@@ -867,6 +867,49 @@ export const CREATE_MODERATOR = gql`
   }
 `;
 
+export const SESSION_BOOKINGS = gql`
+  query SessionBookings($classSessionId: ID!) {
+    bookings(classSessionId: $classSessionId) {
+      id
+      studioId
+      slug
+      status
+      paid
+      priceCents
+      archived
+      createdAt
+      payment {
+        id
+        amountCents
+        currency
+        status
+      }
+      client {
+        id
+        name
+        email
+      }
+      classSession {
+        id
+        startTime
+        endTime
+        capacity
+        room
+        classTemplate {
+          id
+          title
+          priceCents
+          currency
+        }
+        instructor {
+          id
+          name
+        }
+      }
+    }
+  }
+`;
+
 export const PUBLIC_CLASS_PAGE = gql`
   query PublicClassPage($studioInviteCode: String!, $templateId: ID!) {
     publicClassPage(
