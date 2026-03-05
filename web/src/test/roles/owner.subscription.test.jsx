@@ -136,8 +136,8 @@ describe("OwnerSubscription page", () => {
     it("shows Free for starter tier and dollar amounts for paid tiers", () => {
       renderPage();
       expect(screen.getByText("Free")).toBeTruthy();
-      expect(screen.getAllByText("$59").length).toBeGreaterThan(0);
-      expect(screen.getAllByText("$129").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("$79").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("$175").length).toBeGreaterThan(0);
     });
 
     it("shows loading state while subscription is fetching", () => {
@@ -236,7 +236,13 @@ describe("OwnerSubscription page", () => {
 
       await waitFor(() =>
         expect(checkoutMutationFn).toHaveBeenCalledWith(
-          expect.objectContaining({ variables: { tier: "pro" } }),
+          expect.objectContaining({
+            variables: {
+              tier: "pro",
+              currency: "cad",
+              billingInterval: "month",
+            },
+          }),
         ),
       );
     });
@@ -258,7 +264,13 @@ describe("OwnerSubscription page", () => {
 
       await waitFor(() =>
         expect(checkoutMutationFn).toHaveBeenCalledWith(
-          expect.objectContaining({ variables: { tier: "studio" } }),
+          expect.objectContaining({
+            variables: {
+              tier: "studio",
+              currency: "cad",
+              billingInterval: "month",
+            },
+          }),
         ),
       );
     });

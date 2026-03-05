@@ -136,7 +136,122 @@ cd api
 rm -f tmp/pids/server.pid
 ```
 
+## Notification system
+
+Studio owners receive **in-app notifications** (bell icon in the header) and, for subscription events, **email notifications** via `SubscriptionMailer`.
+
+### Architecture
+
+| Layer             | File(s)                                                                   |
+| ----------------- | ------------------------------------------------------------------------- |
+| Model             | `api/app/models/notification.rb`                                          |
+| Job               | `api/app/jobs/notification_job.rb`                                        |
+| Mailer            | `api/app/mailers/subscription_mailer.rb`                                  |
+| GraphQL type      | `api/app/graphql/types/notification_type.rb`                              |
+| GraphQL queries   | `myNotifications`, `myUnreadNotificationCount` in `query_type.rb`         |
+| GraphQL mutations | `markNotificationRead`, `markAllNotificationsRead`, `dismissNotification` |
+| Webhook wiring    | `api/app/controllers/platform_webhooks_controller.rb`                     |
+| Scheduled tasks   | `api/lib/tasks/notifications.rake`                                        |
+| Frontend bell     | `web/src/components/NotificationBell.jsx`                                 |
+| Frontend banner   | `web/src/components/SubscriptionStatusBanner.jsx`                         |
+
+The frontend panel is rendered via React portal (`document.body`) so it is never clipped by `overflow-hidden` ancestors.
+
+---
+
+### Notification kinds and triggers
+
+#### Subscription (fired automatically via Stripe webhooks or rake tasks)
+
+| Kind                             | Trigger                                                                               |
+| -------------------------------- | ------------------------------------------------------------------------------------- |
+| `subscription_trial_ending`      | Daily rake task — when a trial ends in ≤ 3 days                                       |
+| `subscription_trial_expired`     | Daily rake task — when a trial period has passed (also downgrades to Starter)         |
+| `subscription_past_due`          | Daily rake task — in-app reminder every 24 h while status is `past_due`               |
+| `subscription_payment_failed`    | Stripe `invoice.payment_failed` webhook                                               |
+| `subscription_payment_succeeded` | Stripe `invoice.paid` webhook                                                         |
+| `subscription_cancelled`         | Stripe `customer.subscription.deleted` or `customer.subscription.updated` → cancelled |
+| `subscription_reactivated`       | Available; fire manually via `NotificationJob.perform_later`                          |
+| `subscription_upgraded`          | Available; fire manually via `NotificationJob.perform_later`                          |
+| `subscription_downgraded`        | Available; fire manually via `NotificationJob.perform_later`                          |
+
+#### Booking (fired inline from GraphQL mutations)
+
+| Kind                | Trigger                                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `booking_confirmed` | `CreateBooking` mutation — notifies owners when a client books a spot                                        |
+| `booking_cancelled` | `CancelBooking` mutation — notifies owners when a booking is cancelled                                       |
+| `waitlist_promoted` | Available; `CancelBooking` already fires the client email; in-app owner notification can be added if desired |
+
+#### Class & scheduling
+
+| Kind             | Trigger                                                                                              |
+| ---------------- | ---------------------------------------------------------------------------------------------------- |
+| `class_reminder` | Daily rake task `notifications:class_reminders` — classes starting in the next 24 h with ≥ 1 booking |
+
+#### Client & membership
+
+| Kind                      | Trigger                                                                 |
+| ------------------------- | ----------------------------------------------------------------------- |
+| `new_client_joined`       | `SignUp` mutation — when a client completes account creation            |
+| `membership_expiring`     | Available; add a rake task or callback when a membership is near expiry |
+| `instructor_payout_ready` | Available; fire from the payout calculation flow                        |
+| `studio_milestone`        | Available; fire from any place that tracks business milestones          |
+
+#### General
+
+| Kind      | Trigger                                                                            |
+| --------- | ---------------------------------------------------------------------------------- |
+| `general` | Fire ad-hoc: `Notification.notify_owners(studio:, kind: "general", title:, body:)` |
+
+---
+
+### Firing notifications manually
+
+**In-app only (no email):**
+
+```ruby
+Notification.notify_owners(
+  studio:     studio,
+  kind:       "general",         # any valid kind
+  title:      "Something happened",
+  body:       "Here is more detail.",
+  action_url: "/some/path"       # optional — navigated to on click
+)
+```
+
+`notify_owners` is idempotent — it uses `find_or_create_by!(user, studio, kind, title)` so calling it twice with the same arguments is safe.
+
+**With email (subscription events):**
+
+```ruby
+NotificationJob.perform_later("subscription_payment_failed", studio_subscription.id)
+```
+
+The job creates the in-app notification and sends an email to every owner on the account.
+
+---
+
+### Rake tasks (schedule daily via Heroku Scheduler or cron)
+
+```bash
+# Subscription reminders: trial_ending, trial_expired (also downgrades), past_due reminders
+rails notifications:subscription_reminders
+
+# Class reminders: upcoming classes in the next 24 h with active bookings
+rails notifications:class_reminders
+```
+
+---
+
+### Frontend components
+
+**`NotificationBell`** — drop into any authenticated header. Polls the unread count every 60 s, loads the list lazily when opened, supports mark-read and dismiss per item, and "Mark all read".
+
+**`SubscriptionStatusBanner`** — renders a dismissible banner at the top of the app when the subscription is `past_due`, `cancelled`, or a trial is ending within 3 days.
+
+---
+
 ## More docs
 
 - Backend details: `api/README.md`
-

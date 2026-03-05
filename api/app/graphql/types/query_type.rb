@@ -961,6 +961,24 @@ module Types
                .order(created_at: :desc)
     end
 
+    field :my_notifications, [ Types::NotificationType ], null: false,
+      description: "List the current user's visible (undismissed) notifications, newest first."
+    def my_notifications
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authenticated" unless user
+
+      Notification.where(user_id: user.id).visible.recent
+    end
+
+    field :my_unread_notification_count, Integer, null: false,
+      description: "Count of unread notifications for the current user."
+    def my_unread_notification_count
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authenticated" unless user
+
+      Notification.where(user_id: user.id).unread.undismissed.count
+    end
+
     private
 
     # Management access: owner, staff, or platform staff (godmode + moderator)

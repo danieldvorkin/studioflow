@@ -1,17 +1,18 @@
-import React from 'react'
-import { createRoot } from 'react-dom/client'
-import { ApolloProvider } from '@apollo/client'
-import { GoogleOAuthProvider } from '@react-oauth/google'
-import './index.css'
-import App from './App.jsx'
-import client from './apollo/client'
-import { AuthProvider } from './auth/AuthProvider'
-import { ToastProvider } from './components/ToastProvider'
-import { StudioProvider } from './studio/StudioProvider'
-import { ThemeProvider } from './theme/ThemeProvider'
-import { LocationProvider } from './location/LocationProvider'
+import React from "react";
+import { createRoot } from "react-dom/client";
+import { ApolloProvider } from "@apollo/client";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import "./index.css";
+import App from "./App.jsx";
+import client from "./apollo/client";
+import { AuthProvider } from "./auth/AuthProvider";
+import { ToastProvider } from "./components/ToastProvider";
+import { StudioProvider } from "./studio/StudioProvider";
+import { ThemeProvider } from "./theme/ThemeProvider";
+import { LocationProvider } from "./location/LocationProvider";
+import { CurrencyProvider } from "./currency/CurrencyProvider";
 
-createRoot(document.getElementById('root')).render(
+createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ApolloProvider client={client}>
       <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
@@ -20,7 +21,9 @@ createRoot(document.getElementById('root')).render(
             <StudioProvider>
               <ThemeProvider>
                 <LocationProvider>
-                  <App />
+                  <CurrencyProvider>
+                    <App />
+                  </CurrencyProvider>
                 </LocationProvider>
               </ThemeProvider>
             </StudioProvider>
@@ -29,4 +32,4 @@ createRoot(document.getElementById('root')).render(
       </GoogleOAuthProvider>
     </ApolloProvider>
   </React.StrictMode>,
-)
+);

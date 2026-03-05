@@ -1,0 +1,21 @@
+<h2>Your StudioFlow <%= @tier_label %> has been renewed</h2>
+
+<p>Hi <%= @user.name.presence || @user.email %>,</p>
+
+<p>
+  Great news — your StudioFlow <strong><%= @tier_label %></strong> subscription
+  has been renewed successfully.
+</p>
+
+<% if @period_end %>
+<p>
+  Your next renewal date is <strong><%= @period_end.strftime('%B %-d, %Y') %></strong>.
+</p>
+<% end %>
+
+<p>Thank you for being a StudioFlow customer!</p>
+
+<p>
+  Thanks,<br>
+  The StudioFlow Team
+</p>

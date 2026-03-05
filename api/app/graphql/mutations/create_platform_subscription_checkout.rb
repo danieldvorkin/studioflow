@@ -3,20 +3,34 @@
 module Mutations
   class CreatePlatformSubscriptionCheckout < BaseMutation
     argument :tier, String, required: true
+    argument :currency, String, required: false, default_value: "cad"
+    argument :billing_interval, String, required: false, default_value: "month"
 
     field :checkout_url, String, null: true
     field :errors, [ String ], null: false
 
     TIER_PRICE_ENV = {
-      "starter" => nil,                            # free — no Stripe price needed
-      "pro"     => "PLATFORM_STRIPE_PRICE_PRO",
-      "studio"  => "PLATFORM_STRIPE_PRICE_STUDIO",
-      # Legacy keys kept for existing production subscriptions
-      "basic"   => "PLATFORM_STRIPE_PRICE_BASIC",
-      "premium" => "PLATFORM_STRIPE_PRICE_PREMIUM"
+      [ "pro",    "cad", "month" ] => "PLATFORM_STRIPE_PRICE_PRO_CAD",
+      [ "pro",    "cad", "year"  ] => "PLATFORM_STRIPE_PRICE_PRO_YEARLY_CAD",
+      [ "pro",    "usd", "month" ] => "PLATFORM_STRIPE_PRICE_PRO",
+      [ "pro",    "usd", "year"  ] => "PLATFORM_STRIPE_PRICE_PRO_YEARLY",
+      [ "studio", "cad", "month" ] => "PLATFORM_STRIPE_PRICE_STUDIO_CAD",
+      [ "studio", "cad", "year"  ] => "PLATFORM_STRIPE_PRICE_STUDIO_YEARLY_CAD",
+      [ "studio", "usd", "month" ] => "PLATFORM_STRIPE_PRICE_STUDIO",
+      [ "studio", "usd", "year"  ] => "PLATFORM_STRIPE_PRICE_STUDIO_YEARLY",
+      # Legacy keys
+      [ "basic",   "usd", "month" ] => "PLATFORM_STRIPE_PRICE_BASIC",
+      [ "premium", "usd", "month" ] => "PLATFORM_STRIPE_PRICE_PREMIUM",
+      [ "basic",   "cad", "month" ] => "PLATFORM_STRIPE_PRICE_PRO_CAD",
+      [ "premium", "cad", "month" ] => "PLATFORM_STRIPE_PRICE_STUDIO_CAD"
     }.freeze
 
-    def resolve(tier:)
+    def resolve(tier:, currency: "cad", billing_interval: "month")
+      currency = currency.to_s.downcase
+      currency = "cad" unless %w[cad usd].include?(currency)
+      billing_interval = billing_interval.to_s.downcase
+      billing_interval = "month" unless %w[month year].include?(billing_interval)
+
       user = context[:current_user]
       return { checkout_url: nil, errors: [ "Not authenticated" ] } unless user
       return { checkout_url: nil, errors: [ "Not authorized" ] } unless user.owner? && !user.godmode?
@@ -49,9 +63,9 @@ module Mutations
       platform_key = ENV["PLATFORM_STRIPE_SECRET_KEY"].presence
       return { checkout_url: nil, errors: [ "Platform Stripe is not configured" ] } unless platform_key
 
-      price_env_key = TIER_PRICE_ENV[tier]
+      price_env_key = TIER_PRICE_ENV[[ tier, currency, billing_interval ]]
       price_id = price_env_key && ENV[price_env_key].presence
-      return { checkout_url: nil, errors: [ "Stripe price for #{tier} tier is not configured" ] } unless price_id
+      return { checkout_url: nil, errors: [ "Stripe price for #{tier} tier (#{currency.upcase} #{billing_interval}ly) is not configured" ] } unless price_id
 
       Stripe.api_key = platform_key
 

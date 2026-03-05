@@ -104,6 +104,19 @@ vi.mock("../../studio/StudioProvider", () => ({
   StudioProvider: ({ children }) => children,
 }));
 
+vi.mock("../../currency/CurrencyProvider", () => ({
+  useCurrency: (() => {
+    const ctx = {
+      currency: "cad",
+      setCurrency: vi.fn(),
+      isCAD: true,
+      priceDisplay: (cad) => ({ symbol: "$", amount: cad, label: "CAD" }),
+    };
+    return () => ctx;
+  })(),
+  CurrencyProvider: ({ children }) => children,
+}));
+
 vi.mock("@react-oauth/google", () => ({
   GoogleOAuthProvider: ({ children }) => children,
   useGoogleLogin: (opts) => () => opts?.onSuccess?.({ access_token: "tok" }),

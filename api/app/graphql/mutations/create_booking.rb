@@ -52,6 +52,19 @@ module Mutations
       if booking.save
         # Enqueue notification job for booking confirmation or waitlist
         NotificationJob.perform_now(:booking_confirmation, booking.id)
+
+        # Notify studio owners about the new booking
+        if status == "booked"
+          time_str = cs.start_time.strftime("%a %-d %b at %-I:%M %p")
+          Notification.notify_owners(
+            studio:     cs.studio,
+            kind:       "booking_confirmed",
+            title:      "New booking – #{cs.class_template&.title || "Class"}",
+            body:       "#{client.name} booked #{cs.class_template&.title || "a class"} on #{time_str}.",
+            action_url: "/schedule/#{cs.id}"
+          )
+        end
+
         { booking: booking, errors: [] }
       else
         { booking: nil, errors: booking.errors.full_messages }

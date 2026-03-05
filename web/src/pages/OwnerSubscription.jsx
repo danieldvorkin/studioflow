@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation } from "@apollo/client";
 import { useAuth } from "../auth/AuthProvider";
+import { useCurrency } from "../currency/CurrencyProvider";
 import { MY_STUDIO_SUBSCRIPTION } from "../apollo/queries";
 import {
   CREATE_PLATFORM_SUBSCRIPTION_CHECKOUT,
@@ -37,8 +38,8 @@ const TIERS = [
   {
     id: "starter",
     name: "Starter",
-    price: 0,
-    currency: "USD",
+    priceCad: 0,
+    priceUsd: 0,
     description: "Perfect for solo instructors just getting started.",
     features: [
       { label: "Up to 30 bookings/month", included: true },
@@ -54,8 +55,8 @@ const TIERS = [
   {
     id: "pro",
     name: "Pro",
-    price: 59,
-    currency: "USD",
+    priceCad: 79,
+    priceUsd: 59,
     description: "For growing studios with multiple instructors.",
     features: [
       { label: "Unlimited bookings", included: true },
@@ -72,8 +73,8 @@ const TIERS = [
   {
     id: "studio",
     name: "Studio",
-    price: 129,
-    currency: "USD",
+    priceCad: 175,
+    priceUsd: 129,
     description: "For established studios that need everything.",
     features: [
       { label: "Unlimited bookings", included: true },
@@ -94,8 +95,14 @@ function CurrentPlanBanner({
   onManageBilling,
   portalLoading,
   portalError,
+  priceDisplay,
 }) {
   const tierInfo = TIERS.find((t) => t.id === sub.tier) || TIERS[1];
+  const {
+    symbol,
+    amount,
+    label: currencyLabel,
+  } = priceDisplay(tierInfo.priceCad, tierInfo.priceUsd);
   const statusLabel = sub.status.replace("_", " ");
   const statusColor = STATUS_COLORS[sub.status] || STATUS_COLORS.active;
 
@@ -128,10 +135,13 @@ function CurrentPlanBanner({
           </span>
           <div className="text-right">
             <span className="text-2xl font-bold text-white">
-              {tierInfo.price === 0 ? "Free" : `$${tierInfo.price}`}
+              {amount === 0 ? "Free" : `${symbol}${amount}`}
             </span>
-            {tierInfo.price > 0 && (
-              <span className="text-sm text-slate-400"> USD / month</span>
+            {amount > 0 && (
+              <span className="text-sm text-slate-400">
+                {" "}
+                {currencyLabel} / month
+              </span>
             )}
           </div>
         </div>
@@ -271,7 +281,19 @@ function CurrentPlanBanner({
   );
 }
 
-function TierCard({ tier, isCurrent, isActive, onSubscribe, loading }) {
+function TierCard({
+  tier,
+  isCurrent,
+  isActive,
+  onSubscribe,
+  loading,
+  priceDisplay,
+}) {
+  const {
+    symbol,
+    amount,
+    label: currencyLabel,
+  } = priceDisplay(tier.priceCad, tier.priceUsd);
   return (
     <div
       className={`relative rounded-xl border p-5 transition ${
@@ -285,7 +307,7 @@ function TierCard({ tier, isCurrent, isActive, onSubscribe, loading }) {
           Current
         </span>
       )}
-      {tier.id === "pro" && !(isCurrent && isActive) && (
+      {tier.id === "studio" && !(isCurrent && isActive) && (
         <span className="absolute right-4 top-4 rounded-full bg-purple-700 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white">
           Best value
         </span>
@@ -294,10 +316,13 @@ function TierCard({ tier, isCurrent, isActive, onSubscribe, loading }) {
       <p className="mt-0.5 text-xs text-slate-400">{tier.description}</p>
       <div className="mt-3 mb-4">
         <span className="text-3xl font-bold text-white">
-          {tier.price === 0 ? "Free" : `$${tier.price}`}
+          {amount === 0 ? "Free" : `${symbol}${amount}`}
         </span>
-        {tier.price > 0 && (
-          <span className="text-sm text-slate-400"> USD / month</span>
+        {amount > 0 && (
+          <span className="text-sm text-slate-400">
+            {" "}
+            {currencyLabel} / month
+          </span>
         )}
       </div>
       <ul className="space-y-2">
@@ -341,7 +366,7 @@ function TierCard({ tier, isCurrent, isActive, onSubscribe, loading }) {
             ) : tier.price === 0 ? (
               "Switch to Free (Starter)"
             ) : (
-              `Subscribe to ${tier.name} — $${tier.price}/mo`
+              `Subscribe to ${tier.name} — ${symbol}${amount}/mo`
             )}
           </button>
         )}
@@ -353,6 +378,7 @@ function TierCard({ tier, isCurrent, isActive, onSubscribe, loading }) {
 export default function OwnerSubscription() {
   const auth = useAuth();
   const user = auth.user;
+  const { currency, priceDisplay } = useCurrency();
   const [searchParams, setSearchParams] = useSearchParams();
   const [checkoutError, setCheckoutError] = useState(null);
   const [loadingTier, setLoadingTier] = useState(null);
@@ -425,7 +451,9 @@ export default function OwnerSubscription() {
     setCheckoutError(null);
     setLoadingTier(tier);
     try {
-      const { data: result } = await createCheckout({ variables: { tier } });
+      const { data: result } = await createCheckout({
+        variables: { tier, currency, billingInterval: "month" },
+      });
       const errs = result?.createPlatformSubscriptionCheckout?.errors || [];
       const url = result?.createPlatformSubscriptionCheckout?.checkoutUrl;
       if (errs.length > 0) {
@@ -488,6 +516,7 @@ export default function OwnerSubscription() {
           onManageBilling={handleManageBilling}
           portalLoading={portalLoading}
           portalError={portalError}
+          priceDisplay={priceDisplay}
         />
       ) : (
         <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900 px-5 py-6 text-center">
@@ -514,6 +543,7 @@ export default function OwnerSubscription() {
               isActive={isSubActive}
               onSubscribe={handleSubscribe}
               loading={loadingTier}
+              priceDisplay={priceDisplay}
             />
           ))}
         </div>

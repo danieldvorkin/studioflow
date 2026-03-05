@@ -84,6 +84,19 @@ vi.mock("../location/LocationProvider", () => ({
   LocationProvider: ({ children }) => children,
 }));
 
+vi.mock("../currency/CurrencyProvider", () => ({
+  useCurrency: (() => {
+    const ctx = {
+      currency: "cad",
+      setCurrency: vi.fn(),
+      isCAD: true,
+      priceDisplay: (cad) => ({ symbol: "$", amount: cad, label: "CAD" }),
+    };
+    return () => ctx;
+  })(),
+  CurrencyProvider: ({ children }) => children,
+}));
+
 vi.mock("../components/ToastProvider", () => ({
   useToast: (() => {
     const toast = { addToast: vi.fn() };

@@ -45,8 +45,8 @@ RSpec.describe "Studio subscriptions GraphQL", type: :request do
       subs = json.dig("data", "studioSubscriptions")
       prices = subs.map { |s| [ s["tier"], s["priceCad"] ] }.to_h
 
-      expect(prices["basic"]).to eq((59 * 1.35).round)
-      expect(prices["premium"]).to eq((129 * 1.35).round)
+      expect(prices["basic"]).to eq(79)
+      expect(prices["premium"]).to eq(175)
     end
 
     it "raises not authorized for a regular owner" do
@@ -87,7 +87,7 @@ RSpec.describe "Studio subscriptions GraphQL", type: :request do
       expect(json["errors"]).to be_nil
       expect(data["id"]).to eq(sub.id.to_s)
       expect(data["tier"]).to eq("premium")
-      expect(data["priceCad"]).to eq((129 * 1.35).round)
+      expect(data["priceCad"]).to eq(175)
       expect(data["active"]).to eq(true)
     end
 
@@ -258,6 +258,10 @@ RSpec.describe "Studio subscriptions GraphQL", type: :request do
         "PLATFORM_STRIPE_PRICE_PREMIUM" => "price_premium_test",
         "PLATFORM_STRIPE_PRICE_PRO" => "price_pro_test",
         "PLATFORM_STRIPE_PRICE_STUDIO" => "price_studio_test",
+        "PLATFORM_STRIPE_PRICE_PRO_CAD" => "price_pro_cad_test",
+        "PLATFORM_STRIPE_PRICE_PRO_YEARLY_CAD" => "price_pro_yearly_cad_test",
+        "PLATFORM_STRIPE_PRICE_STUDIO_CAD" => "price_studio_cad_test",
+        "PLATFORM_STRIPE_PRICE_STUDIO_YEARLY_CAD" => "price_studio_yearly_cad_test",
         "WEB_APP_URL" => "http://localhost:5173"
       ))
     end
@@ -334,7 +338,7 @@ RSpec.describe "Studio subscriptions GraphQL", type: :request do
     it "returns error when price env var is missing" do
       stub_const("ENV", ENV.to_h.merge(
         "PLATFORM_STRIPE_SECRET_KEY" => "sk_test_platform"
-      ).except("PLATFORM_STRIPE_PRICE_BASIC"))
+      ).except("PLATFORM_STRIPE_PRICE_PRO_CAD", "PLATFORM_STRIPE_PRICE_BASIC", "PLATFORM_STRIPE_PRICE_PRO"))
 
       sign_in(owner_a)
       json = graphql_post(query: mutation, variables: { tier: "basic" })
@@ -369,7 +373,7 @@ RSpec.describe "Studio subscriptions GraphQL", type: :request do
       expect(payload["errors"]).to eq([])
       expect(payload["checkoutUrl"]).to eq("https://checkout.stripe.com/pro_session")
       expect(Stripe::Checkout::Session).to have_received(:create).with(
-        hash_including(line_items: [ { price: "price_pro_test", quantity: 1 } ])
+        hash_including(line_items: [ { price: "price_pro_cad_test", quantity: 1 } ])
       )
     end
 
@@ -387,7 +391,7 @@ RSpec.describe "Studio subscriptions GraphQL", type: :request do
       expect(payload["errors"]).to eq([])
       expect(payload["checkoutUrl"]).to eq("https://checkout.stripe.com/studio_session")
       expect(Stripe::Checkout::Session).to have_received(:create).with(
-        hash_including(line_items: [ { price: "price_studio_test", quantity: 1 } ])
+        hash_including(line_items: [ { price: "price_studio_cad_test", quantity: 1 } ])
       )
     end
 
@@ -459,7 +463,7 @@ RSpec.describe "Studio subscriptions GraphQL", type: :request do
       stub_const("ENV", ENV.to_h.merge(
         "PLATFORM_STRIPE_SECRET_KEY" => "sk_test_platform",
         "WEB_APP_URL" => "http://localhost:5173"
-      ).except("PLATFORM_STRIPE_PRICE_PRO"))
+      ).except("PLATFORM_STRIPE_PRICE_PRO", "PLATFORM_STRIPE_PRICE_PRO_CAD", "PLATFORM_STRIPE_PRICE_PRO_YEARLY_CAD"))
 
       sign_in(owner_a)
       json = graphql_post(query: mutation, variables: { tier: "pro" })

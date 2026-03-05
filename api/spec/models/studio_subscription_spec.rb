@@ -30,20 +30,20 @@ RSpec.describe StudioSubscription, type: :model do
   end
 
   describe "constants" do
-    it "has basic and premium tiers" do
-      expect(described_class::TIERS).to contain_exactly("basic", "premium")
+    it "has all expected tiers" do
+      expect(described_class::TIERS).to contain_exactly("starter", "pro", "studio", "basic", "premium")
     end
 
     it "has all expected statuses" do
       expect(described_class::STATUSES).to include("trialing", "active", "past_due", "cancelled", "suspended")
     end
 
-    it "prices basic at 150 CAD" do
-      expect(described_class::TIER_PRICES.dig("basic", :price_cad)).to eq(150)
+    it "has a USD monthly price for basic" do
+      expect(described_class::TIER_PRICES.dig("basic", :price_usd_monthly)).to eq(59)
     end
 
-    it "prices premium at 300 CAD" do
-      expect(described_class::TIER_PRICES.dig("premium", :price_cad)).to eq(300)
+    it "has a USD monthly price for premium" do
+      expect(described_class::TIER_PRICES.dig("premium", :price_usd_monthly)).to eq(129)
     end
   end
 
@@ -74,12 +74,12 @@ RSpec.describe StudioSubscription, type: :model do
   end
 
   describe "#price_cad" do
-    it "returns 150 for basic" do
-      expect(build(:studio_subscription, :basic).price_cad).to eq(150)
+    it "returns the CAD price for basic" do
+      expect(build(:studio_subscription, :basic).price_cad).to eq(79)
     end
 
-    it "returns 300 for premium" do
-      expect(build(:studio_subscription, :premium).price_cad).to eq(300)
+    it "returns the CAD price for premium" do
+      expect(build(:studio_subscription, :premium).price_cad).to eq(175)
     end
   end
 

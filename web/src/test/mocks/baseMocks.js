@@ -1,59 +1,64 @@
-import React from 'react'
-import { vi } from 'vitest'
+import React from "react";
+import { vi } from "vitest";
 
 const authState = {
   user: null,
   loading: false,
   isImpersonating: false,
   impersonator: null,
-}
+};
 
 const locationState = {
   locations: [],
   locationId: null,
   setLocationId: vi.fn(),
-}
+};
 
 const toastState = {
   addToast: vi.fn(),
-}
+};
 
-export function setMockAuth({ user = null, loading = false, isImpersonating = false, impersonator = null } = {}) {
-  authState.user = user
-  authState.loading = loading
-  authState.isImpersonating = isImpersonating
-  authState.impersonator = impersonator
+export function setMockAuth({
+  user = null,
+  loading = false,
+  isImpersonating = false,
+  impersonator = null,
+} = {}) {
+  authState.user = user;
+  authState.loading = loading;
+  authState.isImpersonating = isImpersonating;
+  authState.impersonator = impersonator;
 }
 
 export function setMockLocationContext(next = {}) {
-  Object.assign(locationState, next)
+  Object.assign(locationState, next);
 }
 
 export function getMockAddToast() {
-  return toastState.addToast
+  return toastState.addToast;
 }
 
-vi.mock('../../components/ToastProvider', () => ({
+vi.mock("../../components/ToastProvider", () => ({
   useToast: () => ({ addToast: toastState.addToast }),
   ToastProvider: ({ children }) => children,
-}))
+}));
 
-vi.mock('../../location/LocationProvider', () => ({
+vi.mock("../../location/LocationProvider", () => ({
   useLocationContext: () => locationState,
   LocationProvider: ({ children }) => children,
-}))
+}));
 
-vi.mock('../../theme/ThemeProvider', () => ({
+vi.mock("../../theme/ThemeProvider", () => ({
   useTheme: () => ({
-    theme: 'dark',
+    theme: "dark",
     toggleTheme: vi.fn(),
     applyTheme: vi.fn(),
     clearThemeOverride: vi.fn(),
   }),
   ThemeProvider: ({ children }) => children,
-}))
+}));
 
-vi.mock('../../auth/AuthProvider', () => ({
+vi.mock("../../auth/AuthProvider", () => ({
   useAuth: () => ({
     user: authState.user,
     loading: authState.loading,
@@ -66,27 +71,43 @@ vi.mock('../../auth/AuthProvider', () => ({
     impersonator: authState.impersonator,
   }),
   AuthProvider: ({ children }) => children,
-}))
+}));
 
-vi.mock('@stripe/react-stripe-js', () => ({
+vi.mock("../../currency/CurrencyProvider", () => ({
+  useCurrency: () => ({
+    currency: "cad",
+    setCurrency: vi.fn(),
+    isCAD: true,
+    priceDisplay: (cadAmount, usdAmount) => ({
+      symbol: "$",
+      amount: cadAmount,
+      label: "CAD",
+    }),
+  }),
+  CurrencyProvider: ({ children }) => children,
+}));
+
+vi.mock("@stripe/react-stripe-js", () => ({
   Elements: ({ children }) => children,
-  CardElement: () => React.createElement('div', { 'data-testid': 'card-element' }),
+  CardElement: () =>
+    React.createElement("div", { "data-testid": "card-element" }),
   useStripe: () => ({
     createPaymentMethod: vi.fn().mockResolvedValue({
-      paymentMethod: { id: 'pm_test_new' },
+      paymentMethod: { id: "pm_test_new" },
       error: null,
     }),
   }),
   useElements: () => ({
     getElement: () => ({}),
   }),
-}))
+}));
 
-vi.mock('@stripe/stripe-js', () => ({
+vi.mock("@stripe/stripe-js", () => ({
   loadStripe: () => ({}),
-}))
+}));
 
-vi.mock('@react-oauth/google', () => ({
+vi.mock("@react-oauth/google", () => ({
   GoogleOAuthProvider: ({ children }) => children,
-  useGoogleLogin: (opts) => () => opts?.onSuccess?.({ access_token: 'test-access-token' }),
-}))
+  useGoogleLogin: (opts) => () =>
+    opts?.onSuccess?.({ access_token: "test-access-token" }),
+}));

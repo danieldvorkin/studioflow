@@ -29,6 +29,7 @@ import LocationsPage from "./pages/Locations";
 import BookingsPage from "./pages/Bookings";
 import BookingShow from "./pages/BookingShow";
 import ClientsPage from "./pages/Clients";
+import ClientProfile from "./pages/ClientProfile";
 import InstructorPayoutsPage from "./pages/InstructorPayouts";
 import StudioShowPage from "./pages/StudioShowPage";
 import Favorites from "./pages/Favorites";
@@ -42,6 +43,8 @@ import GodmodeSubscriptions from "./pages/GodmodeSubscriptions";
 import GodmodeStudio from "./pages/GodmodeStudio";
 import GodmodeStudios from "./pages/GodmodeStudios";
 import MyMembershipsPage from "./pages/MyMemberships";
+import OwnerMembershipsPage from "./pages/OwnerMemberships";
+import BundlesPage from "./pages/Bundles";
 import ShopPage from "./pages/Shop";
 import OwnerShopPage from "./pages/OwnerShop";
 import MyOrdersPage from "./pages/MyOrders";
@@ -55,9 +58,12 @@ import OwnerSubscription from "./pages/OwnerSubscription";
 const Dashboard = lazy(() => import("./pages/dashboard"));
 const Profile = lazy(() => import("./pages/profile"));
 import { useTheme } from "./theme/ThemeProvider";
+import { useCurrency } from "./currency/CurrencyProvider";
 import { useLocationContext } from "./location/LocationProvider";
 import { STUDIO_SETTINGS } from "./apollo/queries";
 import { useStudio } from "./studio/StudioProvider";
+import NotificationBell from "./components/NotificationBell";
+import SubscriptionStatusBanner from "./components/SubscriptionStatusBanner";
 
 function NavItem({
   to,
@@ -133,6 +139,7 @@ function AppShell() {
   const mobileNavOpenRef = useRef(mobileNavOpen);
   const routerLocation = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const { currency, setCurrency } = useCurrency();
 
   const { locations, locationId, setLocationId } = useLocationContext();
 
@@ -216,7 +223,7 @@ function AppShell() {
                 Classes
               </NavItem>
             )}
-            <NavItem to="/shop">Shop</NavItem>
+            {!isOwner && <NavItem to="/shop">Shop</NavItem>}
             <NavItem to="/my-orders">My orders</NavItem>
           </NavFolder>
 
@@ -226,6 +233,8 @@ function AppShell() {
               <NavItem to="/owner/instructor-payouts">
                 Instructor payouts
               </NavItem>
+              <NavItem to="/owner/memberships">Memberships</NavItem>
+              <NavItem to="/owner/bundles">Bundles</NavItem>
               <NavItem to="/owner/shop">Shop</NavItem>
               <NavItem to="/owner/subscription">Subscription</NavItem>
               <NavItem to="/locations">Locations</NavItem>
@@ -403,6 +412,20 @@ function AppShell() {
                       Instructor payouts
                     </NavItem>
                     <NavItem
+                      to="/owner/memberships"
+                      variant="mobile"
+                      onNavigate={() => setMobileNavOpen(false)}
+                    >
+                      Memberships
+                    </NavItem>
+                    <NavItem
+                      to="/owner/bundles"
+                      variant="mobile"
+                      onNavigate={() => setMobileNavOpen(false)}
+                    >
+                      Bundles
+                    </NavItem>
+                    <NavItem
                       to="/owner/subscription"
                       variant="mobile"
                       onNavigate={() => setMobileNavOpen(false)}
@@ -533,6 +556,32 @@ function AppShell() {
                 </select>
               </div>
             )}
+            <div className="hidden sm:flex items-center rounded-full border border-slate-700 bg-slate-900 text-[11px] font-semibold overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setCurrency("cad")}
+                className={`px-2.5 py-1 transition ${
+                  currency === "cad"
+                    ? "bg-sky-600 text-white"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+                aria-label="Switch to CAD"
+              >
+                CAD
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrency("usd")}
+                className={`px-2.5 py-1 transition ${
+                  currency === "usd"
+                    ? "bg-sky-600 text-white"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+                aria-label="Switch to USD"
+              >
+                USD
+              </button>
+            </div>
             <button
               type="button"
               onClick={toggleTheme}
@@ -541,6 +590,7 @@ function AppShell() {
             >
               {theme === "dark" ? "☀︎" : "☾"}
             </button>
+            {(isOwner || isGodmode || isModerator) && <NotificationBell />}
             {user ? (
               <>
                 <div className="flex items-center gap-2">
@@ -604,6 +654,7 @@ function AppShell() {
             </button>
           </div>
         )}
+        {(isOwner || isGodmode || isModerator) && <SubscriptionStatusBanner />}
         <div className="flex-1 min-h-0 overflow-y-auto px-4 py-6 md:px-8">
           <Outlet />
         </div>
@@ -686,6 +737,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <InstructorPayoutsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/owner/memberships"
+            element={
+              <ProtectedRoute>
+                <OwnerMembershipsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/owner/bundles"
+            element={
+              <ProtectedRoute>
+                <BundlesPage />
               </ProtectedRoute>
             }
           />
@@ -817,6 +884,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ClientsRouteGate />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/clients/:id"
+            element={
+              <ProtectedRoute>
+                <ClientProfile />
               </ProtectedRoute>
             }
           />

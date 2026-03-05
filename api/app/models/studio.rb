@@ -10,6 +10,7 @@ class Studio < ApplicationRecord
   has_many :instructor_payouts, dependent: :destroy
   has_one :studio_subscription, dependent: :destroy
   has_many :client_invitations, dependent: :destroy
+  has_many :notifications, dependent: :destroy
 
   validates :name, presence: true
 
