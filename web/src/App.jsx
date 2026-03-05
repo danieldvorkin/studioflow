@@ -14,6 +14,8 @@ import "./App.css";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import SignUpPortal from "./pages/SignUpPortal";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Landing from "./pages/Landing";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import RoleGate from "./auth/RoleGate";
@@ -564,6 +566,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/signin" element={<SignIn />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/signup" element={<SignUp />} />
         <Route
           path="/signup/owner"

@@ -1,0 +1,17 @@
+Welcome to StudioFlow — your studio is ready!
+
+Hi <%= @user.name.presence || @user.email %>,
+
+Your StudioFlow account has been created and your studio "<%= @studio.name %>" is live.
+
+Here's what you can do right now:
+- Add class templates and locations
+- Schedule sessions and manage your calendar
+- Invite clients to join your studio
+- Set up payments and memberships
+
+Log in to get started: <%= @login_url %>
+
+If you have any questions, reply to this email and we'll be happy to help.
+
+— The StudioFlow Team
