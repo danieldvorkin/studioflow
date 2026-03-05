@@ -32,6 +32,7 @@ import StudioShowPage from "./pages/StudioShowPage";
 import Favorites from "./pages/Favorites";
 import ClassDetail from "./pages/ClassDetail";
 import PublicClassDetail from "./pages/PublicClassDetail";
+import SessionManage from "./pages/SessionManage";
 import { PageSpinner } from "./components/Spinner";
 
 const Dashboard = lazy(() => import("./pages/dashboard"));
@@ -639,6 +640,14 @@ function App() {
             }
           />
           <Route path="/templates/:id/sessions" element={<Sessions />} />
+          <Route
+            path="/sessions/:id/manage"
+            element={
+              <ProtectedRoute>
+                <SessionManage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/classes/:templateId"
             element={

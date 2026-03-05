@@ -339,6 +339,15 @@ export const CONFIRM_BOOKING_CHECKOUT_PAYMENT = gql`
   }
 `;
 
+export const MARK_NO_SHOW_BOOKING = gql`
+  mutation MarkNoShowBooking($id: ID!) {
+    markNoShowBooking(input: { id: $id }) {
+      success
+      errors
+    }
+  }
+`;
+
 export const SEND_BOOKING_PAYMENT_REMINDER = gql`
   mutation SendBookingPaymentReminder($bookingId: ID!) {
     sendBookingPaymentReminder(input: { bookingId: $bookingId }) {

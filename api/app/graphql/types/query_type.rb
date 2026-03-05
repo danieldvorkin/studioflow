@@ -343,8 +343,9 @@ module Types
     description: "Bookings visible to the current user based on role" do
     argument :studio_location_id, ID, required: false
     argument :studio_id, ID, required: false
+    argument :class_session_id, ID, required: false
   end
-    def bookings(studio_location_id: nil, studio_id: nil)
+    def bookings(studio_location_id: nil, studio_id: nil, class_session_id: nil)
     user = context[:current_user]
     raise GraphQL::ExecutionError, "Not authorized" unless user
 
@@ -369,6 +370,10 @@ module Types
     if studio_location_id
       scope = scope.joins(class_session: :class_template)
           .where(class_templates: { studio_location_id: [ studio_location_id, nil ] })
+    end
+
+    if class_session_id
+      scope = scope.where(class_session_id: class_session_id)
     end
 
     scope.includes(:client, :class_session, :payment).order(created_at: :desc)

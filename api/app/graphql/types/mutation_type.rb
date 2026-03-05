@@ -13,6 +13,7 @@ module Types
     field :create_booking, mutation: Mutations::CreateBooking, null: true
     field :cancel_booking, mutation: Mutations::CancelBooking, null: true
     field :archive_booking, mutation: Mutations::ArchiveBooking, null: true
+    field :mark_no_show_booking, mutation: Mutations::MarkNoShowBooking, null: true
     field :rebook_booking, mutation: Mutations::RebookBooking, null: true
     field :rebook_booking_with_payment, mutation: Mutations::RebookBookingWithPayment, null: true
     field :create_client, mutation: Mutations::CreateClient, null: true

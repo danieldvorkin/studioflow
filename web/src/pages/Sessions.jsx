@@ -13,7 +13,13 @@ import {
 } from "../apollo/mutations";
 import { useToast } from "../components/ToastProvider";
 import { useAuth } from "../auth/AuthProvider";
-import { canDeleteSessions, canEditSession } from "../auth/permissions";
+import {
+  canDeleteSessions,
+  canEditSession,
+  isOwner,
+  isStaff,
+  isGodmode,
+} from "../auth/permissions";
 import { useStudio } from "../studio/StudioProvider";
 
 export default function Sessions() {
@@ -21,6 +27,7 @@ export default function Sessions() {
   const { user } = useAuth();
   const roleName = (user?.roleName || "").toString().toLowerCase();
   const isClientUser = roleName === "client";
+  const canManageSession = isGodmode(user) || isOwner(user) || isStaff(user);
   const { selectedStudioId } = useStudio();
   const canFavorite = isClientUser && !!selectedStudioId;
 
@@ -153,6 +160,14 @@ export default function Sessions() {
                 </div>
               </div>
               <div className="flex items-center gap-2 text-xs">
+                {canManageSession && (
+                  <Link
+                    to={`/sessions/${s.id}/manage`}
+                    className="inline-flex items-center rounded-full border border-slate-600 px-3 py-1 text-[11px] font-semibold text-slate-200 hover:bg-slate-800"
+                  >
+                    Manage
+                  </Link>
+                )}
                 {canFavorite && (
                   <button
                     type="button"
