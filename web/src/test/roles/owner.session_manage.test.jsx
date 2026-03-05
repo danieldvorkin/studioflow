@@ -232,6 +232,7 @@ describe('SessionManage — owner/staff session detail panel', () => {
 
     expect(screen.queryByRole('button', { name: 'Send reminder' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'No-Show' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
   })
 })
 
