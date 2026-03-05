@@ -12,16 +12,16 @@ RSpec.describe "Bundle bookings", type: :request do
     create(:class_template,
       instructor: instructor,
       price_cents: 3_000,
-      currency: "cad",
-      bundle_enabled: true,
-      bundle_spots: 6
+      currency: "cad"
     )
   end
   let(:session) do
     create(:class_session,
       class_template: template,
       instructor: instructor,
-      start_time: 3.days.from_now.change(sec: 0)
+      start_time: 3.days.from_now.change(sec: 0),
+      bundle_enabled: true,
+      bundle_spots: 6
     )
   end
 
@@ -201,7 +201,7 @@ RSpec.describe "Bundle bookings", type: :request do
     end
 
     it "rejects when instructor has blocked the client" do
-      create(:instructor_client_block, instructor_id: instructor.id, client_id: client.id)
+      create(:instructor_client_block, instructor: instructor, client: client, studio: studio)
       sign_in(staff)
 
       json    = graphql_post(

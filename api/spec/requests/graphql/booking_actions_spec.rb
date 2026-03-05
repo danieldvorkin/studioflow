@@ -216,7 +216,7 @@ RSpec.describe "Booking actions", type: :request do
 
     it "blocks rebook when instructor has blocked the client" do
       booking = create(:booking, client: client, class_session: session, status: "cancelled")
-      create(:instructor_client_block, instructor_id: instructor.id, client_id: client.id)
+      create(:instructor_client_block, instructor: instructor, client: client, studio: studio)
       sign_in(staff)
 
       json    = graphql_post(query: mutation, variables: { id: booking.id.to_s })
