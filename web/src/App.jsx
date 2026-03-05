@@ -51,6 +51,7 @@ import ForClients from "./pages/ForClients";
 import Contact from "./pages/Contact";
 import Team from "./pages/Team";
 import Pricing from "./pages/Pricing";
+import OwnerSubscription from "./pages/OwnerSubscription";
 const Dashboard = lazy(() => import("./pages/dashboard"));
 const Profile = lazy(() => import("./pages/profile"));
 import { useTheme } from "./theme/ThemeProvider";
@@ -226,6 +227,7 @@ function AppShell() {
                 Instructor payouts
               </NavItem>
               <NavItem to="/owner/shop">Shop</NavItem>
+              <NavItem to="/owner/subscription">Subscription</NavItem>
               <NavItem to="/locations">Locations</NavItem>
             </NavFolder>
           )}
@@ -399,6 +401,13 @@ function AppShell() {
                       onNavigate={() => setMobileNavOpen(false)}
                     >
                       Instructor payouts
+                    </NavItem>
+                    <NavItem
+                      to="/owner/subscription"
+                      variant="mobile"
+                      onNavigate={() => setMobileNavOpen(false)}
+                    >
+                      Subscription
                     </NavItem>
                     <NavItem
                       to="/locations"
@@ -677,6 +686,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <InstructorPayoutsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/owner/subscription"
+            element={
+              <ProtectedRoute>
+                <OwnerSubscription />
               </ProtectedRoute>
             }
           />
