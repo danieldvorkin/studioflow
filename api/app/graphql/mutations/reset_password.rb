@@ -6,6 +6,8 @@ module Mutations
     argument :password, String, required: true
 
     field :success, Boolean, null: false
+    field :token,   String,  null: true
+    field :user,    Types::UserType, null: true
     field :errors,  [ String ], null: false
 
     def resolve(token:, password:)
@@ -16,9 +18,10 @@ module Mutations
       )
 
       if user.errors.empty?
-        { success: true, errors: [] }
+        jwt = Warden::JWTAuth::UserEncoder.new.call(user, :user, nil).first
+        { success: true, token: jwt, user: user, errors: [] }
       else
-        { success: false, errors: user.errors.full_messages }
+        { success: false, token: nil, user: nil, errors: user.errors.full_messages }
       end
     end
   end

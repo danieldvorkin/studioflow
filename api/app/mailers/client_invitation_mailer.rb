@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class ClientInvitationMailer < ApplicationMailer
-  default from: "no-reply@studioflow.app"
-
   def invite
     @invitation  = params[:invitation]
     @studio      = @invitation.studio

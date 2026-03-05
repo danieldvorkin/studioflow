@@ -17,4 +17,15 @@ class UserMailer < ApplicationMailer
 
     mail(to: @user.email, subject: "Reset your StudioFlow password")
   end
+
+  # Sent when a studio owner/staff invites an instructor or staff member.
+  def invite
+    @user       = params[:user]
+    @studio     = params[:studio]
+    @invited_by = params[:invited_by]
+    @reset_url  = params[:reset_url]
+
+    role_label = User::ROLES.key(@user.role)&.to_s&.capitalize || "team member"
+    mail(to: @user.email, subject: "You've been invited to join #{@studio.name} on StudioFlow")
+  end
 end

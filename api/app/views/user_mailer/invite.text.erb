@@ -1,0 +1,11 @@
+You've been invited to <%= @studio.name %> on StudioFlow
+
+<%= @invited_by.name.presence || @invited_by.email %> has added you to <%= @studio.name %> as a <%= User::ROLES.key(@user.role)&.to_s&.capitalize || "team member" %>.
+
+Set your password and get started here (link expires in 2 hours):
+<%= @reset_url %>
+
+If you weren't expecting this invitation, you can safely ignore this email.
+
+---
+StudioFlow · joinstudioflow.com

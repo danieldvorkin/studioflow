@@ -120,6 +120,8 @@ module Mutations
       # Send order confirmation email — swallow errors so payment is never rolled back
       begin
         ShopOrderMailer.with(order: order).order_confirmation.deliver_later
+        owner = order.studio.users.find_by(role: User::ROLES[:owner])
+        ShopOrderMailer.with(order: order, owner: owner).owner_notification.deliver_later if owner&.email.present?
       rescue => _e
         # Non-fatal: email will be retried via ActiveJob or dropped
       end

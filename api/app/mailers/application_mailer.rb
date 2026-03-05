@@ -1,4 +1,8 @@
 class ApplicationMailer < ActionMailer::Base
-  default from: ENV.fetch("MAILER_FROM", "onboarding@resend.dev")
+  default from: -> { ApplicationMailer.default_from_address }
   layout "mailer"
+
+  def self.default_from_address
+    "noreply@joinstudioflow.com"
+  end
 end

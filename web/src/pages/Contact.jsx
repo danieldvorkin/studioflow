@@ -13,14 +13,36 @@ export default function Contact() {
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
 
-  const handleSubmit = (e) => {
+  const [error, setError] = useState(null);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setSending(true);
-    // Simulate a send — in production wire this to a real endpoint
-    setTimeout(() => {
-      setSending(false);
+    setError(null);
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+      const res = await fetch(`${apiUrl}/contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          subject: form.subject,
+          message: form.message,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(
+          data.error || "Something went wrong. Please try again.",
+        );
+      }
       setSent(true);
-    }, 1200);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -157,6 +179,7 @@ export default function Contact() {
                     <button
                       onClick={() => {
                         setSent(false);
+                        setError(null);
                         setForm({
                           name: "",
                           email: "",
@@ -251,6 +274,11 @@ export default function Contact() {
                       className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:border-sky-500/60 focus:outline-none focus:ring-1 focus:ring-sky-500/30 transition resize-none"
                     />
                   </div>
+                  {error && (
+                    <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-400">
+                      {error}
+                    </p>
+                  )}
                   <button
                     type="submit"
                     disabled={sending}

@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { useEffect, useRef, useState } from "react";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
 /* ─── Mini in-app mockup components ─────────────────────────── */
 
 function SessionRow({ time, name, spots, total, badge, badgeColor }) {
@@ -530,98 +532,119 @@ function ClientPortalMockup() {
   );
 }
 
-function FAQSection() {
-  const [open, setOpen] = useState(null);
-  const faqs = [
-    {
-      q: "Why should my studio use StudioFlow instead of a spreadsheet?",
-      a: "Spreadsheets break at scale. They can't collect payment, send reminders, manage waitlists, or give clients a self-service experience. StudioFlow replaces a patchwork of tools — scheduling, booking, payment, payout, analytics — with one system that runs automatically.",
-    },
-    {
-      q: "We're a small studio with 2 instructors. Is StudioFlow overkill?",
-      a: "StudioFlow is built to grow with you. Small studios love it because it eliminates the manual work that's hardest when you're wearing every hat. You get the same powerful tools as a 10-location operation, without the complexity.",
-    },
-    {
-      q: "How does StudioFlow compare to Mindbody?",
-      a: "StudioFlow is faster, more affordable, and designed for the modern web. Where Mindbody is complex and dated, StudioFlow is opinionated — it does the things studios actually need, beautifully, without the bloat or the enterprise price tag.",
-    },
-    {
-      q: "Can my clients really book without calling or DMing me?",
-      a: "Yes — and that's the point. Clients browse your live schedule, choose a session, save their card once, and book in under 30 seconds. No DMs, no back-and-forth, no manual confirmation needed on your end.",
-    },
-    {
-      q: "How do instructor payouts work?",
-      a: "StudioFlow tracks every session each instructor teaches and calculates earnings automatically based on your configured rates. At month-end you get a clean payout report — no disputes, no spreadsheets, exportable to CSV for your accountant.",
-    },
-    {
-      q: "Does StudioFlow support multiple studio locations?",
-      a: "Yes. You manage all locations from a single dashboard. Each location has its own schedule, instructors, and analytics, but everything rolls up to your owner view so you always have the full picture.",
-    },
-    {
-      q: "What payment processor does StudioFlow use?",
-      a: "We use Stripe — the same infrastructure trusted by millions of businesses. Client cards are saved securely on file, and payments are collected automatically at the moment of booking. No invoicing, no chasing.",
-    },
-    {
-      q: "Can we sell memberships and class bundles?",
-      a: "Absolutely. StudioFlow supports recurring memberships and class-pack bundles. Usage is tracked automatically, so clients always know how many sessions remain and you never have to count manually.",
-    },
-    {
-      q: "Is there a shop feature for selling merchandise?",
-      a: "Yes — StudioFlow includes a built-in studio shop. List grip socks, resistance bands, logo gear, or anything else your clients love. Orders land in your dashboard and revenue rolls up alongside your session revenue.",
-    },
-    {
-      q: "How long does it take to get set up?",
-      a: "Most studios are fully live within a day. You set up your class templates, add your instructors, configure payment rates, and open your schedule. We're here to help at every step — no ticket queue, real humans.",
-    },
-  ];
+/* ─── Contact section ─────────────────────────────────────────── */
+function ContactSection() {
+  const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [status, setStatus] = useState("idle"); // idle | sending | sent | error
+
+  const handleChange = (e) =>
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus("sending");
+    try {
+      const res = await fetch(`${API_URL}/contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error("server error");
+      setStatus("sent");
+      setForm({ name: "", email: "", message: "" });
+    } catch {
+      setStatus("error");
+    }
+  };
 
   return (
-    <section id="faq" className="mx-auto mt-28 max-w-3xl scroll-mt-20 px-4">
-      <div className="text-center mb-10">
+    <section id="contact" className="mx-auto mt-28 max-w-2xl scroll-mt-20 px-4">
+      <div className="text-center">
         <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-sky-400">
-          FAQ
+          Get in touch
         </div>
         <h2 className="mt-3 text-3xl font-bold tracking-tight text-white">
-          Why studios choose StudioFlow.
+          Have a question? We&apos;d love to hear from you.
         </h2>
-        <p className="mx-auto mt-3 max-w-lg text-sm text-slate-400">
-          The questions every studio owner asks before they switch — and the
-          honest answers.
+        <p className="mx-auto mt-3 max-w-md text-sm text-slate-400">
+          Send us a message and we&apos;ll get back to you as soon as possible.
         </p>
       </div>
-      <div className="space-y-2">
-        {faqs.map((faq, i) => (
-          <div
-            key={i}
-            className="rounded-2xl border border-slate-800 bg-slate-900/60 overflow-hidden transition hover:border-slate-700"
-          >
-            <button
-              onClick={() => setOpen(open === i ? null : i)}
-              className="flex w-full items-center justify-between px-6 py-4 text-left"
-            >
-              <span className="text-sm font-semibold text-slate-100 pr-4">
-                {faq.q}
-              </span>
-              <span
-                className="shrink-0 text-sky-400 transition-transform duration-200"
-                style={{
-                  transform: open === i ? "rotate(45deg)" : "rotate(0deg)",
-                }}
-              >
-                +
-              </span>
-            </button>
-            <div
-              className="overflow-hidden transition-all duration-300"
-              style={{ maxHeight: open === i ? "300px" : "0px" }}
-            >
-              <p className="px-6 pb-5 text-sm text-slate-400 leading-relaxed">
-                {faq.a}
-              </p>
+
+      {status === "sent" ? (
+        <div className="mt-10 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-8 text-center">
+          <div className="text-2xl font-bold text-emerald-400">
+            Message sent ✓
+          </div>
+          <p className="mt-2 text-sm text-slate-400">
+            Thanks for reaching out — we&apos;ll be in touch soon.
+          </p>
+        </div>
+      ) : (
+        <form
+          onSubmit={handleSubmit}
+          className="mt-10 space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-8"
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                Name
+              </label>
+              <input
+                type="text"
+                name="name"
+                required
+                value={form.name}
+                onChange={handleChange}
+                placeholder="Your name"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/40"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                Email
+              </label>
+              <input
+                type="email"
+                name="email"
+                required
+                value={form.email}
+                onChange={handleChange}
+                placeholder="you@example.com"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/40"
+              />
             </div>
           </div>
-        ))}
-      </div>
+          <div>
+            <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+              Message
+            </label>
+            <textarea
+              name="message"
+              required
+              rows={5}
+              value={form.message}
+              onChange={handleChange}
+              placeholder="How can we help?"
+              className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/40 resize-none"
+            />
+          </div>
+
+          {status === "error" && (
+            <p className="text-sm text-rose-400">
+              Something went wrong — please try again.
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={status === "sending"}
+            className="w-full rounded-xl bg-sky-500 py-3 text-sm font-bold text-slate-950 transition hover:bg-sky-400 disabled:opacity-50"
+          >
+            {status === "sending" ? "Sending…" : "Send message →"}
+          </button>
+        </form>
+      )}
     </section>
   );
 }
@@ -1248,156 +1271,9 @@ export default function Landing() {
         </section>
 
         {/* ══════════════════════════════════════════════════
-            TESTIMONIALS
+            CONTACT
         ══════════════════════════════════════════════════ */}
-        <section className="mx-auto mt-28 max-w-6xl px-4">
-          <div className="text-center mb-12">
-            <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-sky-400">
-              Don't take our word for it
-            </div>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight text-white">
-              Studios that made the switch.
-            </h2>
-          </div>
-
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                quote:
-                  "I used to spend Sunday nights reconciling spreadsheets and chasing Venmos. Now I look at one screen and everything's just… done. My instructor payouts take 5 minutes instead of a full afternoon.",
-                name: "Priya Anand",
-                role: "Owner, Meridian Pilates",
-                location: "Austin, TX",
-                avatar: "PA",
-                avatarColor: "from-violet-500 to-indigo-600",
-                stars: 5,
-              },
-              {
-                quote:
-                  "The StudioFlow team is genuinely world-class. I had a question about multi-location setup at 10pm and got a reply that actually solved my problem. They care about your studio as much as you do.",
-                name: "James Kowalski",
-                role: "Owner, Kinetic Studio",
-                location: "Chicago, IL",
-                avatar: "JK",
-                avatarColor: "from-sky-500 to-cyan-600",
-                stars: 5,
-              },
-              {
-                quote:
-                  "My clients constantly compliment how easy booking is. One told me she books her Thursday class before she's even out of the parking lot. That retention means real money.",
-                name: "Sofia Reyes",
-                role: "Owner, Center Reformer",
-                location: "Miami, FL",
-                avatar: "SR",
-                avatarColor: "from-fuchsia-500 to-pink-600",
-                stars: 5,
-              },
-              {
-                quote:
-                  "As an instructor, I finally trust my payout numbers. I can see exactly which sessions I taught, what I earned, and when it'll hit my account. No more awkward convos with the owner.",
-                name: "Marcus Webb",
-                role: "Instructor, The Pilates Room",
-                location: "Brooklyn, NY",
-                avatar: "MW",
-                avatarColor: "from-emerald-500 to-teal-600",
-                stars: 5,
-              },
-              {
-                quote:
-                  "We run three locations and two instructors per location. Before StudioFlow, coordinating that was a nightmare. Now it's just Tuesday.",
-                name: "Dana Park",
-                role: "Founder, Park Method Studios",
-                location: "Los Angeles, CA",
-                avatar: "DP",
-                avatarColor: "from-amber-500 to-orange-600",
-                stars: 5,
-              },
-              {
-                quote:
-                  "The shop feature was the surprise hit. We added grip socks and a tote bag, and within a month it was covering our software costs twice over. It's stupid easy to set up.",
-                name: "Rachel Okonkwo",
-                role: "Owner, Form & Flow",
-                location: "Nashville, TN",
-                avatar: "RO",
-                avatarColor: "from-rose-500 to-red-600",
-                stars: 5,
-              },
-            ].map(
-              ({ quote, name, role, location, avatar, avatarColor, stars }) => (
-                <div
-                  key={name}
-                  className="flex flex-col rounded-2xl border border-slate-800 bg-slate-900/60 p-6 transition hover:border-slate-700 hover:bg-slate-900"
-                >
-                  {/* Stars */}
-                  <div className="flex gap-0.5 mb-4">
-                    {Array.from({ length: stars }).map((_, i) => (
-                      <span key={i} className="text-amber-400 text-sm">
-                        ★
-                      </span>
-                    ))}
-                  </div>
-                  {/* Quote */}
-                  <p className="flex-1 text-sm text-slate-300 leading-relaxed">
-                    &ldquo;{quote}&rdquo;
-                  </p>
-                  {/* Author */}
-                  <div className="mt-5 flex items-center gap-3">
-                    <div
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${avatarColor} text-[11px] font-bold text-white`}
-                    >
-                      {avatar}
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-slate-100">
-                        {name}
-                      </div>
-                      <div className="text-[11px] text-slate-500">
-                        {role} · {location}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ),
-            )}
-          </div>
-
-          {/* Team callout */}
-          <div className="mt-10 rounded-2xl border border-sky-500/20 bg-gradient-to-br from-sky-500/5 via-slate-900/40 to-violet-500/5 p-8 text-center">
-            <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-sky-400 mb-3">
-              The team behind the software
-            </div>
-            <h3 className="text-xl font-bold text-white">
-              Real people. Actually reachable.
-            </h3>
-            <p className="mx-auto mt-3 max-w-xl text-sm text-slate-400">
-              The team at joinstudioflow.com built this because they watched
-              studio owners drown in admin. Every feature exists because a real
-              studio owner asked for it. Support isn't a ticket queue — it's a
-              conversation with people who get it.
-            </p>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm">
-              {[
-                ["⚡", "Same-day responses"],
-                ["🛠️", "Feature requests actually shipped"],
-                ["🧘", "Built by studio people, for studio people"],
-                ["💬", "No bots. Real humans."],
-              ].map(([icon, label]) => (
-                <div
-                  key={label}
-                  className="flex items-center gap-2 text-slate-400"
-                >
-                  <span>{icon}</span>
-                  <span>{label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ══════════════════════════════════════════════════
-            FAQ
-        ══════════════════════════════════════════════════ */}
-        <FAQSection />
+        <ContactSection />
 
         {/* ══════════════════════════════════════════════════
             FINAL CTA
@@ -1454,12 +1330,9 @@ export default function Landing() {
               <a href="#roles" className="transition hover:text-slate-400">
                 Who it's for
               </a>
-              <Link to="/team" className="transition hover:text-slate-400">
-                Team
-              </Link>
-              <Link to="/contact" className="transition hover:text-slate-400">
+              <a href="#contact" className="transition hover:text-slate-400">
                 Contact
-              </Link>
+              </a>
               <Link to="/signin" className="transition hover:text-slate-400">
                 Sign in
               </Link>

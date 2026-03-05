@@ -39,7 +39,19 @@ module Mutations
       user.role = role
 
       if user.save
-        user.send_reset_password_instructions
+        raw_token, hashed_token = Devise.token_generator.generate(User, :reset_password_token)
+        user.update!(reset_password_token: hashed_token, reset_password_sent_at: Time.current)
+
+        web_url   = ENV.fetch("WEB_APP_URL", "http://localhost:5173")
+        reset_url = "#{web_url}/reset-password?token=#{raw_token}"
+
+        UserMailer.with(
+          user:       user,
+          studio:     user.studio,
+          invited_by: current_user,
+          reset_url:  reset_url
+        ).invite.deliver_later
+
         { user: user, errors: [] }
       else
         { user: nil, errors: user.errors.full_messages }
