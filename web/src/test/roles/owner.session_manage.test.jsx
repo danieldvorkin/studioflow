@@ -254,10 +254,13 @@ describe("SessionManage — owner/staff session detail panel", () => {
 
   it("does not show reminder or no-show buttons for paid bookings", async () => {
     const paid = makeBooking({ paid: true, status: "booked" });
-
     renderSessionManage([sessionBookingsMock([paid])]);
     await screen.findByText("Jane Doe");
 
+    expect(screen.queryByRole('button', { name: 'Send reminder' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'No-Show' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
+  
     expect(
       screen.queryByRole("button", { name: "Send reminder" }),
     ).not.toBeInTheDocument();
