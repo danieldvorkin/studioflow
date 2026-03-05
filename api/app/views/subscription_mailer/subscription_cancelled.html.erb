@@ -1,0 +1,22 @@
+<h2>Your StudioFlow subscription has been cancelled</h2>
+
+<p>Hi <%= @user.name.presence || @user.email %>,</p>
+
+<p>
+  Your StudioFlow <strong><%= @tier_label %></strong> subscription has been cancelled.
+  Your account has been moved to the <strong>Starter</strong> (free) plan.
+</p>
+
+<p>
+  All your data is safe and your studio remains accessible on the Starter plan.
+  You can re-subscribe at any time.
+</p>
+
+<p>
+  <a href="<%= @billing_url %>">View plans and resubscribe →</a>
+</p>
+
+<p>
+  Thanks,<br>
+  The StudioFlow Team
+</p>

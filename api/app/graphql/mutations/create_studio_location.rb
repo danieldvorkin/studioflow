@@ -21,6 +21,25 @@ module Mutations
           user.studio
         end
 
+      # ── Subscription location limit check ─────────────────────────────────
+      unless user.godmode?
+        sub = StudioSubscription.find_by(studio_id: effective_studio.id)
+        if sub.present? && sub.active?
+          current_count = effective_studio.studio_locations.count
+          unless sub.within_location_limit?(current_count)
+            limit = sub.max_locations
+            tier  = sub.tier_label
+            return {
+              studio_location: nil,
+              errors: [
+                "Your #{tier} plan allows up to #{limit} location#{'s' if limit != 1}. " \
+                "Upgrade your plan to add more locations."
+              ]
+            }
+          end
+        end
+      end
+
       location = StudioLocation.new(
         studio: effective_studio,
         name: name,

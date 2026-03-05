@@ -1,0 +1,22 @@
+<h2>Payment failed for your StudioFlow subscription</h2>
+
+<p>Hi <%= @user.name.presence || @user.email %>,</p>
+
+<p>
+  We weren't able to process the payment for your StudioFlow
+  <strong><%= @tier_label %></strong> subscription.
+</p>
+
+<p>
+  Please update your payment method to avoid any disruption to your studio.
+  We'll retry the charge automatically, but we recommend updating your card now.
+</p>
+
+<p>
+  <a href="<%= @billing_url %>">Update payment method →</a>
+</p>
+
+<p>
+  Thanks,<br>
+  The StudioFlow Team
+</p>

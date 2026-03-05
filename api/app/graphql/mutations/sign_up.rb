@@ -62,6 +62,15 @@ module Mutations
           client.save!
 
           invitation&.accept! if invitation&.pending?
+
+          # Notify studio owners that a new client has joined
+          Notification.notify_owners(
+            studio:     studio,
+            kind:       "new_client_joined",
+            title:      "New client joined",
+            body:       "#{client.name || user.email} just created an account at your studio.",
+            action_url: "/clients/#{client.id}"
+          )
         end
 
         if account_type == "OWNER"

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_04_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_05_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -274,6 +274,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_04_130000) do
     t.index ["studio_id"], name: "index_membership_plans_on_studio_id"
   end
 
+  create_table "notifications", force: :cascade do |t|
+    t.string "action_url"
+    t.text "body"
+    t.datetime "created_at", null: false
+    t.datetime "dismissed_at"
+    t.string "kind", default: "general", null: false
+    t.datetime "read_at"
+    t.bigint "studio_id"
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["studio_id"], name: "index_notifications_on_studio_id"
+    t.index ["user_id", "dismissed_at"], name: "index_notifications_on_user_id_and_dismissed_at"
+    t.index ["user_id", "read_at"], name: "index_notifications_on_user_id_and_read_at"
+    t.index ["user_id"], name: "index_notifications_on_user_id"
+  end
+
   create_table "payment_settings", force: :cascade do |t|
     t.boolean "clients_page_enabled", default: true, null: false
     t.datetime "created_at", null: false
@@ -447,6 +464,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_04_130000) do
   add_foreign_key "instructor_payouts", "users", column: "created_by_id"
   add_foreign_key "instructor_payouts", "users", column: "instructor_id"
   add_foreign_key "membership_plans", "studios"
+  add_foreign_key "notifications", "studios"
+  add_foreign_key "notifications", "users"
   add_foreign_key "payment_settings", "studios"
   add_foreign_key "payments", "bookings"
   add_foreign_key "payments", "class_sessions"

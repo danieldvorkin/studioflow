@@ -22,6 +22,26 @@ module Mutations
 
       studio = current_user.studio
 
+      # ── Subscription client limit check ────────────────────────────────────
+      unless current_user.godmode?
+        sub = StudioSubscription.find_by(studio_id: studio.id)
+        if sub.present? && sub.active?
+          current_count = studio.clients.count
+          unless sub.within_client_limit?(current_count)
+            limit = sub.max_clients
+            tier  = sub.tier_label
+            return {
+              invitation: nil,
+              signup_url: nil,
+              errors: [
+                "Your #{tier} plan allows up to #{limit} active clients. " \
+                "Upgrade your plan to invite more clients."
+              ]
+            }
+          end
+        end
+      end
+
       # Reuse a pending invitation for the same email/studio, or create a new one
       invitation = studio.client_invitations.pending.find_by(email: normalized)
       invitation ||= studio.client_invitations.build(

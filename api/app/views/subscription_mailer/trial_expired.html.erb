@@ -1,0 +1,22 @@
+<h2>Your <%= @tier_label %> trial has ended</h2>
+
+<p>Hi <%= @user.name.presence || @user.email %>,</p>
+
+<p>
+  Your StudioFlow <strong><%= @tier_label %></strong> trial period has ended and
+  your account has been moved to the <strong>Starter</strong> (free) plan.
+</p>
+
+<p>
+  You haven't lost any of your data — it's all still there waiting for you.
+  Upgrading will immediately restore access to all your premium features.
+</p>
+
+<p>
+  <a href="<%= @billing_url %>">Upgrade your plan →</a>
+</p>
+
+<p>
+  Thanks,<br>
+  The StudioFlow Team
+</p>

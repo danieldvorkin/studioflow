@@ -326,8 +326,178 @@ upsert_booking!(client: c3a, session: s3_sessions[1]) rescue nil
 puts "CoreHouse: #{s3_sessions.size} sessions, 2 clients"
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Summary
+# Example notifications (local dev only)
 # ─────────────────────────────────────────────────────────────────────────────
+
+puts "Seeding example notifications..."
+
+def seed_notification!(user:, studio:, kind:, title:, body:, action_url: nil, read: false, created_at: nil)
+  n = Notification.find_or_initialize_by(user: user, studio: studio, kind: kind, title: title)
+  n.body       = body
+  n.action_url = action_url
+  n.read_at    = read ? 2.hours.ago : nil
+  n.created_at = created_at if created_at
+  n.save!
+  n
+end
+
+[
+  # ── Flow Pilates owner (active Pro trial ending soon) ─────────────────────
+  {
+    user: owner1, studio: studio1,
+    kind: "subscription_trial_ending",
+    title: "Your trial is ending soon — Pro",
+    body:  "Add a payment method to avoid losing access to analytics, payout tracking, and more.",
+    action_url: "/owner/subscription",
+    read: false,
+    created_at: 1.hour.ago
+  },
+  {
+    user: owner1, studio: studio1,
+    kind: "subscription_payment_succeeded",
+    title: "Subscription renewed — Pro",
+    body:  "Your Pro subscription was renewed successfully. Next renewal on #{2.months.from_now.strftime('%B %-d, %Y')}.",
+    action_url: "/owner/subscription",
+    read: true,
+    created_at: 35.days.ago
+  },
+  {
+    user: owner1, studio: studio1,
+    kind: "general",
+    title: "Welcome to StudioFlow 👋",
+    body:  "Your studio is all set up. Explore the dashboard, invite clients, and schedule your first class.",
+    action_url: "/dashboard",
+    read: true,
+    created_at: 60.days.ago
+  },
+
+  # ── Zen Movement owner (past_due scenario) ────────────────────────────────
+  {
+    user: owner2, studio: studio2,
+    kind: "subscription_payment_failed",
+    title: "Payment failed — Studio",
+    body:  "We couldn't process your payment. Please update your payment method to avoid interruption.",
+    action_url: "/owner/subscription",
+    read: false,
+    created_at: 3.hours.ago
+  },
+  {
+    user: owner2, studio: studio2,
+    kind: "subscription_payment_failed",
+    title: "Payment failed — Studio",
+    body:  "This is our second attempt. Please update your card before your subscription is suspended.",
+    action_url: "/owner/subscription",
+    read: false,
+    created_at: 6.days.ago
+  },
+  {
+    user: owner2, studio: studio2,
+    kind: "subscription_upgraded",
+    title: "Plan upgraded — Studio",
+    body:  "You upgraded from Pro to Studio. Enjoy unlimited locations, the built-in shop, and white-label portal.",
+    action_url: "/owner/subscription",
+    read: true,
+    created_at: 45.days.ago
+  },
+
+  # ── CoreHouse owner (free Starter, cancelled scenario) ───────────────────
+  {
+    user: owner3, studio: studio3,
+    kind: "subscription_trial_expired",
+    title: "Your trial has ended — Pro",
+    body:  "Your 14-day Pro trial expired. You've been moved to the free Starter plan. Upgrade anytime to restore access.",
+    action_url: "/owner/subscription",
+    read: false,
+    created_at: 2.days.ago
+  },
+  {
+    user: owner3, studio: studio3,
+    kind: "subscription_cancelled",
+    title: "Subscription cancelled — Pro",
+    body:  "Your Pro subscription was cancelled at the end of your billing period. You're now on Starter.",
+    action_url: "/owner/subscription",
+    read: true,
+    created_at: 5.days.ago
+  },
+  {
+    user: owner3, studio: studio3,
+    kind: "general",
+    title: "Welcome to StudioFlow 👋",
+    body:  "Your studio is ready. Start by inviting your first client or scheduling a class.",
+    action_url: "/dashboard",
+    read: true,
+    created_at: 20.days.ago
+  },
+
+  # ── New notification kinds examples ──────────────────────────────────────
+  {
+    user: owner1, studio: studio1,
+    kind: "class_reminder",
+    title: "Morning Flow coming up soon",
+    body:  "8/12 clients booked for Tue 10 Jun at 8:00 AM.",
+    action_url: "/schedule",
+    read: false,
+    created_at: 2.hours.ago
+  },
+  {
+    user: owner1, studio: studio1,
+    kind: "booking_confirmed",
+    title: "New booking – Morning Flow",
+    body:  "Jordan Blake booked Morning Flow on Tue 10 Jun at 8:00 AM.",
+    action_url: "/schedule",
+    read: false,
+    created_at: 30.minutes.ago
+  },
+  {
+    user: owner1, studio: studio1,
+    kind: "booking_cancelled",
+    title: "Booking cancelled – Evening Stretch",
+    body:  "Taylor Kim cancelled their booking for Thu 12 Jun at 6:00 PM.",
+    action_url: "/schedule",
+    read: true,
+    created_at: 4.hours.ago
+  },
+  {
+    user: owner2, studio: studio2,
+    kind: "new_client_joined",
+    title: "New client joined",
+    body:  "Alex Rivera just created an account at your studio.",
+    action_url: "/clients",
+    read: false,
+    created_at: 15.minutes.ago
+  },
+  {
+    user: owner2, studio: studio2,
+    kind: "waitlist_promoted",
+    title: "Client moved off waitlist",
+    body:  "Sam Chen was automatically promoted from the waitlist when a spot opened in Pilates Basics.",
+    action_url: "/schedule",
+    read: true,
+    created_at: 1.day.ago
+  },
+  {
+    user: owner3, studio: studio3,
+    kind: "membership_expiring",
+    title: "Membership expiring soon",
+    body:  "Emma Carter's \"Unlimited Monthly\" membership expires in 3 days.",
+    action_url: "/clients",
+    read: false,
+    created_at: 6.hours.ago
+  },
+  {
+    user: owner1, studio: studio1,
+    kind: "studio_milestone",
+    title: "🏆 100 bookings milestone!",
+    body:  "Your studio just hit 100 total bookings. Keep up the great work!",
+    action_url: "/dashboard",
+    read: true,
+    created_at: 10.days.ago
+  }
+].each { |attrs| seed_notification!(**attrs) }
+
+puts "  #{Notification.count} example notifications seeded"
+
+
 puts ""
 puts "━━ SEED ACCOUNTS (all password: #{SEED_PASSWORD}) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 puts "  GODMODE    dvorkin212@gmail.com"

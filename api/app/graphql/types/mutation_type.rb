@@ -86,5 +86,10 @@ module Types
 
     # Godmode only
     field :send_test_email, mutation: Mutations::SendTestEmail, null: true
+
+    # Notifications
+    field :mark_notification_read,     mutation: Mutations::MarkNotificationRead,     null: true
+    field :mark_all_notifications_read, mutation: Mutations::MarkAllNotificationsRead, null: true
+    field :dismiss_notification,       mutation: Mutations::DismissNotification,      null: true
   end
 end

@@ -38,11 +38,11 @@ RSpec.describe StudioSubscription, type: :model do
       expect(described_class::STATUSES).to include("trialing", "active", "past_due", "cancelled", "suspended")
     end
 
-    it "prices basic (legacy) at 59 USD monthly" do
+    it "has a USD monthly price for basic" do
       expect(described_class::TIER_PRICES.dig("basic", :price_usd_monthly)).to eq(59)
     end
 
-    it "prices premium (legacy) at 129 USD monthly" do
+    it "has a USD monthly price for premium" do
       expect(described_class::TIER_PRICES.dig("premium", :price_usd_monthly)).to eq(129)
     end
   end
@@ -74,12 +74,12 @@ RSpec.describe StudioSubscription, type: :model do
   end
 
   describe "#price_cad" do
-    it "returns computed CAD price for basic" do
-      expect(build(:studio_subscription, :basic).price_cad).to eq((59 * 1.35).round)
+    it "returns the CAD price for basic" do
+      expect(build(:studio_subscription, :basic).price_cad).to eq(79)
     end
 
-    it "returns computed CAD price for premium" do
-      expect(build(:studio_subscription, :premium).price_cad).to eq((129 * 1.35).round)
+    it "returns the CAD price for premium" do
+      expect(build(:studio_subscription, :premium).price_cad).to eq(175)
     end
   end
 

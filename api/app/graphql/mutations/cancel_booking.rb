@@ -33,6 +33,17 @@ module Mutations
       # Notify cancellation
       NotificationJob.perform_now(:booking_cancellation, booking.id)
 
+      # Notify studio owners about the cancellation
+      cs = booking.class_session
+      time_str = cs.start_time.strftime("%a %-d %b at %-I:%M %p")
+      Notification.notify_owners(
+        studio:     booking.studio,
+        kind:       "booking_cancelled",
+        title:      "Booking cancelled – #{cs.class_template&.title || "Class"}",
+        body:       "#{booking.client&.name || "A client"} cancelled their booking for #{time_str}.",
+        action_url: "/schedule/#{cs.id}"
+      )
+
       errors = []
 
       payment = booking.payment

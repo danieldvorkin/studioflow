@@ -1,0 +1,25 @@
+<h2>Your <%= @tier_label %> trial is ending soon</h2>
+
+<p>Hi <%= @user.name.presence || @user.email %>,</p>
+
+<p>
+  Your StudioFlow <strong><%= @tier_label %></strong> trial ends in
+  <strong><%= @days_left %> day<%= @days_left == 1 ? '' : 's' %></strong>.
+</p>
+
+<p>
+  To keep enjoying all the features you've been using — unlimited clients,
+  analytics, payout tracking, and more — please add a payment method before your
+  trial expires.
+</p>
+
+<p>
+  <a href="<%= @billing_url %>">Manage your subscription →</a>
+</p>
+
+<p>If you have any questions, just reply to this email — we're happy to help.</p>
+
+<p>
+  Thanks,<br>
+  The StudioFlow Team
+</p>

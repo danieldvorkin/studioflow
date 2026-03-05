@@ -45,8 +45,8 @@ RSpec.describe "Studio subscriptions GraphQL", type: :request do
       subs = json.dig("data", "studioSubscriptions")
       prices = subs.map { |s| [ s["tier"], s["priceCad"] ] }.to_h
 
-      expect(prices["basic"]).to eq((59 * 1.35).round)
-      expect(prices["premium"]).to eq((129 * 1.35).round)
+      expect(prices["basic"]).to eq(79)
+      expect(prices["premium"]).to eq(175)
     end
 
     it "raises not authorized for a regular owner" do
@@ -87,7 +87,7 @@ RSpec.describe "Studio subscriptions GraphQL", type: :request do
       expect(json["errors"]).to be_nil
       expect(data["id"]).to eq(sub.id.to_s)
       expect(data["tier"]).to eq("premium")
-      expect(data["priceCad"]).to eq((129 * 1.35).round)
+      expect(data["priceCad"]).to eq(175)
       expect(data["active"]).to eq(true)
     end
 
@@ -256,6 +256,12 @@ RSpec.describe "Studio subscriptions GraphQL", type: :request do
         "PLATFORM_STRIPE_SECRET_KEY" => "sk_test_platform",
         "PLATFORM_STRIPE_PRICE_BASIC" => "price_basic_test",
         "PLATFORM_STRIPE_PRICE_PREMIUM" => "price_premium_test",
+        "PLATFORM_STRIPE_PRICE_PRO" => "price_pro_test",
+        "PLATFORM_STRIPE_PRICE_STUDIO" => "price_studio_test",
+        "PLATFORM_STRIPE_PRICE_PRO_CAD" => "price_pro_cad_test",
+        "PLATFORM_STRIPE_PRICE_PRO_YEARLY_CAD" => "price_pro_yearly_cad_test",
+        "PLATFORM_STRIPE_PRICE_STUDIO_CAD" => "price_studio_cad_test",
+        "PLATFORM_STRIPE_PRICE_STUDIO_YEARLY_CAD" => "price_studio_yearly_cad_test",
         "WEB_APP_URL" => "http://localhost:5173"
       ))
     end
@@ -332,7 +338,7 @@ RSpec.describe "Studio subscriptions GraphQL", type: :request do
     it "returns error when price env var is missing" do
       stub_const("ENV", ENV.to_h.merge(
         "PLATFORM_STRIPE_SECRET_KEY" => "sk_test_platform"
-      ).except("PLATFORM_STRIPE_PRICE_BASIC"))
+      ).except("PLATFORM_STRIPE_PRICE_PRO_CAD", "PLATFORM_STRIPE_PRICE_BASIC", "PLATFORM_STRIPE_PRICE_PRO"))
 
       sign_in(owner_a)
       json = graphql_post(query: mutation, variables: { tier: "basic" })
@@ -349,6 +355,222 @@ RSpec.describe "Studio subscriptions GraphQL", type: :request do
       payload = json.dig("data", "createPlatformSubscriptionCheckout")
 
       expect(payload["errors"]).to include("Card declined")
+    end
+
+    # ── new tier: pro ──────────────────────────────────────────────────────────
+
+    it "returns a checkout URL for the pro tier" do
+      fake_customer = double("Stripe::Customer", id: "cus_pro")
+      fake_session  = double("Stripe::Checkout::Session", url: "https://checkout.stripe.com/pro_session")
+
+      allow(Stripe::Customer).to receive(:create).and_return(fake_customer)
+      allow(Stripe::Checkout::Session).to receive(:create).and_return(fake_session)
+
+      sign_in(owner_a)
+      json = graphql_post(query: mutation, variables: { tier: "pro" })
+      payload = json.dig("data", "createPlatformSubscriptionCheckout")
+
+      expect(payload["errors"]).to eq([])
+      expect(payload["checkoutUrl"]).to eq("https://checkout.stripe.com/pro_session")
+      expect(Stripe::Checkout::Session).to have_received(:create).with(
+        hash_including(line_items: [ { price: "price_pro_cad_test", quantity: 1 } ])
+      )
+    end
+
+    it "returns a checkout URL for the studio tier" do
+      fake_customer = double("Stripe::Customer", id: "cus_studio")
+      fake_session  = double("Stripe::Checkout::Session", url: "https://checkout.stripe.com/studio_session")
+
+      allow(Stripe::Customer).to receive(:create).and_return(fake_customer)
+      allow(Stripe::Checkout::Session).to receive(:create).and_return(fake_session)
+
+      sign_in(owner_a)
+      json = graphql_post(query: mutation, variables: { tier: "studio" })
+      payload = json.dig("data", "createPlatformSubscriptionCheckout")
+
+      expect(payload["errors"]).to eq([])
+      expect(payload["checkoutUrl"]).to eq("https://checkout.stripe.com/studio_session")
+      expect(Stripe::Checkout::Session).to have_received(:create).with(
+        hash_including(line_items: [ { price: "price_studio_cad_test", quantity: 1 } ])
+      )
+    end
+
+    it "success and cancel URLs point to /owner/subscription" do
+      fake_customer = double("Stripe::Customer", id: "cus_url_check")
+      fake_session  = double("Stripe::Checkout::Session", url: "https://checkout.stripe.com/url_check")
+
+      allow(Stripe::Customer).to receive(:create).and_return(fake_customer)
+      allow(Stripe::Checkout::Session).to receive(:create).and_return(fake_session)
+
+      sign_in(owner_a)
+      graphql_post(query: mutation, variables: { tier: "pro" })
+
+      expect(Stripe::Checkout::Session).to have_received(:create).with(
+        hash_including(
+          success_url: match(%r{/owner/subscription\?checkout_success=1}),
+          cancel_url:  match(%r{/owner/subscription\?checkout_cancelled=1})
+        )
+      )
+    end
+
+    # ── starter tier: free — no Stripe involved ─────────────────────────────────
+
+    it "downgrades to starter without calling Stripe — updates sub directly" do
+      create(:studio_subscription, :pro, studio: studio_a, status: "active",
+             stripe_customer_id: "cus_existing", stripe_subscription_id: "sub_existing")
+      sign_in(owner_a)
+
+      expect(Stripe::Checkout::Session).not_to receive(:create)
+
+      json = graphql_post(query: mutation, variables: { tier: "starter" })
+      payload = json.dig("data", "createPlatformSubscriptionCheckout")
+
+      expect(payload["errors"]).to eq([])
+      expect(payload["checkoutUrl"]).to include("/owner/subscription?checkout_success=1")
+
+      sub = StudioSubscription.find_by(studio_id: studio_a.id)
+      expect(sub.tier).to eq("starter")
+      expect(sub.status).to eq("active")
+      expect(sub.stripe_subscription_id).to be_nil
+    end
+
+    it "creates a starter subscription from scratch without Stripe" do
+      sign_in(owner_a)
+
+      expect(Stripe::Checkout::Session).not_to receive(:create)
+      expect(Stripe::Customer).not_to receive(:create)
+
+      json = graphql_post(query: mutation, variables: { tier: "starter" })
+      payload = json.dig("data", "createPlatformSubscriptionCheckout")
+
+      expect(payload["errors"]).to eq([])
+      sub = StudioSubscription.find_by(studio_id: studio_a.id)
+      expect(sub).not_to be_nil
+      expect(sub.tier).to eq("starter")
+    end
+
+    it "returns error for starter when already on active starter" do
+      create(:studio_subscription, :starter, studio: studio_a, status: "active")
+      sign_in(owner_a)
+
+      json = graphql_post(query: mutation, variables: { tier: "starter" })
+      payload = json.dig("data", "createPlatformSubscriptionCheckout")
+
+      expect(payload["errors"]).to include(match(/already have an active/))
+    end
+
+    it "returns error when pro price env var is missing" do
+      stub_const("ENV", ENV.to_h.merge(
+        "PLATFORM_STRIPE_SECRET_KEY" => "sk_test_platform",
+        "WEB_APP_URL" => "http://localhost:5173"
+      ).except("PLATFORM_STRIPE_PRICE_PRO", "PLATFORM_STRIPE_PRICE_PRO_CAD", "PLATFORM_STRIPE_PRICE_PRO_YEARLY_CAD"))
+
+      sign_in(owner_a)
+      json = graphql_post(query: mutation, variables: { tier: "pro" })
+      payload = json.dig("data", "createPlatformSubscriptionCheckout")
+
+      expect(payload["errors"]).to include(match(/not configured/))
+    end
+  end
+
+  # ─── createBillingPortalSession ──────────────────────────────────────────────
+
+  describe "createBillingPortalSession mutation" do
+    let(:mutation) do
+      <<~GRAPHQL
+        mutation {
+          createBillingPortalSession(input: {}) {
+            portalUrl
+            errors
+          }
+        }
+      GRAPHQL
+    end
+
+    before do
+      stub_const("ENV", ENV.to_h.merge(
+        "PLATFORM_STRIPE_SECRET_KEY" => "sk_test_platform",
+        "WEB_APP_URL" => "http://localhost:5173"
+      ))
+    end
+
+    it "returns a portal URL for owner with existing stripe customer" do
+      create(:studio_subscription, studio: studio_a, stripe_customer_id: "cus_portal")
+      fake_session = double("Stripe::BillingPortal::Session", url: "https://billing.stripe.com/portal_session")
+      allow(Stripe::BillingPortal::Session).to receive(:create).and_return(fake_session)
+
+      sign_in(owner_a)
+      json = graphql_post(query: mutation)
+      payload = json.dig("data", "createBillingPortalSession")
+
+      expect(payload["errors"]).to eq([])
+      expect(payload["portalUrl"]).to eq("https://billing.stripe.com/portal_session")
+    end
+
+    it "passes the correct return_url pointing to /owner/subscription" do
+      create(:studio_subscription, studio: studio_a, stripe_customer_id: "cus_return")
+      fake_session = double("Stripe::BillingPortal::Session", url: "https://billing.stripe.com/s")
+      allow(Stripe::BillingPortal::Session).to receive(:create).and_return(fake_session)
+
+      sign_in(owner_a)
+      graphql_post(query: mutation)
+
+      expect(Stripe::BillingPortal::Session).to have_received(:create).with(
+        hash_including(
+          customer: "cus_return",
+          return_url: "http://localhost:5173/owner/subscription"
+        )
+      )
+    end
+
+    it "returns error when no subscription or stripe customer exists" do
+      sign_in(owner_a)
+      json = graphql_post(query: mutation)
+      payload = json.dig("data", "createBillingPortalSession")
+
+      expect(payload["errors"]).to include(match(/No billing account/))
+      expect(payload["portalUrl"]).to be_nil
+    end
+
+    it "returns error when platform key is not configured" do
+      stub_const("ENV", ENV.to_h.except("PLATFORM_STRIPE_SECRET_KEY"))
+      create(:studio_subscription, studio: studio_a, stripe_customer_id: "cus_x")
+      sign_in(owner_a)
+
+      json = graphql_post(query: mutation)
+      payload = json.dig("data", "createBillingPortalSession")
+
+      expect(payload["errors"]).to include(match(/not configured/))
+    end
+
+    it "rejects unauthenticated requests" do
+      json = graphql_post(query: mutation)
+      payload = json.dig("data", "createBillingPortalSession")
+
+      expect(payload["errors"]).to include("Not authenticated")
+    end
+
+    it "rejects godmode user" do
+      create(:studio_subscription, studio: god_studio, stripe_customer_id: "cus_god")
+      sign_in(god)
+
+      json = graphql_post(query: mutation)
+      payload = json.dig("data", "createBillingPortalSession")
+
+      expect(payload["errors"]).to include("Not authorized")
+    end
+
+    it "surfaces Stripe errors gracefully" do
+      create(:studio_subscription, studio: studio_a, stripe_customer_id: "cus_err")
+      allow(Stripe::BillingPortal::Session).to receive(:create)
+        .and_raise(Stripe::StripeError.new("Customer not found"))
+
+      sign_in(owner_a)
+      json = graphql_post(query: mutation)
+      payload = json.dig("data", "createBillingPortalSession")
+
+      expect(payload["errors"]).to include("Customer not found")
+      expect(payload["portalUrl"]).to be_nil
     end
   end
 end

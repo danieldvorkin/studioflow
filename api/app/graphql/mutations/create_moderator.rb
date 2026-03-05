@@ -32,6 +32,7 @@ module Mutations
       )
 
       if user.save
+        UserMailer.with(user: user, plaintext_password: plaintext).moderator_welcome.deliver_later
         { user: user, plaintext_password: plaintext, errors: [] }
       else
         { user: nil, plaintext_password: nil, errors: user.errors.full_messages }
