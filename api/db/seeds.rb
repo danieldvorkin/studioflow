@@ -263,7 +263,7 @@ c2c  = upsert_client!(studio: studio2, email: "layla.berg@example.com", name: "L
 s2_slots = [
   { hour: 9,  min: 0,  tmpl: tmpl2a, room: "Reformer Studio", instructor: instr2a },
   { hour: 11, min: 0,  tmpl: tmpl2b, room: "Main Floor",      instructor: instr2b },
-  { hour: 17, min: 30, tmpl: tmpl2c, room: "Reformer Studio", instructor: instr2a },
+  { hour: 17, min: 30, tmpl: tmpl2c, room: "Reformer Studio", instructor: instr2a }
 ]
 s2_sessions = []
 (-2..2).each do |wo|
@@ -279,7 +279,7 @@ s2_sessions = []
   end
 end
 
-[[c2a, 0], [c2a, 3], [c2b, 1], [c2b, 4], [c2c, 2]].each do |(cl, idx)|
+[ [ c2a, 0 ], [ c2a, 3 ], [ c2b, 1 ], [ c2b, 4 ], [ c2c, 2 ] ].each do |(cl, idx)|
   upsert_booking!(client: cl, session: s2_sessions[idx]) rescue nil
 end
 
