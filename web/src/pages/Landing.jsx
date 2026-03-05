@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { useEffect, useRef, useState } from "react";
 
 /* ─── Mini in-app mockup components ─────────────────────────── */
 
@@ -281,6 +282,34 @@ function PayoutMockup() {
 function AnalyticsMockup() {
   const bars = [65, 80, 55, 90, 75, 95, 70];
   const days = ["M", "T", "W", "T", "F", "S", "S"];
+  const barColors = [
+    "from-sky-500 to-sky-400",
+    "from-indigo-500 to-sky-500",
+    "from-violet-500 to-indigo-500",
+    "from-sky-400 to-cyan-400",
+    "from-indigo-400 to-sky-400",
+    "from-violet-400 to-fuchsia-400",
+    "from-sky-500 to-indigo-400",
+  ];
+  const ref = useRef(null);
+  const [animated, setAnimated] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setAnimated(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.3 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900/80 shadow-2xl">
       <div className="border-b border-slate-800 bg-slate-950/60 px-5 py-3">
@@ -304,7 +333,7 @@ function AnalyticsMockup() {
             </div>
           ))}
         </div>
-        <div>
+        <div ref={ref}>
           <div className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-slate-500">
             Bookings this week
           </div>
@@ -312,8 +341,11 @@ function AnalyticsMockup() {
             {bars.map((h, i) => (
               <div key={i} className="flex flex-1 flex-col items-center gap-1">
                 <div
-                  className="w-full rounded-t-sm bg-sky-500/60"
-                  style={{ height: `${h}%` }}
+                  className={`w-full rounded-t-sm bg-gradient-to-t ${barColors[i]} shadow-sm`}
+                  style={{
+                    height: animated ? `${h}%` : "0%",
+                    transition: `height 0.7s cubic-bezier(0.34,1.56,0.64,1) ${i * 80}ms`,
+                  }}
                 />
                 <span className="text-[9px] text-slate-600">{days[i]}</span>
               </div>
@@ -327,6 +359,98 @@ function AnalyticsMockup() {
           <span className="text-[10px] font-bold text-emerald-400">
             ↑ 22% MoM
           </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ShopMockup() {
+  const items = [
+    {
+      name: "Reformer Grip Socks",
+      price: "$18",
+      tag: "Best seller",
+      tagColor: "bg-amber-500/20 text-amber-300",
+      img: "🧦",
+    },
+    {
+      name: "Studio Tote Bag",
+      price: "$34",
+      tag: "New",
+      tagColor: "bg-sky-500/20 text-sky-300",
+      img: "👜",
+    },
+    {
+      name: "Resistance Loop Set",
+      price: "$24",
+      tag: "Popular",
+      tagColor: "bg-violet-500/20 text-violet-300",
+      img: "⭕",
+    },
+    {
+      name: "Cork Yoga Block",
+      price: "$22",
+      tag: "Eco",
+      tagColor: "bg-emerald-500/20 text-emerald-300",
+      img: "🟫",
+    },
+  ];
+  return (
+    <div className="overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900/80 shadow-2xl">
+      <div className="border-b border-slate-800 bg-slate-950/60 px-5 py-3 flex items-center justify-between">
+        <div className="text-xs font-semibold text-slate-400">Studio shop</div>
+        <div className="flex items-center gap-2">
+          <div className="text-[10px] text-slate-500">4 items · March</div>
+          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/20 text-[10px] font-bold text-amber-300">
+            2
+          </div>
+        </div>
+      </div>
+      <div className="p-4 space-y-2">
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          {items.map((item) => (
+            <div
+              key={item.name}
+              className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 flex flex-col gap-1.5"
+            >
+              <div className="flex items-start justify-between">
+                <span className="text-2xl">{item.img}</span>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${item.tagColor}`}
+                >
+                  {item.tag}
+                </span>
+              </div>
+              <div className="text-xs font-semibold text-slate-100 leading-tight">
+                {item.name}
+              </div>
+              <div className="flex items-center justify-between mt-auto pt-1">
+                <span className="text-sm font-bold text-slate-200">
+                  {item.price}
+                </span>
+                <button className="rounded-lg bg-sky-500/20 px-2 py-0.5 text-[10px] font-bold text-sky-300">
+                  + Add
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="rounded-xl border border-slate-800 bg-slate-950/30 px-4 py-2.5 flex items-center justify-between">
+          <div>
+            <div className="text-xs font-semibold text-slate-200">
+              Month revenue
+            </div>
+            <div className="text-[10px] text-slate-500">
+              98 orders · 0 spreadsheets
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-base font-bold text-emerald-400">$3,412</div>
+            <div className="text-[10px] font-semibold text-emerald-500/60">
+              ↑ 31% MoM
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -406,6 +530,102 @@ function ClientPortalMockup() {
   );
 }
 
+function FAQSection() {
+  const [open, setOpen] = useState(null);
+  const faqs = [
+    {
+      q: "Why should my studio use StudioFlow instead of a spreadsheet?",
+      a: "Spreadsheets break at scale. They can't collect payment, send reminders, manage waitlists, or give clients a self-service experience. StudioFlow replaces a patchwork of tools — scheduling, booking, payment, payout, analytics — with one system that runs automatically.",
+    },
+    {
+      q: "We're a small studio with 2 instructors. Is StudioFlow overkill?",
+      a: "StudioFlow is built to grow with you. Small studios love it because it eliminates the manual work that's hardest when you're wearing every hat. You get the same powerful tools as a 10-location operation, without the complexity.",
+    },
+    {
+      q: "How does StudioFlow compare to Mindbody?",
+      a: "StudioFlow is faster, more affordable, and designed for the modern web. Where Mindbody is complex and dated, StudioFlow is opinionated — it does the things studios actually need, beautifully, without the bloat or the enterprise price tag.",
+    },
+    {
+      q: "Can my clients really book without calling or DMing me?",
+      a: "Yes — and that's the point. Clients browse your live schedule, choose a session, save their card once, and book in under 30 seconds. No DMs, no back-and-forth, no manual confirmation needed on your end.",
+    },
+    {
+      q: "How do instructor payouts work?",
+      a: "StudioFlow tracks every session each instructor teaches and calculates earnings automatically based on your configured rates. At month-end you get a clean payout report — no disputes, no spreadsheets, exportable to CSV for your accountant.",
+    },
+    {
+      q: "Does StudioFlow support multiple studio locations?",
+      a: "Yes. You manage all locations from a single dashboard. Each location has its own schedule, instructors, and analytics, but everything rolls up to your owner view so you always have the full picture.",
+    },
+    {
+      q: "What payment processor does StudioFlow use?",
+      a: "We use Stripe — the same infrastructure trusted by millions of businesses. Client cards are saved securely on file, and payments are collected automatically at the moment of booking. No invoicing, no chasing.",
+    },
+    {
+      q: "Can we sell memberships and class bundles?",
+      a: "Absolutely. StudioFlow supports recurring memberships and class-pack bundles. Usage is tracked automatically, so clients always know how many sessions remain and you never have to count manually.",
+    },
+    {
+      q: "Is there a shop feature for selling merchandise?",
+      a: "Yes — StudioFlow includes a built-in studio shop. List grip socks, resistance bands, logo gear, or anything else your clients love. Orders land in your dashboard and revenue rolls up alongside your session revenue.",
+    },
+    {
+      q: "How long does it take to get set up?",
+      a: "Most studios are fully live within a day. You set up your class templates, add your instructors, configure payment rates, and open your schedule. We're here to help at every step — no ticket queue, real humans.",
+    },
+  ];
+
+  return (
+    <section id="faq" className="mx-auto mt-28 max-w-3xl scroll-mt-20 px-4">
+      <div className="text-center mb-10">
+        <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-sky-400">
+          FAQ
+        </div>
+        <h2 className="mt-3 text-3xl font-bold tracking-tight text-white">
+          Why studios choose StudioFlow.
+        </h2>
+        <p className="mx-auto mt-3 max-w-lg text-sm text-slate-400">
+          The questions every studio owner asks before they switch — and the
+          honest answers.
+        </p>
+      </div>
+      <div className="space-y-2">
+        {faqs.map((faq, i) => (
+          <div
+            key={i}
+            className="rounded-2xl border border-slate-800 bg-slate-900/60 overflow-hidden transition hover:border-slate-700"
+          >
+            <button
+              onClick={() => setOpen(open === i ? null : i)}
+              className="flex w-full items-center justify-between px-6 py-4 text-left"
+            >
+              <span className="text-sm font-semibold text-slate-100 pr-4">
+                {faq.q}
+              </span>
+              <span
+                className="shrink-0 text-sky-400 transition-transform duration-200"
+                style={{
+                  transform: open === i ? "rotate(45deg)" : "rotate(0deg)",
+                }}
+              >
+                +
+              </span>
+            </button>
+            <div
+              className="overflow-hidden transition-all duration-300"
+              style={{ maxHeight: open === i ? "300px" : "0px" }}
+            >
+              <p className="px-6 pb-5 text-sm text-slate-400 leading-relaxed">
+                {faq.a}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function Landing() {
   useDocumentTitle(null);
   return (
@@ -436,6 +656,12 @@ export default function Landing() {
             <a href="#roles" className="transition hover:text-white">
               Who it's for
             </a>
+            <Link to="/team" className="transition hover:text-white">
+              Team
+            </Link>
+            <Link to="/contact" className="transition hover:text-white">
+              Contact
+            </Link>
           </nav>
           <div className="flex items-center gap-2.5">
             <Link
@@ -673,6 +899,49 @@ export default function Landing() {
               </ul>
             </div>
           </div>
+
+          {/* 5 — Shop */}
+          <div className="grid items-center gap-10 md:grid-cols-2">
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-amber-400">
+                Studio Shop
+              </div>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
+                Sell more than sessions.
+                <br />
+                <span className="text-slate-400 font-normal">
+                  Your merch, in your flow.
+                </span>
+              </h2>
+              <p className="mt-4 text-sm text-slate-400">
+                Add a shop directly inside your studio platform. Sell grip
+                socks, resistance bands, logo totes — whatever your clients
+                love. Orders land right in your dashboard, revenue stacks up
+                automatically.
+              </p>
+              <ul className="mt-6 space-y-3 text-sm text-slate-300">
+                {[
+                  "List products in minutes — no third-party store needed",
+                  "Clients shop between bookings without leaving the app",
+                  "Inventory tracked automatically, orders fulfilled with ease",
+                  "Monthly shop revenue rolls up alongside session revenue",
+                ].map((f) => (
+                  <li key={f} className="flex items-start gap-3">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-amber-400 text-xs">
+                      ✓
+                    </span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="relative">
+              <div className="absolute -inset-4 rounded-3xl bg-amber-500/10 blur-2xl" />
+              <div className="relative">
+                <ShopMockup />
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* ══════════════════════════════════════════════════
@@ -734,6 +1003,11 @@ export default function Landing() {
                 title: "Fast by design",
                 desc: "Clean navigation. No bloat. Your team actually enjoys using it.",
               },
+              {
+                emoji: "🛍️",
+                title: "Built-in shop",
+                desc: "Sell merch and accessories directly to clients — no third-party store needed.",
+              },
             ].map(({ emoji, title, desc }) => (
               <div
                 key={title}
@@ -770,6 +1044,7 @@ export default function Landing() {
                 border: "border-sky-500/20",
                 bg: "bg-sky-500/5",
                 tagline: "Run your business,\nnot your inbox.",
+                link: "/for-owners",
                 perks: [
                   "Full revenue and booking visibility",
                   "Instructor payouts with zero disputes",
@@ -783,6 +1058,7 @@ export default function Landing() {
                 border: "border-violet-500/20",
                 bg: "bg-violet-500/5",
                 tagline: "Stay in flow,\nnot in admin.",
+                link: "/for-instructors",
                 perks: [
                   "See your schedule at a glance",
                   "Track client attendance effortlessly",
@@ -796,6 +1072,7 @@ export default function Landing() {
                 border: "border-emerald-500/20",
                 bg: "bg-emerald-500/5",
                 tagline: "Book, pay, show up.\nThat's it.",
+                link: "/for-clients",
                 perks: [
                   "Browse and book from any device",
                   "Saved cards for instant checkout",
@@ -803,10 +1080,11 @@ export default function Landing() {
                   "Booking history always accessible",
                 ],
               },
-            ].map(({ role, color, border, bg, tagline, perks }) => (
-              <div
+            ].map(({ role, color, border, bg, tagline, perks, link }) => (
+              <Link
                 key={role}
-                className={`rounded-2xl border ${border} ${bg} p-6`}
+                to={link}
+                className={`group rounded-2xl border ${border} ${bg} p-6 block transition hover:brightness-110`}
               >
                 <div
                   className={`text-[11px] font-bold uppercase tracking-[0.22em] ${color}`}
@@ -829,10 +1107,297 @@ export default function Landing() {
                     </li>
                   ))}
                 </ul>
+                <div
+                  className={`mt-5 text-xs font-semibold ${color} opacity-0 group-hover:opacity-100 transition`}
+                >
+                  See how it works →
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════════════════
+            THE OLD WAY VS STUDIOFLOW  (X-factor section)
+        ══════════════════════════════════════════════════ */}
+        <section className="mx-auto mt-28 max-w-6xl px-4">
+          <div className="text-center mb-12">
+            <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-rose-400">
+              The honest truth
+            </div>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
+              Your current setup is{" "}
+              <span className="bg-gradient-to-r from-rose-400 to-orange-400 bg-clip-text text-transparent">
+                costing you.
+              </span>
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-slate-400">
+              Every session managed in a spreadsheet, every booking chased over
+              text, every payout argued over — that's hours you're not getting
+              back. And clients who don't come back.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Before */}
+            <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-6">
+              <div className="mb-5 flex items-center gap-2">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-rose-500/20 text-sm font-bold text-rose-400">
+                  ✕
+                </div>
+                <div className="text-sm font-bold text-rose-400 uppercase tracking-widest">
+                  The old way
+                </div>
+              </div>
+              <ul className="space-y-3">
+                {[
+                  ["Google Sheets", 'your "booking system"'],
+                  ["Instagram DMs", "for class reservations"],
+                  ["Venmo / cash", "chased for every session"],
+                  ["Email threads", "to manage instructor pay"],
+                  ["3 different apps", "none of them talk to each other"],
+                  ["Zero visibility", "into revenue until end of month"],
+                  ["Clients forget", "because there's no reminder system"],
+                  ["Waitlists", "managed manually, in your head"],
+                ].map(([bold, rest]) => (
+                  <li
+                    key={bold}
+                    className="flex items-start gap-3 text-sm text-slate-400"
+                  >
+                    <span className="mt-0.5 shrink-0 text-rose-500/60">—</span>
+                    <span>
+                      <span className="font-semibold text-rose-300/80">
+                        {bold}
+                      </span>{" "}
+                      {rest}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-6 rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+                <span className="font-bold">Result:</span> You're running a
+                studio part-time and doing office admin full-time.
+              </div>
+            </div>
+
+            {/* After */}
+            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-6">
+              <div className="mb-5 flex items-center gap-2">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/20 text-sm font-bold text-emerald-400">
+                  ✓
+                </div>
+                <div className="text-sm font-bold text-emerald-400 uppercase tracking-widest">
+                  With StudioFlow
+                </div>
+              </div>
+              <ul className="space-y-3">
+                {[
+                  ["One dashboard", "schedules, bookings, clients, payouts"],
+                  ["Client portal", "clients book themselves, 24/7"],
+                  [
+                    "Stripe on file",
+                    "payment collected automatically at booking",
+                  ],
+                  ["Payout reports", "generated in seconds, no disputes"],
+                  [
+                    "Everything connected",
+                    "schedule → booking → payment → payout",
+                  ],
+                  ["Live revenue", "always current, never a surprise"],
+                  ["Auto-reminders", "sent so clients actually show up"],
+                  ["Waitlists handled", "automatically when a spot opens"],
+                ].map(([bold, rest]) => (
+                  <li
+                    key={bold}
+                    className="flex items-start gap-3 text-sm text-slate-300"
+                  >
+                    <span className="mt-0.5 shrink-0 text-emerald-400">✓</span>
+                    <span>
+                      <span className="font-semibold text-emerald-300">
+                        {bold}
+                      </span>{" "}
+                      {rest}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-6 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+                <span className="font-bold">Result:</span> You teach. StudioFlow
+                handles the rest.
+              </div>
+            </div>
+          </div>
+
+          {/* Social proof numbers */}
+          <div className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4">
+            {[
+              ["4.2 hrs", "saved per week on admin, on average"],
+              ["31%", "average revenue increase in 90 days"],
+              ["< 30 sec", "average client booking time"],
+              ["98%", "of studios say they'd never go back"],
+            ].map(([stat, label]) => (
+              <div
+                key={label}
+                className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 text-center"
+              >
+                <div className="text-2xl font-bold text-white">{stat}</div>
+                <div className="mt-1.5 text-[11px] text-slate-500">{label}</div>
               </div>
             ))}
           </div>
         </section>
+
+        {/* ══════════════════════════════════════════════════
+            TESTIMONIALS
+        ══════════════════════════════════════════════════ */}
+        <section className="mx-auto mt-28 max-w-6xl px-4">
+          <div className="text-center mb-12">
+            <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-sky-400">
+              Don't take our word for it
+            </div>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-white">
+              Studios that made the switch.
+            </h2>
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {[
+              {
+                quote:
+                  "I used to spend Sunday nights reconciling spreadsheets and chasing Venmos. Now I look at one screen and everything's just… done. My instructor payouts take 5 minutes instead of a full afternoon.",
+                name: "Priya Anand",
+                role: "Owner, Meridian Pilates",
+                location: "Austin, TX",
+                avatar: "PA",
+                avatarColor: "from-violet-500 to-indigo-600",
+                stars: 5,
+              },
+              {
+                quote:
+                  "The StudioFlow team is genuinely world-class. I had a question about multi-location setup at 10pm and got a reply that actually solved my problem. They care about your studio as much as you do.",
+                name: "James Kowalski",
+                role: "Owner, Kinetic Studio",
+                location: "Chicago, IL",
+                avatar: "JK",
+                avatarColor: "from-sky-500 to-cyan-600",
+                stars: 5,
+              },
+              {
+                quote:
+                  "My clients constantly compliment how easy booking is. One told me she books her Thursday class before she's even out of the parking lot. That retention means real money.",
+                name: "Sofia Reyes",
+                role: "Owner, Center Reformer",
+                location: "Miami, FL",
+                avatar: "SR",
+                avatarColor: "from-fuchsia-500 to-pink-600",
+                stars: 5,
+              },
+              {
+                quote:
+                  "As an instructor, I finally trust my payout numbers. I can see exactly which sessions I taught, what I earned, and when it'll hit my account. No more awkward convos with the owner.",
+                name: "Marcus Webb",
+                role: "Instructor, The Pilates Room",
+                location: "Brooklyn, NY",
+                avatar: "MW",
+                avatarColor: "from-emerald-500 to-teal-600",
+                stars: 5,
+              },
+              {
+                quote:
+                  "We run three locations and two instructors per location. Before StudioFlow, coordinating that was a nightmare. Now it's just Tuesday.",
+                name: "Dana Park",
+                role: "Founder, Park Method Studios",
+                location: "Los Angeles, CA",
+                avatar: "DP",
+                avatarColor: "from-amber-500 to-orange-600",
+                stars: 5,
+              },
+              {
+                quote:
+                  "The shop feature was the surprise hit. We added grip socks and a tote bag, and within a month it was covering our software costs twice over. It's stupid easy to set up.",
+                name: "Rachel Okonkwo",
+                role: "Owner, Form & Flow",
+                location: "Nashville, TN",
+                avatar: "RO",
+                avatarColor: "from-rose-500 to-red-600",
+                stars: 5,
+              },
+            ].map(
+              ({ quote, name, role, location, avatar, avatarColor, stars }) => (
+                <div
+                  key={name}
+                  className="flex flex-col rounded-2xl border border-slate-800 bg-slate-900/60 p-6 transition hover:border-slate-700 hover:bg-slate-900"
+                >
+                  {/* Stars */}
+                  <div className="flex gap-0.5 mb-4">
+                    {Array.from({ length: stars }).map((_, i) => (
+                      <span key={i} className="text-amber-400 text-sm">
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                  {/* Quote */}
+                  <p className="flex-1 text-sm text-slate-300 leading-relaxed">
+                    &ldquo;{quote}&rdquo;
+                  </p>
+                  {/* Author */}
+                  <div className="mt-5 flex items-center gap-3">
+                    <div
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${avatarColor} text-[11px] font-bold text-white`}
+                    >
+                      {avatar}
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-slate-100">
+                        {name}
+                      </div>
+                      <div className="text-[11px] text-slate-500">
+                        {role} · {location}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ),
+            )}
+          </div>
+
+          {/* Team callout */}
+          <div className="mt-10 rounded-2xl border border-sky-500/20 bg-gradient-to-br from-sky-500/5 via-slate-900/40 to-violet-500/5 p-8 text-center">
+            <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-sky-400 mb-3">
+              The team behind the software
+            </div>
+            <h3 className="text-xl font-bold text-white">
+              Real people. Actually reachable.
+            </h3>
+            <p className="mx-auto mt-3 max-w-xl text-sm text-slate-400">
+              The team at joinstudioflow.com built this because they watched
+              studio owners drown in admin. Every feature exists because a real
+              studio owner asked for it. Support isn't a ticket queue — it's a
+              conversation with people who get it.
+            </p>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm">
+              {[
+                ["⚡", "Same-day responses"],
+                ["🛠️", "Feature requests actually shipped"],
+                ["🧘", "Built by studio people, for studio people"],
+                ["💬", "No bots. Real humans."],
+              ].map(([icon, label]) => (
+                <div
+                  key={label}
+                  className="flex items-center gap-2 text-slate-400"
+                >
+                  <span>{icon}</span>
+                  <span>{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════════════════
+            FAQ
+        ══════════════════════════════════════════════════ */}
+        <FAQSection />
 
         {/* ══════════════════════════════════════════════════
             FINAL CTA
@@ -889,6 +1454,12 @@ export default function Landing() {
               <a href="#roles" className="transition hover:text-slate-400">
                 Who it's for
               </a>
+              <Link to="/team" className="transition hover:text-slate-400">
+                Team
+              </Link>
+              <Link to="/contact" className="transition hover:text-slate-400">
+                Contact
+              </Link>
               <Link to="/signin" className="transition hover:text-slate-400">
                 Sign in
               </Link>

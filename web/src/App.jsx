@@ -42,6 +42,9 @@ import GodmodeSubscriptions from "./pages/GodmodeSubscriptions";
 import GodmodeStudio from "./pages/GodmodeStudio";
 import GodmodeStudios from "./pages/GodmodeStudios";
 import MyMembershipsPage from "./pages/MyMemberships";
+import ShopPage from "./pages/Shop";
+import OwnerShopPage from "./pages/OwnerShop";
+import MyOrdersPage from "./pages/MyOrders";
 const Dashboard = lazy(() => import("./pages/dashboard"));
 const Profile = lazy(() => import("./pages/profile"));
 import { useTheme } from "./theme/ThemeProvider";
@@ -206,6 +209,8 @@ function AppShell() {
                 Classes
               </NavItem>
             )}
+            <NavItem to="/shop">Shop</NavItem>
+            <NavItem to="/my-orders">My orders</NavItem>
           </NavFolder>
 
           {(isGodmode || isOwner || isModerator) && (
@@ -214,6 +219,7 @@ function AppShell() {
               <NavItem to="/owner/instructor-payouts">
                 Instructor payouts
               </NavItem>
+              <NavItem to="/owner/shop">Shop</NavItem>
               <NavItem to="/locations">Locations</NavItem>
             </NavFolder>
           )}
@@ -732,6 +738,30 @@ function App() {
             element={
               <ProtectedRoute>
                 <MyMembershipsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-orders"
+            element={
+              <ProtectedRoute>
+                <MyOrdersPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/shop"
+            element={
+              <ProtectedRoute>
+                <ShopPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/owner/shop"
+            element={
+              <ProtectedRoute>
+                <OwnerShopPage />
               </ProtectedRoute>
             }
           />

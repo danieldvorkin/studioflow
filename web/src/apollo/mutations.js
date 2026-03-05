@@ -1422,3 +1422,172 @@ export const SEND_TEST_EMAIL = gql`
     }
   }
 `;
+
+// ── Shop ────────────────────────────────────────────────────────────────────
+
+export const CREATE_SHOP_ITEM = gql`
+  mutation CreateShopItem(
+    $title: String!
+    $description: String
+    $priceCents: Int!
+    $currency: String
+    $itemType: String
+    $stockQuantity: Int
+    $active: Boolean
+    $imageUrl: String
+  ) {
+    createShopItem(
+      input: {
+        title: $title
+        description: $description
+        priceCents: $priceCents
+        currency: $currency
+        itemType: $itemType
+        stockQuantity: $stockQuantity
+        active: $active
+        imageUrl: $imageUrl
+      }
+    ) {
+      shopItem {
+        id
+        title
+        description
+        priceCents
+        currency
+        itemType
+        stockQuantity
+        active
+        inStock
+        imageUrl
+      }
+      errors
+    }
+  }
+`;
+
+export const UPDATE_SHOP_ITEM = gql`
+  mutation UpdateShopItem(
+    $id: ID!
+    $title: String
+    $description: String
+    $priceCents: Int
+    $currency: String
+    $itemType: String
+    $stockQuantity: Int
+    $active: Boolean
+    $imageUrl: String
+  ) {
+    updateShopItem(
+      input: {
+        id: $id
+        title: $title
+        description: $description
+        priceCents: $priceCents
+        currency: $currency
+        itemType: $itemType
+        stockQuantity: $stockQuantity
+        active: $active
+        imageUrl: $imageUrl
+      }
+    ) {
+      shopItem {
+        id
+        title
+        description
+        priceCents
+        currency
+        itemType
+        stockQuantity
+        active
+        inStock
+        imageUrl
+      }
+      errors
+    }
+  }
+`;
+
+export const DELETE_SHOP_ITEM = gql`
+  mutation DeleteShopItem($id: ID!) {
+    deleteShopItem(input: { id: $id }) {
+      success
+      errors
+    }
+  }
+`;
+
+export const CREATE_SHOP_ORDER = gql`
+  mutation CreateShopOrder(
+    $shopItemId: ID!
+    $quantity: Int
+    $clientId: ID
+    $rentalDueDate: ISO8601Date
+    $rentalAgreementAcceptedAt: ISO8601DateTime
+    $notes: String
+    $paymentMethodId: String
+  ) {
+    createShopOrder(
+      input: {
+        shopItemId: $shopItemId
+        quantity: $quantity
+        clientId: $clientId
+        rentalDueDate: $rentalDueDate
+        rentalAgreementAcceptedAt: $rentalAgreementAcceptedAt
+        notes: $notes
+        paymentMethodId: $paymentMethodId
+      }
+    ) {
+      shopOrder {
+        id
+        quantity
+        totalCents
+        currency
+        status
+        stripePaymentIntentId
+        rentalDueDate
+        rentalAgreementAcceptedAt
+        notes
+        shopItem {
+          id
+          title
+          itemType
+        }
+        client {
+          id
+          name
+          email
+        }
+      }
+      errors
+    }
+  }
+`;
+
+export const UPDATE_SHOP_ORDER = gql`
+  mutation UpdateShopOrder(
+    $id: ID!
+    $status: String
+    $returnedAt: ISO8601Date
+    $rentalDueDate: ISO8601Date
+    $notes: String
+  ) {
+    updateShopOrder(
+      input: {
+        id: $id
+        status: $status
+        returnedAt: $returnedAt
+        rentalDueDate: $rentalDueDate
+        notes: $notes
+      }
+    ) {
+      shopOrder {
+        id
+        status
+        returnedAt
+        rentalDueDate
+        notes
+      }
+      errors
+    }
+  }
+`;

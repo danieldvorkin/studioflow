@@ -141,8 +141,14 @@ module Mutations
           stripe_payment_intent_id: intent.id,
           raw_response: intent.to_hash
         )
+      end
 
+      # Send confirmation emails outside the transaction so a mailer failure
+      # never rolls back a successfully captured payment and booking.
+      begin
         NotificationJob.perform_now(:booking_confirmation, booking.id)
+      rescue => e
+        Rails.logger.error("[CreateBookingWithPayment] Notification failed for booking #{booking.id}: #{e.message}")
       end
 
       { booking: booking, payment: payment, errors: [] }

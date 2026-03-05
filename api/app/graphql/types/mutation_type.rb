@@ -78,6 +78,12 @@ module Types
     field :forgot_password, mutation: Mutations::ForgotPassword, null: true
     field :reset_password,  mutation: Mutations::ResetPassword,  null: true
 
+    field :create_shop_item,   mutation: Mutations::CreateShopItem,   null: true
+    field :update_shop_item,   mutation: Mutations::UpdateShopItem,   null: true
+    field :delete_shop_item,   mutation: Mutations::DeleteShopItem,   null: true
+    field :create_shop_order,  mutation: Mutations::CreateShopOrder,  null: true
+    field :update_shop_order,  mutation: Mutations::UpdateShopOrder,  null: true
+
     # Godmode only
     field :send_test_email, mutation: Mutations::SendTestEmail, null: true
   end
