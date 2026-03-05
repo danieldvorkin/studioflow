@@ -4,6 +4,8 @@ Rails.application.routes.draw do
   post "/graphql", to: "graphql#execute"
 
   post "/stripe/platform-webhook", to: "platform_webhooks#receive"
+  post "/webhooks", to: "webhooks#receive"
+  post "/contact",  to: "contacts#create"
 
   # Native iOS Google Sign-In REST endpoint
   # Accepts: { id_token: "..." } or { access_token: "..." }

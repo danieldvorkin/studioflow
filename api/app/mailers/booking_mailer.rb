@@ -1,6 +1,4 @@
 class BookingMailer < ApplicationMailer
-  default from: ENV.fetch("MAILER_FROM", "onboarding@resend.dev")
-
   def confirmation
     @booking = params[:booking]
     @booking_url = booking_url_for(@booking)

@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 /* ─── Mini in-app mockup components ─────────────────────────── */
 
@@ -403,6 +406,123 @@ function ClientPortalMockup() {
         ))}
       </div>
     </div>
+  );
+}
+
+/* ─── Contact section ─────────────────────────────────────────── */
+function ContactSection() {
+  const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [status, setStatus] = useState("idle"); // idle | sending | sent | error
+
+  const handleChange = (e) =>
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus("sending");
+    try {
+      const res = await fetch(`${API_URL}/contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error("server error");
+      setStatus("sent");
+      setForm({ name: "", email: "", message: "" });
+    } catch {
+      setStatus("error");
+    }
+  };
+
+  return (
+    <section id="contact" className="mx-auto mt-28 max-w-2xl scroll-mt-20 px-4">
+      <div className="text-center">
+        <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-sky-400">
+          Get in touch
+        </div>
+        <h2 className="mt-3 text-3xl font-bold tracking-tight text-white">
+          Have a question? We&apos;d love to hear from you.
+        </h2>
+        <p className="mx-auto mt-3 max-w-md text-sm text-slate-400">
+          Send us a message and we&apos;ll get back to you as soon as possible.
+        </p>
+      </div>
+
+      {status === "sent" ? (
+        <div className="mt-10 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-8 text-center">
+          <div className="text-2xl font-bold text-emerald-400">
+            Message sent ✓
+          </div>
+          <p className="mt-2 text-sm text-slate-400">
+            Thanks for reaching out — we&apos;ll be in touch soon.
+          </p>
+        </div>
+      ) : (
+        <form
+          onSubmit={handleSubmit}
+          className="mt-10 space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-8"
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                Name
+              </label>
+              <input
+                type="text"
+                name="name"
+                required
+                value={form.name}
+                onChange={handleChange}
+                placeholder="Your name"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/40"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                Email
+              </label>
+              <input
+                type="email"
+                name="email"
+                required
+                value={form.email}
+                onChange={handleChange}
+                placeholder="you@example.com"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/40"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+              Message
+            </label>
+            <textarea
+              name="message"
+              required
+              rows={5}
+              value={form.message}
+              onChange={handleChange}
+              placeholder="How can we help?"
+              className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/40 resize-none"
+            />
+          </div>
+
+          {status === "error" && (
+            <p className="text-sm text-rose-400">
+              Something went wrong — please try again.
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={status === "sending"}
+            className="w-full rounded-xl bg-sky-500 py-3 text-sm font-bold text-slate-950 transition hover:bg-sky-400 disabled:opacity-50"
+          >
+            {status === "sending" ? "Sending…" : "Send message →"}
+          </button>
+        </form>
+      )}
+    </section>
   );
 }
 
@@ -835,6 +955,11 @@ export default function Landing() {
         </section>
 
         {/* ══════════════════════════════════════════════════
+            CONTACT
+        ══════════════════════════════════════════════════ */}
+        <ContactSection />
+
+        {/* ══════════════════════════════════════════════════
             FINAL CTA
         ══════════════════════════════════════════════════ */}
         <section className="mx-auto mt-28 max-w-6xl px-4 pb-24">
@@ -888,6 +1013,9 @@ export default function Landing() {
               </a>
               <a href="#roles" className="transition hover:text-slate-400">
                 Who it's for
+              </a>
+              <a href="#contact" className="transition hover:text-slate-400">
+                Contact
               </a>
               <Link to="/signin" className="transition hover:text-slate-400">
                 Sign in
