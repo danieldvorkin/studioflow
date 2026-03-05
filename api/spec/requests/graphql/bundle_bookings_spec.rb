@@ -197,7 +197,7 @@ RSpec.describe "Bundle bookings", type: :request do
       payload = json.dig("data", "createBookingWithBundle")
 
       expect(payload["booking"]).to be_nil
-      expect(payload["errors"].join).to match(/no bundle spots/i)
+      expect(payload["errors"].join).to match(/not redeemable/i)
     end
 
     it "rejects when instructor has blocked the client" do
