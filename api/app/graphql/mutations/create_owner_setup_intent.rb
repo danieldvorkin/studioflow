@@ -26,7 +26,7 @@ module Mutations
             metadata: { studio_id: studio.id }
           )
           sub.stripe_customer_id = customer.id
-          sub.tier   ||= "basic"
+          sub.tier   ||= "starter"
           sub.status ||= "trialing"
           sub.save!
         end

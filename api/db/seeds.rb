@@ -134,7 +134,7 @@ end
 # ─────────────────────────────────────────────────────────────────────────────
 # PLATFORM STUDIO (godmode + moderator home)
 # ─────────────────────────────────────────────────────────────────────────────
-platform_studio = upsert_studio!(slug: "platform", name: "Platform (Internal)", tier: "premium")
+platform_studio = upsert_studio!(slug: "platform", name: "Platform (Internal)", tier: "studio")
 seed_payment_settings!(studio: platform_studio, title: "Platform Admin")
 
 upsert_user!(studio: platform_studio, email: "dvorkin212@gmail.com",
@@ -149,7 +149,7 @@ puts "Moderator: mod@studioflow.example.com / #{SEED_PASSWORD}"
 # ─────────────────────────────────────────────────────────────────────────────
 # STUDIO 1 — Flow Pilates (full setup, CAD, growth tier)
 # ─────────────────────────────────────────────────────────────────────────────
-studio1 = upsert_studio!(slug: "flow-pilates", name: "Flow Pilates", tier: "premium")
+studio1 = upsert_studio!(slug: "flow-pilates", name: "Flow Pilates", tier: "studio")
 seed_payment_settings!(studio: studio1, title: "Flow Pilates Dashboard", currency: "cad")
 
 owner1  = upsert_user!(studio: studio1, email: "owner@flowpilates.example.com",       name: "Claire Fontaine", role: :owner)
@@ -227,7 +227,7 @@ puts "Flow Pilates: #{s1_sessions.size} sessions, 5 clients"
 # ─────────────────────────────────────────────────────────────────────────────
 # STUDIO 2 — Zen Movement Studio (mid-size, USD, basic tier)
 # ─────────────────────────────────────────────────────────────────────────────
-studio2 = upsert_studio!(slug: "zen-movement", name: "Zen Movement Studio", tier: "basic")
+studio2 = upsert_studio!(slug: "zen-movement", name: "Zen Movement Studio", tier: "pro")
 seed_payment_settings!(studio: studio2, title: "Zen Movement Dashboard", currency: "usd")
 
 owner2  = upsert_user!(studio: studio2, email: "owner@zenmovement.example.com",        name: "Priya Nair",   role: :owner)
@@ -288,7 +288,7 @@ puts "Zen Movement: #{s2_sessions.size} sessions, 3 clients"
 # ─────────────────────────────────────────────────────────────────────────────
 # STUDIO 3 — CoreHouse (small, CAD, basic tier)
 # ─────────────────────────────────────────────────────────────────────────────
-studio3 = upsert_studio!(slug: "corehouse", name: "CoreHouse", tier: "basic")
+studio3 = upsert_studio!(slug: "corehouse", name: "CoreHouse", tier: "starter")
 seed_payment_settings!(studio: studio3, title: "CoreHouse", currency: "cad")
 
 owner3  = upsert_user!(studio: studio3, email: "owner@corehouse.example.com",    name: "Brett Langford", role: :owner)

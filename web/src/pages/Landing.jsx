@@ -35,7 +35,380 @@ function SessionRow({ time, name, spots, total, badge, badgeColor }) {
   );
 }
 
+const NAV_ITEMS = [
+  "Dashboard",
+  "Schedule",
+  "Bookings",
+  "Clients",
+  "Analytics",
+  "Payouts",
+];
+
+function DashboardPanel({ active }) {
+  const bars = [65, 80, 55, 90, 75, 95, 70];
+  const days = ["M", "T", "W", "T", "F", "S", "S"];
+  const barColors = [
+    "from-sky-500 to-sky-400",
+    "from-indigo-500 to-sky-500",
+    "from-violet-500 to-indigo-500",
+    "from-sky-400 to-cyan-400",
+    "from-indigo-400 to-sky-400",
+    "from-violet-400 to-fuchsia-400",
+    "from-sky-500 to-indigo-400",
+  ];
+
+  if (active === "Dashboard")
+    return (
+      <div className="space-y-3">
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            ["24", "bookings today", "text-slate-50"],
+            ["$1,840", "revenue", "text-emerald-400"],
+            ["92%", "fill rate", "text-sky-400"],
+          ].map(([v, l, c]) => (
+            <div
+              key={l}
+              className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-center"
+            >
+              <div className={`text-lg font-bold ${c}`}>{v}</div>
+              <div className="text-[10px] text-slate-500">{l}</div>
+            </div>
+          ))}
+        </div>
+        <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 pt-1">
+          Recent activity
+        </div>
+        {[
+          ["Sarah T.", "booked Reformer Flow · 9 AM", "2m ago"],
+          ["James K.", "checked in · Mat Pilates", "14m ago"],
+          ["Anika R.", "joined waitlist · Tower Strength", "31m ago"],
+          ["Chris M.", "purchased 10-class bundle", "1h ago"],
+        ].map(([name, action, time]) => (
+          <div
+            key={name + time}
+            className="flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/30 px-3 py-2"
+          >
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-700 text-[10px] font-bold text-slate-300">
+              {name[0]}
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className="text-[11px] font-semibold text-slate-200">
+                {name}
+              </span>
+              <span className="text-[11px] text-slate-500"> · {action}</span>
+            </div>
+            <div className="text-[10px] text-slate-600 shrink-0">{time}</div>
+          </div>
+        ))}
+      </div>
+    );
+
+  if (active === "Schedule")
+    return (
+      <div className="space-y-2">
+        <div className="mb-1 flex items-center justify-between">
+          <div className="text-sm font-semibold text-slate-100">
+            Today · Mon Mar 3
+          </div>
+          <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold text-emerald-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> 2
+            locations live
+          </div>
+        </div>
+        <SessionRow
+          time="7:00 AM"
+          name="Reformer Flow"
+          spots={8}
+          total={8}
+          badge="FULL"
+          badgeColor="bg-emerald-500/20 text-emerald-300"
+        />
+        <SessionRow
+          time="9:30 AM"
+          name="Tower Strength"
+          spots={5}
+          total={8}
+          badge="OPEN"
+          badgeColor="bg-sky-500/20 text-sky-300"
+        />
+        <SessionRow
+          time="12:00 PM"
+          name="Mat Pilates"
+          spots={7}
+          total={10}
+          badge="OPEN"
+          badgeColor="bg-sky-500/20 text-sky-300"
+        />
+        <SessionRow
+          time="4:00 PM"
+          name="Private — Sarah T."
+          spots={1}
+          total={1}
+          badge="VIP"
+          badgeColor="bg-fuchsia-500/20 text-fuchsia-300"
+        />
+        <SessionRow
+          time="6:30 PM"
+          name="Evening Reformer"
+          spots={3}
+          total={8}
+          badge="OPEN"
+          badgeColor="bg-sky-500/20 text-sky-300"
+        />
+      </div>
+    );
+
+  if (active === "Bookings")
+    return (
+      <div className="space-y-2">
+        <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 pb-1">
+          Recent bookings
+        </div>
+        {[
+          [
+            "Sarah T.",
+            "Reformer Flow",
+            "Today 9:00 AM",
+            "$55",
+            "bg-emerald-500/10 text-emerald-400",
+            "Confirmed",
+          ],
+          [
+            "James K.",
+            "Tower Strength",
+            "Today 9:30 AM",
+            "$55",
+            "bg-sky-500/10 text-sky-400",
+            "Checked in",
+          ],
+          [
+            "Anika R.",
+            "Mat Pilates",
+            "Today 12:00 PM",
+            "$45",
+            "bg-amber-500/10 text-amber-400",
+            "Waitlist",
+          ],
+          [
+            "Chris M.",
+            "Evening Reformer",
+            "Today 6:30 PM",
+            "$55",
+            "bg-emerald-500/10 text-emerald-400",
+            "Confirmed",
+          ],
+          [
+            "Maria L.",
+            "Private Session",
+            "Today 4:00 PM",
+            "$120",
+            "bg-fuchsia-500/10 text-fuchsia-400",
+            "VIP",
+          ],
+        ].map(([name, cls, time, price, badgeCls, badge]) => (
+          <div
+            key={name + cls}
+            className="flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/30 px-3 py-2.5"
+          >
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-700 text-[10px] font-bold text-slate-300">
+              {name[0]}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[11px] font-semibold text-slate-200">
+                {name}
+              </div>
+              <div className="text-[10px] text-slate-500">
+                {cls} · {time}
+              </div>
+            </div>
+            <div className="text-[11px] font-bold text-slate-200">{price}</div>
+            <span
+              className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${badgeCls}`}
+            >
+              {badge}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+
+  if (active === "Clients")
+    return (
+      <div className="space-y-2">
+        <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 pb-1">
+          Client roster
+        </div>
+        {[
+          [
+            "Sarah T.",
+            "14 classes",
+            "Active member",
+            "bg-emerald-500/10 text-emerald-400",
+          ],
+          [
+            "James K.",
+            "9 classes",
+            "Bundle · 1 left",
+            "bg-amber-500/10 text-amber-400",
+          ],
+          [
+            "Anika R.",
+            "22 classes",
+            "Active member",
+            "bg-emerald-500/10 text-emerald-400",
+          ],
+          ["Chris M.", "3 classes", "New client", "bg-sky-500/10 text-sky-400"],
+          [
+            "Priya S.",
+            "31 classes",
+            "VIP member",
+            "bg-fuchsia-500/10 text-fuchsia-400",
+          ],
+        ].map(([name, classes, status, badgeCls]) => (
+          <div
+            key={name}
+            className="flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/30 px-3 py-2.5"
+          >
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-700 text-[11px] font-bold text-slate-300">
+              {name[0]}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[11px] font-semibold text-slate-200">
+                {name}
+              </div>
+              <div className="text-[10px] text-slate-500">{classes}</div>
+            </div>
+            <span
+              className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${badgeCls}`}
+            >
+              {status}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+
+  if (active === "Analytics")
+    return (
+      <div className="space-y-3">
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            ["$12.4k", "Revenue MTD", "text-emerald-400"],
+            ["89%", "Fill rate", "text-sky-400"],
+            ["4.9★", "Satisfaction", "text-amber-400"],
+          ].map(([v, l, c]) => (
+            <div
+              key={l}
+              className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-center"
+            >
+              <div className={`text-base font-bold ${c}`}>{v}</div>
+              <div className="text-[10px] text-slate-500">{l}</div>
+            </div>
+          ))}
+        </div>
+        <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+          Bookings this week
+        </div>
+        <div className="flex h-16 gap-1.5">
+          {bars.map((h, i) => (
+            <div
+              key={i}
+              className="flex flex-1 flex-col items-center justify-end gap-1 h-full"
+            >
+              <div
+                className={`w-full rounded-t-sm bg-gradient-to-t ${barColors[i]}`}
+                style={{ height: `${h}%` }}
+              />
+              <span className="text-[9px] text-slate-600">{days[i]}</span>
+            </div>
+          ))}
+        </div>
+        <div className="rounded-xl border border-slate-800 bg-slate-950/30 px-3 py-2 flex items-center justify-between">
+          <span className="text-[11px] text-slate-400">
+            Top class: Reformer Flow
+          </span>
+          <span className="text-[10px] font-bold text-emerald-400">
+            ↑ 22% MoM
+          </span>
+        </div>
+      </div>
+    );
+
+  if (active === "Payouts")
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center justify-between pb-1">
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+            Instructor payouts · March
+          </div>
+          <div className="text-[11px] font-semibold text-sky-400">
+            $3,200 total
+          </div>
+        </div>
+        {[
+          [
+            "Maria L.",
+            14,
+            "$1,120",
+            "Paid",
+            "text-emerald-400 bg-emerald-500/10",
+          ],
+          ["James K.", 9, "$720", "Pending", "text-sky-400 bg-sky-500/10"],
+          [
+            "Anika R.",
+            11,
+            "$880",
+            "Paid",
+            "text-emerald-400 bg-emerald-500/10",
+          ],
+          ["Chris M.", 6, "$480", "Review", "text-amber-400 bg-amber-500/10"],
+        ].map(([name, sessions, amount, status, color]) => (
+          <div
+            key={name}
+            className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/30 px-3 py-2.5"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-700 text-[10px] font-bold text-slate-300">
+                {name[0]}
+              </div>
+              <div>
+                <div className="text-[11px] font-semibold text-slate-200">
+                  {name}
+                </div>
+                <div className="text-[10px] text-slate-500">
+                  {sessions} sessions
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold text-slate-200">
+                {amount}
+              </span>
+              <span
+                className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${color}`}
+              >
+                {status}
+              </span>
+            </div>
+          </div>
+        ))}
+        <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/20 px-3 py-2">
+          <span className="text-[10px] text-slate-500">
+            No spreadsheets. No disputes.
+          </span>
+          <span className="text-[10px] font-semibold text-sky-400">
+            Export CSV →
+          </span>
+        </div>
+      </div>
+    );
+
+  return null;
+}
+
 function DashboardMockup() {
+  const [activeNav, setActiveNav] = useState("Schedule");
+
   return (
     <div className="relative overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900/80 shadow-2xl">
       {/* Fake browser chrome */}
@@ -54,93 +427,33 @@ function DashboardMockup() {
           <div className="mb-4 text-[10px] font-bold tracking-[0.3em] uppercase text-sky-400/80">
             StudioFlow
           </div>
-          {[
-            "Dashboard",
-            "Schedule",
-            "Bookings",
-            "Clients",
-            "Analytics",
-            "Payouts",
-          ].map((item, i) => (
-            <div
+          {NAV_ITEMS.map((item) => (
+            <button
               key={item}
-              className={`mb-1 rounded-lg px-2.5 py-1.5 text-[11px] font-medium ${i === 1 ? "bg-sky-500/20 text-sky-300" : "text-slate-400"}`}
+              onClick={() => setActiveNav(item)}
+              className={`mb-1 w-full rounded-lg px-2.5 py-1.5 text-left text-[11px] font-medium transition-colors duration-150 ${
+                activeNav === item
+                  ? "bg-sky-500/20 text-sky-300"
+                  : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
+              }`}
             >
               {item}
-            </div>
+            </button>
           ))}
         </div>
         {/* Main area */}
-        <div className="flex-1 p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="text-sm font-semibold text-slate-100">
-              Today · Mon Mar 3
-            </div>
-            <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold text-emerald-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> 2
-              locations live
-            </div>
-          </div>
-          <div className="space-y-2">
-            <SessionRow
-              time="7:00 AM"
-              name="Reformer Flow"
-              spots={8}
-              total={8}
-              badge="FULL"
-              badgeColor="bg-emerald-500/20 text-emerald-300"
-            />
-            <SessionRow
-              time="9:30 AM"
-              name="Tower Strength"
-              spots={5}
-              total={8}
-              badge="OPEN"
-              badgeColor="bg-sky-500/20 text-sky-300"
-            />
-            <SessionRow
-              time="12:00 PM"
-              name="Mat Pilates"
-              spots={7}
-              total={10}
-              badge="OPEN"
-              badgeColor="bg-sky-500/20 text-sky-300"
-            />
-            <SessionRow
-              time="4:00 PM"
-              name="Private — Sarah T."
-              spots={1}
-              total={1}
-              badge="VIP"
-              badgeColor="bg-fuchsia-500/20 text-fuchsia-300"
-            />
-            <SessionRow
-              time="6:30 PM"
-              name="Evening Reformer"
-              spots={3}
-              total={8}
-              badge="OPEN"
-              badgeColor="bg-sky-500/20 text-sky-300"
-            />
-          </div>
-          {/* Mini stats bar */}
-          <div className="mt-4 grid grid-cols-3 gap-2">
-            {[
-              ["24", "bookings today"],
-              ["$1,840", "revenue"],
-              ["92%", "fill rate"],
-            ].map(([val, label]) => (
-              <div
-                key={label}
-                className="rounded-xl border border-slate-800 bg-slate-950/40 p-2.5 text-center"
-              >
-                <div className="text-base font-bold text-slate-50">{val}</div>
-                <div className="text-[10px] text-slate-500">{label}</div>
-              </div>
-            ))}
+        <div className="flex-1 overflow-hidden p-4">
+          <div key={activeNav} style={{ animation: "dashFade 0.2s ease both" }}>
+            <DashboardPanel active={activeNav} />
           </div>
         </div>
       </div>
+      <style>{`
+        @keyframes dashFade {
+          from { opacity: 0; transform: translateY(6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
@@ -339,9 +652,12 @@ function AnalyticsMockup() {
           <div className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-slate-500">
             Bookings this week
           </div>
-          <div className="flex h-20 items-end gap-1.5">
+          <div className="flex h-20 gap-1.5">
             {bars.map((h, i) => (
-              <div key={i} className="flex flex-1 flex-col items-center gap-1">
+              <div
+                key={i}
+                className="flex flex-1 flex-col items-center justify-end gap-1 h-full"
+              >
                 <div
                   className={`w-full rounded-t-sm bg-gradient-to-t ${barColors[i]} shadow-sm`}
                   style={{
@@ -679,6 +995,9 @@ export default function Landing() {
             <a href="#roles" className="transition hover:text-white">
               Who it's for
             </a>
+            <Link to="/pricing" className="transition hover:text-white">
+              Pricing
+            </Link>
             <Link to="/team" className="transition hover:text-white">
               Team
             </Link>
@@ -755,7 +1074,7 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* ── Hero dashboard mockup — full-width ── */}
+        {/* ── Hero dashboard mockup — interactive ── */}
         <section
           id="product"
           className="mx-auto mt-6 max-w-5xl scroll-mt-20 px-4 pb-6"
@@ -1330,6 +1649,9 @@ export default function Landing() {
               <a href="#roles" className="transition hover:text-slate-400">
                 Who it's for
               </a>
+              <Link to="/pricing" className="transition hover:text-slate-400">
+                Pricing
+              </Link>
               <a href="#contact" className="transition hover:text-slate-400">
                 Contact
               </a>

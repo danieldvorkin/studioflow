@@ -1,12 +1,33 @@
 # frozen_string_literal: true
 
 class StudioSubscription < ApplicationRecord
-  TIERS = %w[basic premium].freeze
+  # Legacy tiers kept for backward-compat; new marketing tiers: starter / pro / studio
+  TIERS = %w[starter pro studio basic premium].freeze
   STATUSES = %w[trialing active past_due cancelled suspended].freeze
 
   TIER_PRICES = {
-    "basic" => { label: "Basic", price_cad: 150, description: "Core scheduling, booking, and basic analytics" },
-    "premium" => { label: "Premium", price_cad: 300, description: "Everything in Basic, plus full analytics, instructor payouts, Stripe Connect, priority support" }
+    # ── Current public pricing (USD) ───────────────────────────
+    "starter" => {
+      label: "Starter",
+      price_usd_monthly: 0,
+      price_usd_yearly: 0,
+      description: "Free forever. 1 location, up to 50 clients, bookings, Stripe payments."
+    },
+    "pro" => {
+      label: "Pro",
+      price_usd_monthly: 59,
+      price_usd_yearly: 49,
+      description: "Up to 5 locations, unlimited clients, payouts, analytics, bundles & memberships."
+    },
+    "studio" => {
+      label: "Studio",
+      price_usd_monthly: 129,
+      price_usd_yearly: 109,
+      description: "Unlimited locations, built-in shop, white-label portal, priority support."
+    },
+    # ── Legacy tiers (existing production records) ─────────────
+    "basic"   => { label: "Basic",   price_usd_monthly: 59,  price_usd_yearly: 49,  description: "Legacy — maps to Pro." },
+    "premium" => { label: "Premium", price_usd_monthly: 129, price_usd_yearly: 109, description: "Legacy — maps to Studio." }
   }.freeze
 
   belongs_to :studio
@@ -21,15 +42,37 @@ class StudioSubscription < ApplicationRecord
     %w[active trialing].include?(status)
   end
 
+  def starter?
+    tier == "starter"
+  end
+
+  def pro?
+    %w[pro basic].include?(tier)
+  end
+
+  def studio?
+    %w[studio premium].include?(tier)
+  end
+
+  # Legacy aliases
   def premium?
-    tier == "premium"
+    %w[studio premium].include?(tier)
   end
 
   def basic?
-    tier == "basic"
+    %w[pro basic].include?(tier)
   end
 
+  def price_usd_monthly
+    TIER_PRICES.dig(tier, :price_usd_monthly) || 0
+  end
+
+  def price_usd_yearly
+    TIER_PRICES.dig(tier, :price_usd_yearly) || 0
+  end
+
+  # Kept for old callers
   def price_cad
-    TIER_PRICES.dig(tier, :price_cad) || 150
+    (price_usd_monthly * 1.35).round
   end
 end

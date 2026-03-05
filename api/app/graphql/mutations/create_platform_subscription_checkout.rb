@@ -8,7 +8,11 @@ module Mutations
     field :errors, [ String ], null: false
 
     TIER_PRICE_ENV = {
-      "basic" => "PLATFORM_STRIPE_PRICE_BASIC",
+      "starter" => nil,                            # free — no Stripe price needed
+      "pro"     => "PLATFORM_STRIPE_PRICE_PRO",
+      "studio"  => "PLATFORM_STRIPE_PRICE_STUDIO",
+      # Legacy keys kept for existing production subscriptions
+      "basic"   => "PLATFORM_STRIPE_PRICE_BASIC",
       "premium" => "PLATFORM_STRIPE_PRICE_PREMIUM"
     }.freeze
 

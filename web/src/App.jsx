@@ -50,6 +50,7 @@ import ForInstructors from "./pages/ForInstructors";
 import ForClients from "./pages/ForClients";
 import Contact from "./pages/Contact";
 import Team from "./pages/Team";
+import Pricing from "./pages/Pricing";
 const Dashboard = lazy(() => import("./pages/dashboard"));
 const Profile = lazy(() => import("./pages/profile"));
 import { useTheme } from "./theme/ThemeProvider";
@@ -634,6 +635,7 @@ function App() {
         <Route path="/for-owners" element={<ForOwners />} />
         <Route path="/for-instructors" element={<ForInstructors />} />
         <Route path="/for-clients" element={<ForClients />} />
+        <Route path="/pricing" element={<Pricing />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/team" element={<Team />} />
         {/* Public class landing page — no auth required */}
