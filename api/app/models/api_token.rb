@@ -1,3 +1,5 @@
+require "bcrypt"
+
 class ApiToken < ApplicationRecord
   TOKEN_PREFIX_LENGTH = 8
   TOKEN_BYTES         = 32
@@ -18,7 +20,7 @@ class ApiToken < ApplicationRecord
   def self.generate!(user:, studio:, name:)
     raw                = SecureRandom.hex(TOKEN_BYTES)          # 64-char hex string
     prefix             = raw[0, TOKEN_PREFIX_LENGTH]
-    hashed             = BCrypt::Password.create(raw)
+    hashed             = ::BCrypt::Password.create(raw)
 
     token = create!(
       user:         user,
@@ -38,7 +40,7 @@ class ApiToken < ApplicationRecord
     # Narrow the candidate set by prefix first (fast DB lookup)
     candidates = active.where(token_prefix: prefix)
     candidates.find do |record|
-      BCrypt::Password.new(record.token_digest) == raw_token
+      ::BCrypt::Password.new(record.token_digest) == raw_token
     end&.tap(&:touch_last_used)
   end
 

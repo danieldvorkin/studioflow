@@ -18,6 +18,27 @@ Rails.application.routes.draw do
     namespace :v1 do
       get  "me",     to: "me#show"
       get  "studio", to: "me#studio"
+
+      # Owner / Staff
+      resources :clients, only: [ :index, :show ]
+      resources :sessions, only: [ :index, :show ]
+
+      # Instructor
+      namespace :instructor do
+        resources :sessions, only: [ :index ] do
+          member do
+            get :bookings
+          end
+        end
+        resources :payouts, only: [ :index ]
+      end
+
+      # Client (self-service)
+      namespace :client do
+        resources :bookings,         only: [ :index ]
+        resources :memberships,      only: [ :index ]
+        resources :bundle_purchases, only: [ :index ]
+      end
     end
   end
 
