@@ -990,6 +990,55 @@ module Types
       Notification.where(user_id: user.id).unread.undismissed.count
     end
 
+    # List custom studio pages for the current studio
+    # Owners see all; everyone else sees only published pages
+    # Clients may pass studio_id to scope to a specific studio they are browsing
+    field :studio_pages, [ Types::StudioPageType ], null: false,
+      description: "List custom studio pages" do
+      argument :studio_id, ID, required: false
+    end
+    def studio_pages(studio_id: nil)
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authenticated" unless user
+
+      effective_studio =
+        if studio_id.present?
+          Studio.find_by(id: studio_id) || user.studio
+        else
+          user.studio
+        end
+
+      scope = effective_studio.studio_pages.ordered
+      return scope if user.owner? || user.godmode?
+
+      scope.published
+    end
+
+    # Fetch a single studio page by id
+    field :studio_page, Types::StudioPageType, null: true,
+      description: "Fetch a studio page by ID" do
+      argument :id, ID, required: true
+      argument :studio_id, ID, required: false
+    end
+    def studio_page(id:, studio_id: nil)
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authenticated" unless user
+
+      effective_studio =
+        if studio_id.present?
+          Studio.find_by(id: studio_id) || user.studio
+        else
+          user.studio
+        end
+
+      page = effective_studio.studio_pages.find_by(id: id)
+      return nil unless page
+      return page if user.owner? || user.godmode?
+      return page if page.published?
+
+      nil
+    end
+
     private
 
     # Management access: owner, staff, or platform staff (godmode + moderator)

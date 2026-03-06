@@ -6,13 +6,21 @@ local:
   service: Disk
   root: <%= Rails.root.join("storage") %>
 
-# Use bin/rails credentials:edit to set the AWS secrets (as aws:access_key_id|secret_access_key)
-# amazon:
-#   service: S3
-#   access_key_id: <%= Rails.application.credentials.dig(:aws, :access_key_id) %>
-#   secret_access_key: <%= Rails.application.credentials.dig(:aws, :secret_access_key) %>
-#   region: us-east-1
-#   bucket: your_own_bucket-<%= Rails.env %>
+# Digital Ocean Spaces — S3-compatible object storage.
+# Configure via environment variables:
+#   DO_SPACES_KEY        — Spaces access key ID
+#   DO_SPACES_SECRET     — Spaces secret access key
+#   DO_SPACES_REGION     — e.g. nyc3, sfo3, ams3
+#   DO_SPACES_BUCKET     — your Space name
+#   DO_SPACES_ENDPOINT   — https://<region>.digitaloceanspaces.com
+amazon:
+  service: S3
+  access_key_id: <%= ENV.fetch("DO_SPACES_KEY", "") %>
+  secret_access_key: <%= ENV.fetch("DO_SPACES_SECRET", "") %>
+  region: <%= ENV.fetch("DO_SPACES_REGION", "sfo3") %>
+  bucket: <%= ENV.fetch("DO_SPACES_BUCKET", "joinstudioflow-production") %>
+  endpoint: <%= ENV.fetch("DO_SPACES_ENDPOINT", "https://sfo3.digitaloceanspaces.com") %>
+  force_path_style: false
 
 # Remember not to checkin your GCS keyfile to a repository
 # google:

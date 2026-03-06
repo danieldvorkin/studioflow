@@ -12,6 +12,7 @@ class Studio < ApplicationRecord
   has_many :client_invitations, dependent: :destroy
   has_many :notifications, dependent: :destroy
   has_many :api_tokens, dependent: :destroy
+  has_many :studio_pages, dependent: :destroy
 
   validates :name, presence: true
 

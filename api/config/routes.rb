@@ -6,6 +6,8 @@ Rails.application.routes.draw do
   post "/stripe/platform-webhook", to: "platform_webhooks#receive"
   post "/webhooks", to: "webhooks#receive"
   post "/contact",  to: "contacts#create"
+  post "/uploads",  to: "uploads#create"
+  match "/uploads", to: ->(env) { [ 200, { "Content-Type" => "text/plain" }, [ "OK" ] ] }, via: :options
 
   # ── Owner-managed API tokens (JWT-authenticated) ─────────────────────────────
   # Used by the web dashboard to generate / list / revoke long-lived API tokens.

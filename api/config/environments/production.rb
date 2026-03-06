@@ -18,8 +18,9 @@ Rails.application.configure do
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.asset_host = "http://assets.example.com"
 
-  # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :local
+  # Store uploaded files on Digital Ocean Spaces in production. Configure via:
+  #   DO_SPACES_KEY, DO_SPACES_SECRET, DO_SPACES_REGION, DO_SPACES_BUCKET, DO_SPACES_ENDPOINT
+  config.active_storage.service = :amazon
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
   # config.assume_ssl = true
