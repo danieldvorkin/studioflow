@@ -621,8 +621,7 @@ export default function BookingShow() {
                   <span>Total</span>
                   <span>
                     {currencySymbol}
-                    {paymentAmount}{" "}
-                    {payment?.currency ? payment.currency.toUpperCase() : ""}
+                    {paymentAmount}
                   </span>
                 </div>
               </>
