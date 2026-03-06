@@ -73,7 +73,9 @@ module Types
     field :update_client_membership, mutation: Mutations::UpdateClientMembership, null: true
     field :purchase_client_membership, mutation: Mutations::PurchaseClientMembership, null: true
 
-    field :create_moderator, mutation: Mutations::CreateModerator, null: true
+    field :create_moderator,          mutation: Mutations::CreateModerator,         null: true
+    field :resend_moderator_welcome,  mutation: Mutations::ResendModeratorWelcome,  null: true
+    field :toggle_moderator_active,   mutation: Mutations::ToggleModeratorActive,   null: true
 
     field :forgot_password, mutation: Mutations::ForgotPassword, null: true
     field :reset_password,  mutation: Mutations::ResetPassword,  null: true

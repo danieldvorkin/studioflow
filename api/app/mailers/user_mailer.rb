@@ -5,7 +5,7 @@ class UserMailer < ApplicationMailer
   def signup_confirmation
     @user   = params[:user]
     @studio = params[:studio]
-    @login_url = "#{ENV.fetch('WEB_APP_URL', 'http://localhost:5173')}/login"
+    @login_url = "#{web_app_base_url}/signin"
 
     mail(to: @user.email, subject: "Welcome to StudioFlow — your studio is ready!")
   end
@@ -31,9 +31,9 @@ class UserMailer < ApplicationMailer
 
   # Sent when a godmode user creates a new moderator account.
   def moderator_welcome
-    @user              = params[:user]
+    @user               = params[:user]
     @plaintext_password = params[:plaintext_password]
-    @login_url         = "#{ENV.fetch('WEB_APP_URL', 'http://localhost:5173')}/login"
+    @login_url          = "#{web_app_base_url}/signin"
 
     mail(to: @user.email, subject: "You've been added as a StudioFlow Moderator")
   end

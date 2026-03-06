@@ -50,7 +50,8 @@ class GraphqlController < ApplicationController
   # Warden JWT strategy does not populate request.env['warden'].
   def resolve_current_user
     user = request.env["warden"]&.user(:user)
-    return user if user
+    return user if user&.active?
+    return nil if user # inactive via session
 
     auth_header = request.headers["Authorization"]
     return nil unless auth_header&.start_with?("Bearer ")
@@ -67,7 +68,8 @@ class GraphqlController < ApplicationController
         payload, = JWT.decode(token, Rails.application.secret_key_base, true, { algorithm: "HS256" })
       end
       user_id = payload["sub"] || payload["user_id"]
-      User.find_by(id: user_id)
+      user = User.find_by(id: user_id)
+      user&.active? ? user : nil
     rescue => e
       Rails.logger.warn("GraphqlController.resolve_current_user JWT decode failed: #{e.class}: #{e.message}")
       nil

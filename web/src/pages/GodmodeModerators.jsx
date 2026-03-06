@@ -1,19 +1,24 @@
-import { useState } from 'react'
-import { Navigate } from 'react-router-dom'
-import { useQuery, useMutation } from '@apollo/client'
-import { useAuth } from '../auth/AuthProvider'
-import { MODERATORS, CREATE_MODERATOR } from '../apollo/queries'
+import { useState, useCallback } from "react";
+import { Navigate } from "react-router-dom";
+import { useQuery, useMutation } from "@apollo/client";
+import { useAuth } from "../auth/AuthProvider";
+import {
+  MODERATORS,
+  CREATE_MODERATOR,
+  RESEND_MODERATOR_WELCOME,
+  TOGGLE_MODERATOR_ACTIVE,
+} from "../apollo/queries";
 
 function CredentialCard({ email, password, onDismiss }) {
-  const [revealed, setRevealed] = useState(false)
-  const [copied, setCopied] = useState(null)
+  const [revealed, setRevealed] = useState(false);
+  const [copied, setCopied] = useState(null);
 
   const copy = (text, field) => {
     navigator.clipboard.writeText(text).then(() => {
-      setCopied(field)
-      setTimeout(() => setCopied(null), 2000)
-    })
-  }
+      setCopied(field);
+      setTimeout(() => setCopied(null), 2000);
+    });
+  };
 
   return (
     <div className="rounded-2xl border border-emerald-700/60 bg-emerald-950/40 p-5 shadow-sm shadow-black/30">
@@ -33,31 +38,38 @@ function CredentialCard({ email, password, onDismiss }) {
         </button>
       </div>
       <p className="mb-4 text-xs text-slate-400">
-        Save these credentials now — the password will not be shown again after you dismiss this card.
+        Save these credentials now — the password will not be shown again after
+        you dismiss this card.
       </p>
 
       <div className="flex flex-col gap-3">
         {/* Email */}
         <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-700 bg-slate-900 px-4 py-3">
           <div>
-            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Email</div>
-            <div className="mt-0.5 font-mono text-sm text-slate-100">{email}</div>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Email
+            </div>
+            <div className="mt-0.5 font-mono text-sm text-slate-100">
+              {email}
+            </div>
           </div>
           <button
             type="button"
-            onClick={() => copy(email, 'email')}
+            onClick={() => copy(email, "email")}
             className="shrink-0 rounded-md border border-slate-700 px-2.5 py-1 text-[11px] font-medium text-slate-300 hover:bg-slate-800"
           >
-            {copied === 'email' ? 'Copied!' : 'Copy'}
+            {copied === "email" ? "Copied!" : "Copy"}
           </button>
         </div>
 
         {/* Password */}
         <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-700 bg-slate-900 px-4 py-3">
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Password</div>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Password
+            </div>
             <div className="mt-0.5 font-mono text-sm text-slate-100 tracking-widest">
-              {revealed ? password : '•'.repeat(password.length)}
+              {revealed ? password : "•".repeat(password.length)}
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
@@ -66,85 +78,151 @@ function CredentialCard({ email, password, onDismiss }) {
               onClick={() => setRevealed((r) => !r)}
               className="rounded-md border border-slate-700 px-2.5 py-1 text-[11px] font-medium text-slate-300 hover:bg-slate-800"
             >
-              {revealed ? 'Hide' : 'Reveal'}
+              {revealed ? "Hide" : "Reveal"}
             </button>
             <button
               type="button"
-              onClick={() => copy(password, 'password')}
+              onClick={() => copy(password, "password")}
               className="rounded-md border border-slate-700 px-2.5 py-1 text-[11px] font-medium text-slate-300 hover:bg-slate-800"
             >
-              {copied === 'password' ? 'Copied!' : 'Copy'}
+              {copied === "password" ? "Copied!" : "Copy"}
             </button>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default function GodmodeModerators() {
-  const { user, isImpersonating } = useAuth()
+  const { user, isImpersonating } = useAuth();
 
-  const roleName = (user?.roleName || '').toString().toLowerCase()
-  const isGodmode = user?.godmode === true || roleName === 'godmode'
+  const roleName = (user?.roleName || "").toString().toLowerCase();
+  const isGodmode = user?.godmode === true || roleName === "godmode";
 
-  const [form, setForm] = useState({ email: '', name: '' })
-  const [formErrors, setFormErrors] = useState([])
-  const [newCred, setNewCred] = useState(null)
+  const [form, setForm] = useState({ email: "", name: "" });
+  const [formErrors, setFormErrors] = useState([]);
+  const [newCred, setNewCred] = useState(null);
+  // Per-moderator resend state: { [userId]: 'idle' | 'sending' | 'sent' | 'error' }
+  const [resendState, setResendState] = useState({});
 
   const { data, loading, refetch } = useQuery(MODERATORS, {
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
     skip: !isGodmode,
-  })
+  });
 
-  const [createModerator, { loading: creating }] = useMutation(CREATE_MODERATOR)
+  const [createModerator, { loading: creating }] =
+    useMutation(CREATE_MODERATOR);
+  const [resendModeratorWelcome] = useMutation(RESEND_MODERATOR_WELCOME);
+  const [toggleModeratorActive] = useMutation(TOGGLE_MODERATOR_ACTIVE);
 
-  const moderators = data?.moderators || []
+  const handleResend = useCallback(
+    async (modId) => {
+      setResendState((s) => ({ ...s, [modId]: "sending" }));
+      try {
+        const { data: res } = await resendModeratorWelcome({
+          variables: { userId: modId },
+        });
+        const errs = res?.resendModeratorWelcome?.errors;
+        if (errs?.length) {
+          setResendState((s) => ({ ...s, [modId]: "error" }));
+          setTimeout(
+            () => setResendState((s) => ({ ...s, [modId]: "idle" })),
+            4000,
+          );
+        } else {
+          setResendState((s) => ({ ...s, [modId]: "sent" }));
+          setTimeout(
+            () => setResendState((s) => ({ ...s, [modId]: "idle" })),
+            4000,
+          );
+        }
+      } catch {
+        setResendState((s) => ({ ...s, [modId]: "error" }));
+        setTimeout(
+          () => setResendState((s) => ({ ...s, [modId]: "idle" })),
+          4000,
+        );
+      }
+    },
+    [resendModeratorWelcome],
+  );
 
-  if (!user) return <Navigate to="/signin" replace />
-  if (!isGodmode || isImpersonating) return <Navigate to="/dashboard" replace />
+  const handleToggleActive = useCallback(
+    async (modId, currentlyActive) => {
+      try {
+        await toggleModeratorActive({
+          variables: { userId: modId, active: !currentlyActive },
+          update(cache, { data }) {
+            const updated = data?.toggleModeratorActive?.user;
+            if (!updated) return;
+            cache.modify({
+              id: cache.identify({ __typename: "User", id: updated.id }),
+              fields: { active: () => updated.active },
+            });
+          },
+        });
+        refetch();
+      } catch {
+        // silently ignore — the table will stay as-is
+      }
+    },
+    [toggleModeratorActive, refetch],
+  );
+
+  const moderators = data?.moderators || [];
+
+  if (!user) return <Navigate to="/signin" replace />;
+  if (!isGodmode || isImpersonating)
+    return <Navigate to="/dashboard" replace />;
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setFormErrors([])
-    setNewCred(null)
+    e.preventDefault();
+    setFormErrors([]);
+    setNewCred(null);
 
-    const email = form.email.trim()
+    const email = form.email.trim();
     if (!email) {
-      setFormErrors(['Email is required'])
-      return
+      setFormErrors(["Email is required"]);
+      return;
     }
 
     try {
       const { data: res } = await createModerator({
         variables: { email, name: form.name.trim() || undefined },
-      })
-      const result = res?.createModerator
+      });
+      const result = res?.createModerator;
       if (result?.errors?.length) {
-        setFormErrors(result.errors)
-        return
+        setFormErrors(result.errors);
+        return;
       }
       if (result?.user && result?.plaintextPassword) {
-        setNewCred({ email: result.user.email, password: result.plaintextPassword })
-        setForm({ email: '', name: '' })
-        refetch()
+        setNewCred({
+          email: result.user.email,
+          password: result.plaintextPassword,
+        });
+        setForm({ email: "", name: "" });
+        refetch();
       }
     } catch (err) {
-      setFormErrors([err.message || 'An unexpected error occurred'])
+      setFormErrors([err.message || "An unexpected error occurred"]);
     }
-  }
+  };
 
   return (
     <div className="flex w-full flex-col gap-6 p-1">
       <header className="flex flex-col gap-1">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-50">Mission Control</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-50">
+            Mission Control
+          </h1>
           <span className="rounded-full border border-violet-700/60 bg-violet-950/40 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-widest text-violet-400">
             Godmode
           </span>
         </div>
         <p className="text-sm text-slate-400">
-          Manage StudioFlow platform moderators — internal team members with platform-level access.
+          Manage StudioFlow platform moderators — internal team members with
+          platform-level access.
         </p>
       </header>
 
@@ -157,7 +235,10 @@ export default function GodmodeModerators() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-slate-400" htmlFor="mod-email">
+              <label
+                className="text-xs font-medium text-slate-400"
+                htmlFor="mod-email"
+              >
                 Email <span className="text-rose-400">*</span>
               </label>
               <input
@@ -165,34 +246,44 @@ export default function GodmodeModerators() {
                 type="email"
                 required
                 value={form.email}
-                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, email: e.target.value }))
+                }
                 placeholder="moderator@studioflow.io"
                 className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-slate-400" htmlFor="mod-name">
+              <label
+                className="text-xs font-medium text-slate-400"
+                htmlFor="mod-name"
+              >
                 Display Name <span className="text-slate-600">(optional)</span>
               </label>
               <input
                 id="mod-name"
                 type="text"
                 value={form.name}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, name: e.target.value }))
+                }
                 placeholder="Jane Doe"
                 className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
               />
             </div>
 
             <p className="text-[11px] text-slate-500">
-              A random strong password will be generated. Copy it from the credential card before dismissing.
+              A random strong password will be generated. Copy it from the
+              credential card before dismissing.
             </p>
 
             {formErrors.length > 0 && (
               <ul className="flex flex-col gap-1 rounded-lg border border-rose-800/60 bg-rose-950/40 px-4 py-3">
                 {formErrors.map((err) => (
-                  <li key={err} className="text-xs text-rose-300">{err}</li>
+                  <li key={err} className="text-xs text-rose-300">
+                    {err}
+                  </li>
                 ))}
               </ul>
             )}
@@ -202,7 +293,7 @@ export default function GodmodeModerators() {
               disabled={creating}
               className="inline-flex items-center justify-center rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-50"
             >
-              {creating ? 'Creating…' : 'Create Moderator'}
+              {creating ? "Creating…" : "Create Moderator"}
             </button>
           </form>
         </section>
@@ -232,12 +323,14 @@ export default function GodmodeModerators() {
             Active Moderators
           </div>
           <div className="text-xs text-slate-500">
-            {loading ? '…' : `${moderators.length} total`}
+            {loading ? "…" : `${moderators.length} total`}
           </div>
         </div>
 
         {loading && (
-          <div className="py-6 text-center text-sm text-slate-500">Loading…</div>
+          <div className="py-6 text-center text-sm text-slate-500">
+            Loading…
+          </div>
         )}
 
         {!loading && moderators.length === 0 && (
@@ -251,48 +344,113 @@ export default function GodmodeModerators() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-800">
-                  <th className="pb-2 text-left text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Name</th>
-                  <th className="pb-2 text-left text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Email</th>
-                  <th className="pb-2 text-left text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Status</th>
-                  <th className="pb-2 text-left text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Created</th>
+                  <th className="pb-2 text-left text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Name
+                  </th>
+                  <th className="pb-2 text-left text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Email
+                  </th>
+                  <th className="pb-2 text-left text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Status
+                  </th>
+                  <th className="pb-2 text-left text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Created
+                  </th>
+                  <th className="pb-2 text-left text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
-                {moderators.map((mod) => (
-                  <tr key={mod.id} className="group">
-                    <td className="py-3 pr-4 text-slate-200">
-                      {mod.name || <span className="text-slate-600 italic">—</span>}
-                    </td>
-                    <td className="py-3 pr-4 font-mono text-slate-300">{mod.email}</td>
-                    <td className="py-3 pr-4">
-                      {mod.active ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-800/60 bg-emerald-950/40 px-2 py-0.5 text-[11px] font-semibold text-emerald-400">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                          Active
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 text-[11px] font-semibold text-slate-500">
-                          <span className="h-1.5 w-1.5 rounded-full bg-slate-600" />
-                          Inactive
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3 text-xs text-slate-500">
-                      {mod.createdAt
-                        ? new Date(mod.createdAt).toLocaleDateString(undefined, {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                          })
-                        : '—'}
-                    </td>
-                  </tr>
-                ))}
+                {moderators.map((mod) => {
+                  const rs = resendState[mod.id] || "idle";
+                  return (
+                    <tr key={mod.id} className="group">
+                      <td className="py-3 pr-4 text-slate-200">
+                        {mod.name || (
+                          <span className="text-slate-600 italic">—</span>
+                        )}
+                      </td>
+                      <td className="py-3 pr-4 font-mono text-slate-300">
+                        {mod.email}
+                      </td>
+                      <td className="py-3 pr-4">
+                        {mod.active ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-800/60 bg-emerald-950/40 px-2 py-0.5 text-[11px] font-semibold text-emerald-400">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                            Active
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 text-[11px] font-semibold text-slate-500">
+                            <span className="h-1.5 w-1.5 rounded-full bg-slate-600" />
+                            Inactive
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 pr-4 text-xs text-slate-500">
+                        {mod.createdAt
+                          ? new Date(mod.createdAt).toLocaleDateString(
+                              undefined,
+                              {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              },
+                            )
+                          : "—"}
+                      </td>
+                      <td className="py-3">
+                        <div className="flex items-center gap-2">
+                          {/* Resend invite */}
+                          {rs === "sent" && (
+                            <span className="text-[11px] font-semibold text-emerald-400">
+                              ✓ Sent
+                            </span>
+                          )}
+                          {rs === "error" && (
+                            <span className="text-[11px] font-semibold text-rose-400">
+                              ✕ Failed
+                            </span>
+                          )}
+                          {(rs === "idle" || rs === "sending") && (
+                            <button
+                              type="button"
+                              disabled={rs === "sending"}
+                              onClick={() => handleResend(mod.id)}
+                              className="rounded-md border border-slate-700 bg-slate-900 px-2.5 py-1 text-[11px] font-medium text-slate-300 hover:border-violet-600 hover:text-violet-300 disabled:opacity-50"
+                            >
+                              {rs === "sending" ? "Sending…" : "Resend Invite"}
+                            </button>
+                          )}
+
+                          {/* Deactivate / Reactivate */}
+                          {mod.active ? (
+                            <button
+                              type="button"
+                              onClick={() => handleToggleActive(mod.id, true)}
+                              className="rounded-md border border-rose-800/60 bg-rose-950/30 px-2.5 py-1 text-[11px] font-medium text-rose-400 hover:border-rose-600 hover:text-rose-300"
+                            >
+                              Deactivate
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleToggleActive(mod.id, false)}
+                              className="rounded-md border border-emerald-800/60 bg-emerald-950/30 px-2.5 py-1 text-[11px] font-medium text-emerald-400 hover:border-emerald-600 hover:text-emerald-300"
+                            >
+                              Reactivate
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
       </section>
     </div>
-  )
+  );
 }

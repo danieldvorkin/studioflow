@@ -889,6 +889,31 @@ export const CREATE_MODERATOR = gql`
   }
 `;
 
+export const RESEND_MODERATOR_WELCOME = gql`
+  mutation ResendModeratorWelcome($userId: ID!) {
+    resendModeratorWelcome(input: { userId: $userId }) {
+      user {
+        id
+        email
+      }
+      errors
+    }
+  }
+`;
+
+export const TOGGLE_MODERATOR_ACTIVE = gql`
+  mutation ToggleModeratorActive($userId: ID!, $active: Boolean!) {
+    toggleModeratorActive(input: { userId: $userId, active: $active }) {
+      user {
+        id
+        email
+        active
+      }
+      errors
+    }
+  }
+`;
+
 export const SESSION_BOOKINGS = gql`
   query SessionBookings($classSessionId: ID!) {
     bookings(classSessionId: $classSessionId) {
