@@ -1,7 +1,7 @@
 class ShopOrderPolicy < ApplicationPolicy
   # Owners, staff, and platform admins can list all studio orders
   def index?
-    user && (user.godmode? || user.owner? || user.staff?)
+    user && (user.godmode? || user.owner? || user.staff? || user.moderator?)
   end
 
   # Any authenticated user can see their own orders (used by my_shop_orders resolver)

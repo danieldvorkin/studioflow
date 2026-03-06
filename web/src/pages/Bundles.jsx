@@ -19,6 +19,7 @@ import {
   isGodmode as isGodmodeUser,
   isOwner,
   isStaff,
+  isModerator,
 } from "../auth/permissions";
 import { useCurrency } from "../currency/CurrencyProvider";
 
@@ -44,7 +45,8 @@ export default function BundlesPage() {
 
   const roleName = (user?.roleName || "").toString().toLowerCase();
   const isGodmode = user?.godmode === true || roleName === "godmode";
-  const canManage = isOwner(user) || isStaff(user);
+  const canManage = isOwner(user) || isStaff(user) || isModerator(user);
+  const canWrite = isOwner(user) || isStaff(user);
 
   const { data: templatesData } = useQuery(CLASS_TEMPLATES, {
     skip: !canManage,
@@ -260,148 +262,149 @@ export default function BundlesPage() {
         ) : null}
       </header>
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-sm shadow-black/20">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">
-          Add bundle
-        </h2>
-        <form
-          className="grid grid-cols-1 gap-3 md:grid-cols-2"
-          onSubmit={submitCreate}
-        >
-          <div className="space-y-1">
-            <label className="text-[11px] font-medium text-slate-300">
-              Title
-            </label>
-            <input
-              value={createForm.title}
-              onChange={(e) =>
-                setCreateForm((v) => ({ ...v, title: e.target.value }))
-              }
-              className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-              placeholder="10-class pack"
-              required
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-[11px] font-medium text-slate-300">
-              Credits
-            </label>
-            <input
-              type="number"
-              min="1"
-              value={createForm.creditsCount}
-              onChange={(e) =>
-                setCreateForm((v) => ({ ...v, creditsCount: e.target.value }))
-              }
-              className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-              required
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-[11px] font-medium text-slate-300">
-              Price
-            </label>
-            <input
-              type="number"
-              value={createForm.priceDollars}
-              onChange={(e) =>
-                setCreateForm((v) => ({ ...v, priceDollars: e.target.value }))
-              }
-              className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-            />
-            <p className="text-[11px] text-slate-500">
-              Charged when purchasing this bundle.
-            </p>
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-[11px] font-medium text-slate-300">
-              Currency
-            </label>
-            <select
-              value={createForm.currency}
-              onChange={(e) =>
-                setCreateForm((v) => ({ ...v, currency: e.target.value }))
-              }
-              className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-            >
-              <option value="cad">CAD</option>
-              <option value="usd">USD</option>
-            </select>
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-[11px] font-medium text-slate-300">
-              Class template (optional)
-            </label>
-            <select
-              value={createForm.classTemplateId}
-              onChange={(e) =>
-                setCreateForm((v) => ({
-                  ...v,
-                  classTemplateId: e.target.value,
-                }))
-              }
-              className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-            >
-              <option value="">—</option>
-              {templates.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.title}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-[11px] font-medium text-slate-300">
-              Instructor (optional)
-            </label>
-            <select
-              value={createForm.instructorId}
-              onChange={(e) =>
-                setCreateForm((v) => ({ ...v, instructorId: e.target.value }))
-              }
-              className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-            >
-              <option value="">—</option>
-              {instructors.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.name || i.email}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="md:col-span-2 flex items-center justify-between gap-2">
-            <label className="flex items-center gap-2 text-xs font-medium text-slate-200">
+      {canWrite && (
+        <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-sm shadow-black/20">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">
+            Add bundle
+          </h2>
+          <form
+            className="grid grid-cols-1 gap-3 md:grid-cols-2"
+            onSubmit={submitCreate}
+          >
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-slate-300">
+                Title
+              </label>
               <input
-                type="checkbox"
-                checked={createForm.active}
+                value={createForm.title}
                 onChange={(e) =>
-                  setCreateForm((v) => ({ ...v, active: e.target.checked }))
+                  setCreateForm((v) => ({ ...v, title: e.target.value }))
                 }
+                className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                placeholder="10-class pack"
+                required
               />
-              Active
-            </label>
+            </div>
 
-            <button
-              type="submit"
-              className="inline-flex items-center rounded-full bg-sky-500 px-3 py-1 text-xs font-semibold text-on-accent hover:bg-sky-400"
-            >
-              Create
-            </button>
-          </div>
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-slate-300">
+                Credits
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={createForm.creditsCount}
+                onChange={(e) =>
+                  setCreateForm((v) => ({ ...v, creditsCount: e.target.value }))
+                }
+                className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                required
+              />
+            </div>
 
-          <div className="md:col-span-2 text-[11px] text-slate-500">
-            Note: A bundle must target at least a class template or an
-            instructor.
-          </div>
-        </form>
-      </section>
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-slate-300">
+                Price
+              </label>
+              <input
+                type="number"
+                value={createForm.priceDollars}
+                onChange={(e) =>
+                  setCreateForm((v) => ({ ...v, priceDollars: e.target.value }))
+                }
+                className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+              />
+              <p className="text-[11px] text-slate-500">
+                Charged when purchasing this bundle.
+              </p>
+            </div>
 
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-slate-300">
+                Currency
+              </label>
+              <select
+                value={createForm.currency}
+                onChange={(e) =>
+                  setCreateForm((v) => ({ ...v, currency: e.target.value }))
+                }
+                className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+              >
+                <option value="cad">CAD</option>
+                <option value="usd">USD</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-slate-300">
+                Class template (optional)
+              </label>
+              <select
+                value={createForm.classTemplateId}
+                onChange={(e) =>
+                  setCreateForm((v) => ({
+                    ...v,
+                    classTemplateId: e.target.value,
+                  }))
+                }
+                className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+              >
+                <option value="">—</option>
+                {templates.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-slate-300">
+                Instructor (optional)
+              </label>
+              <select
+                value={createForm.instructorId}
+                onChange={(e) =>
+                  setCreateForm((v) => ({ ...v, instructorId: e.target.value }))
+                }
+                className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+              >
+                <option value="">—</option>
+                {instructors.map((i) => (
+                  <option key={i.id} value={i.id}>
+                    {i.name || i.email}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="md:col-span-2 flex items-center justify-between gap-2">
+              <label className="flex items-center gap-2 text-xs font-medium text-slate-200">
+                <input
+                  type="checkbox"
+                  checked={createForm.active}
+                  onChange={(e) =>
+                    setCreateForm((v) => ({ ...v, active: e.target.checked }))
+                  }
+                />
+                Active
+              </label>
+
+              <button
+                type="submit"
+                className="inline-flex items-center rounded-full bg-sky-500 px-3 py-1 text-xs font-semibold text-on-accent hover:bg-sky-400"
+              >
+                Create
+              </button>
+            </div>
+
+            <div className="md:col-span-2 text-[11px] text-slate-500">
+              Note: A bundle must target at least a class template or an
+              instructor.
+            </div>
+          </form>
+        </section>
+      )}
       <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-sm shadow-black/20">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">
@@ -574,7 +577,7 @@ export default function BundlesPage() {
                         )}
                       </td>
                       <td className="px-3 py-2 text-right">
-                        {isEditing ? (
+                        {canWrite && isEditing ? (
                           <div className="flex items-center justify-end gap-2">
                             <button
                               type="button"
@@ -591,7 +594,7 @@ export default function BundlesPage() {
                               Save
                             </button>
                           </div>
-                        ) : (
+                        ) : canWrite ? (
                           <div className="flex items-center justify-end gap-2">
                             <button
                               type="button"
@@ -610,7 +613,7 @@ export default function BundlesPage() {
                               </button>
                             )}
                           </div>
-                        )}
+                        ) : null}
                       </td>
                     </tr>
                   );

@@ -245,12 +245,14 @@ function AppShell() {
             </NavFolder>
           )}
 
-          {isGodmode && (
+          {(isGodmode || isModerator) && (
             <NavFolder label="Platform" defaultOpen>
               <NavItem to="/godmode/studios" end={false}>
                 Studios
               </NavItem>
-              <NavItem to="/godmode/subscriptions">Subscriptions</NavItem>
+              {isGodmode && (
+                <NavItem to="/godmode/subscriptions">Subscriptions</NavItem>
+              )}
               <NavItem to="/godmode/moderators">Moderators</NavItem>
             </NavFolder>
           )}
@@ -453,7 +455,7 @@ function AppShell() {
                   </NavFolder>
                 )}
 
-                {isGodmode && (
+                {(isGodmode || isModerator) && (
                   <NavFolder label="Platform" defaultOpen variant="mobile">
                     <NavItem
                       to="/godmode/studios"
@@ -463,13 +465,15 @@ function AppShell() {
                     >
                       Studios
                     </NavItem>
-                    <NavItem
-                      to="/godmode/subscriptions"
-                      variant="mobile"
-                      onNavigate={() => setMobileNavOpen(false)}
-                    >
-                      Subscriptions
-                    </NavItem>
+                    {isGodmode && (
+                      <NavItem
+                        to="/godmode/subscriptions"
+                        variant="mobile"
+                        onNavigate={() => setMobileNavOpen(false)}
+                      >
+                        Subscriptions
+                      </NavItem>
+                    )}
                     <NavItem
                       to="/godmode/moderators"
                       variant="mobile"

@@ -31,22 +31,24 @@ export default function GodmodeStudios() {
 
   const roleName = (user?.roleName || "").toString().toLowerCase();
   const isGodmode = user?.godmode === true || roleName === "godmode";
+  const isModerator = roleName === "moderator" || user?.role === 4;
+  const isPlatformStaff = isGodmode || isModerator;
 
   const { data: studiosData, loading: studiosLoading } = useQuery(STUDIOS, {
     fetchPolicy: "cache-and-network",
-    skip: !isGodmode,
+    skip: !isPlatformStaff,
   });
 
   const { data: usersData, loading: usersLoading } = useQuery(ALL_USERS, {
     fetchPolicy: "cache-and-network",
-    skip: !isGodmode,
+    skip: !isPlatformStaff,
   });
 
   const { data: subsData, loading: subsLoading } = useQuery(
     STUDIO_SUBSCRIPTIONS,
     {
       fetchPolicy: "cache-and-network",
-      skip: !isGodmode,
+      skip: !isPlatformStaff,
     },
   );
 
@@ -86,7 +88,7 @@ export default function GodmodeStudios() {
   }, [studiosData, usersData, subsData]);
 
   if (!user) return <Navigate to="/signin" replace />;
-  if (!isGodmode || isImpersonating)
+  if (!isPlatformStaff || isImpersonating)
     return <Navigate to="/dashboard" replace />;
 
   return (

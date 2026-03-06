@@ -30,6 +30,10 @@ RSpec.describe ClientMembershipPolicy do
     include_examples "can manage", :staff
   end
 
+  describe "moderator" do
+    include_examples "can manage", :moderator
+  end
+
   describe "client" do
     let(:client_user) { create(:user, :client, studio: studio) }
 

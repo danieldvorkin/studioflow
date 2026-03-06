@@ -99,6 +99,8 @@ export default function GodmodeModerators() {
 
   const roleName = (user?.roleName || "").toString().toLowerCase();
   const isGodmode = user?.godmode === true || roleName === "godmode";
+  const isModerator = roleName === "moderator" || user?.role === 4;
+  const isPlatformStaff = isGodmode || isModerator;
 
   const [form, setForm] = useState({ email: "", name: "" });
   const [formErrors, setFormErrors] = useState([]);
@@ -108,7 +110,7 @@ export default function GodmodeModerators() {
 
   const { data, loading, refetch } = useQuery(MODERATORS, {
     fetchPolicy: "cache-and-network",
-    skip: !isGodmode,
+    skip: !isPlatformStaff,
   });
 
   const [createModerator, { loading: creating }] =
@@ -173,7 +175,7 @@ export default function GodmodeModerators() {
   const moderators = data?.moderators || [];
 
   if (!user) return <Navigate to="/signin" replace />;
-  if (!isGodmode || isImpersonating)
+  if (!isPlatformStaff || isImpersonating)
     return <Navigate to="/dashboard" replace />;
 
   const handleSubmit = async (e) => {
@@ -227,76 +229,79 @@ export default function GodmodeModerators() {
       </header>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Create moderator form */}
-        <section className="flex flex-col gap-4 rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-sm shadow-black/20">
-          <div className="text-xs font-semibold uppercase tracking-[0.3em] text-violet-400">
-            Add Moderator
-          </div>
-
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label
-                className="text-xs font-medium text-slate-400"
-                htmlFor="mod-email"
-              >
-                Email <span className="text-rose-400">*</span>
-              </label>
-              <input
-                id="mod-email"
-                type="email"
-                required
-                value={form.email}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, email: e.target.value }))
-                }
-                placeholder="moderator@studioflow.io"
-                className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-              />
+        {/* Create moderator form — godmode only */}
+        {isGodmode && (
+          <section className="flex flex-col gap-4 rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-sm shadow-black/20">
+            <div className="text-xs font-semibold uppercase tracking-[0.3em] text-violet-400">
+              Add Moderator
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label
-                className="text-xs font-medium text-slate-400"
-                htmlFor="mod-name"
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label
+                  className="text-xs font-medium text-slate-400"
+                  htmlFor="mod-email"
+                >
+                  Email <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  id="mod-email"
+                  type="email"
+                  required
+                  value={form.email}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, email: e.target.value }))
+                  }
+                  placeholder="moderator@studioflow.io"
+                  className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label
+                  className="text-xs font-medium text-slate-400"
+                  htmlFor="mod-name"
+                >
+                  Display Name{" "}
+                  <span className="text-slate-600">(optional)</span>
+                </label>
+                <input
+                  id="mod-name"
+                  type="text"
+                  value={form.name}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, name: e.target.value }))
+                  }
+                  placeholder="Jane Doe"
+                  className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                />
+              </div>
+
+              <p className="text-[11px] text-slate-500">
+                A random strong password will be generated. Copy it from the
+                credential card before dismissing.
+              </p>
+
+              {formErrors.length > 0 && (
+                <ul className="flex flex-col gap-1 rounded-lg border border-rose-800/60 bg-rose-950/40 px-4 py-3">
+                  {formErrors.map((err) => (
+                    <li key={err} className="text-xs text-rose-300">
+                      {err}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <button
+                type="submit"
+                disabled={creating}
+                className="inline-flex items-center justify-center rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-50"
               >
-                Display Name <span className="text-slate-600">(optional)</span>
-              </label>
-              <input
-                id="mod-name"
-                type="text"
-                value={form.name}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, name: e.target.value }))
-                }
-                placeholder="Jane Doe"
-                className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-              />
-            </div>
-
-            <p className="text-[11px] text-slate-500">
-              A random strong password will be generated. Copy it from the
-              credential card before dismissing.
-            </p>
-
-            {formErrors.length > 0 && (
-              <ul className="flex flex-col gap-1 rounded-lg border border-rose-800/60 bg-rose-950/40 px-4 py-3">
-                {formErrors.map((err) => (
-                  <li key={err} className="text-xs text-rose-300">
-                    {err}
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            <button
-              type="submit"
-              disabled={creating}
-              className="inline-flex items-center justify-center rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-50"
-            >
-              {creating ? "Creating…" : "Create Moderator"}
-            </button>
-          </form>
-        </section>
+                {creating ? "Creating…" : "Create Moderator"}
+              </button>
+            </form>
+          </section>
+        )}
 
         {/* Credential reveal card */}
         <section className="flex flex-col gap-4">

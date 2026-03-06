@@ -64,13 +64,15 @@ export default function OwnerApiTokens() {
   const { user } = useAuth();
   const isOwner =
     user?.role === 0 || user?.roleName === "owner" || user?.godmode;
+  const isModerator = user?.role === 4 || user?.roleName === "moderator";
+  const canAccess = isOwner || isModerator;
 
   const [newTokenName, setNewTokenName] = useState("");
   const [createdToken, setCreatedToken] = useState(null); // { rawToken, name }
   const [formError, setFormError] = useState("");
   const [revokeConfirm, setRevokeConfirm] = useState(null); // token id
 
-  const { data, loading, refetch } = useQuery(API_TOKENS, { skip: !isOwner });
+  const { data, loading, refetch } = useQuery(API_TOKENS, { skip: !canAccess });
 
   const [createToken, { loading: creating }] = useMutation(CREATE_API_TOKEN, {
     onCompleted: (res) => {
@@ -99,7 +101,7 @@ export default function OwnerApiTokens() {
     },
   });
 
-  if (!isOwner) return <Navigate to="/dashboard" replace />;
+  if (!canAccess) return <Navigate to="/dashboard" replace />;
 
   const tokens = data?.apiTokens ?? [];
 

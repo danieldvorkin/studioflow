@@ -21,10 +21,11 @@ export default function LocationsPage() {
 
   const [selectedStudioId, setSelectedStudioId] = useState("");
 
-  const { data: studiosData } = useQuery(STUDIOS, { skip: !isGodmode });
+  const isPlatformStaff = isGodmode || isModerator;
+  const { data: studiosData } = useQuery(STUDIOS, { skip: !isPlatformStaff });
   const studios = studiosData?.studios || [];
 
-  const effectiveStudioId = isGodmode ? selectedStudioId || null : null;
+  const effectiveStudioId = isPlatformStaff ? selectedStudioId || null : null;
 
   const { data, loading, refetch } = useQuery(STUDIO_LOCATIONS, {
     skip: !user,
@@ -163,7 +164,7 @@ export default function LocationsPage() {
         </p>
       </header>
 
-      {isGodmode && studios.length > 0 && (
+      {isPlatformStaff && studios.length > 0 && (
         <div className="flex items-center gap-3">
           <label className="text-xs font-medium text-slate-400">Studio</label>
           <select

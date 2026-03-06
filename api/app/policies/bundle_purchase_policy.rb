@@ -1,6 +1,6 @@
 class BundlePurchasePolicy < ApplicationPolicy
   def create?
-    user && (user.godmode? || user.client? || user.owner? || user.staff?)
+    user && (user.godmode? || user.client? || user.owner? || user.staff? || user.moderator?)
   end
 
   def index?

@@ -16,7 +16,7 @@ import {
   UPDATE_CLIENT_MEMBERSHIP,
 } from "../apollo/mutations";
 import { useToast } from "../components/ToastProvider";
-import { isOwner, isStaff, isGodmode } from "../auth/permissions";
+import { isOwner, isStaff, isGodmode, isModerator } from "../auth/permissions";
 import { useCurrency } from "../currency/CurrencyProvider";
 
 function dollarsFromCents(cents) {
@@ -395,7 +395,9 @@ export default function OwnerMembershipsPage() {
   const { data: userData } = useQuery(CURRENT_USER);
   const user = userData?.currentUser;
 
-  const canManage = isGodmode(user) || isOwner(user) || isStaff(user);
+  const canManage =
+    isGodmode(user) || isOwner(user) || isStaff(user) || isModerator(user);
+  const canWrite = isGodmode(user) || isOwner(user) || isStaff(user);
 
   const {
     data: plansData,
@@ -611,7 +613,7 @@ export default function OwnerMembershipsPage() {
       {tab === "plans" && (
         <div className="flex flex-col gap-4">
           {/* Create toggle */}
-          {!showCreate && !editingPlanId && (
+          {canWrite && !showCreate && !editingPlanId && (
             <div>
               <button
                 onClick={() => setShowCreate(true)}
@@ -623,7 +625,7 @@ export default function OwnerMembershipsPage() {
           )}
 
           {/* Create form */}
-          {showCreate && !editingPlanId && (
+          {canWrite && showCreate && !editingPlanId && (
             <PlanForm
               title="Create New Plan"
               form={createForm}
@@ -635,7 +637,7 @@ export default function OwnerMembershipsPage() {
           )}
 
           {/* Edit form */}
-          {editingPlanId && (
+          {canWrite && editingPlanId && (
             <PlanForm
               title="Edit Plan"
               form={editForm}
@@ -741,30 +743,32 @@ export default function OwnerMembershipsPage() {
                   {plan.enrolledCount !== 1 ? "s" : ""}
                 </div>
 
-                <div className="flex items-center gap-2 flex-wrap pt-1">
-                  <button
-                    onClick={() => startEdit(plan)}
-                    className="rounded border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleToggleActive(plan)}
-                    className={`rounded border px-2 py-1 text-xs ${
-                      plan.active
-                        ? "border-amber-600 text-amber-400 hover:bg-amber-600/10"
-                        : "border-emerald-600 text-emerald-400 hover:bg-emerald-600/10"
-                    }`}
-                  >
-                    {plan.active ? "Unpublish" : "Publish"}
-                  </button>
-                  <button
-                    onClick={() => handleDeletePlan(plan.id)}
-                    className="rounded border border-red-800/60 px-2 py-1 text-xs text-red-400 hover:bg-red-800/10"
-                  >
-                    Delete
-                  </button>
-                </div>
+                {canWrite && (
+                  <div className="flex items-center gap-2 flex-wrap pt-1">
+                    <button
+                      onClick={() => startEdit(plan)}
+                      className="rounded border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleToggleActive(plan)}
+                      className={`rounded border px-2 py-1 text-xs ${
+                        plan.active
+                          ? "border-amber-600 text-amber-400 hover:bg-amber-600/10"
+                          : "border-emerald-600 text-emerald-400 hover:bg-emerald-600/10"
+                      }`}
+                    >
+                      {plan.active ? "Unpublish" : "Publish"}
+                    </button>
+                    <button
+                      onClick={() => handleDeletePlan(plan.id)}
+                      className="rounded border border-red-800/60 px-2 py-1 text-xs text-red-400 hover:bg-red-800/10"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -776,12 +780,14 @@ export default function OwnerMembershipsPage() {
         <div className="flex flex-col gap-4">
           {/* Controls */}
           <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => setShowEnrollModal(true)}
-              className="rounded-md bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500"
-            >
-              + Enroll Client
-            </button>
+            {canWrite && (
+              <button
+                onClick={() => setShowEnrollModal(true)}
+                className="rounded-md bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500"
+              >
+                + Enroll Client
+              </button>
+            )}
             <select
               className="rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:border-sky-500 focus:outline-none"
               value={filterPlanId}
@@ -877,7 +883,7 @@ export default function OwnerMembershipsPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 flex-wrap">
-                          {m.status === "active" && (
+                          {canWrite && m.status === "active" && (
                             <>
                               <button
                                 onClick={() =>
@@ -897,7 +903,7 @@ export default function OwnerMembershipsPage() {
                               </button>
                             </>
                           )}
-                          {m.status === "paused" && (
+                          {canWrite && m.status === "paused" && (
                             <button
                               onClick={() => handleUpdateStatus(m.id, "active")}
                               className="rounded border border-emerald-600 px-2 py-0.5 text-xs text-emerald-400 hover:bg-emerald-600/10"
@@ -905,7 +911,7 @@ export default function OwnerMembershipsPage() {
                               Reactivate
                             </button>
                           )}
-                          {m.status === "cancelled" && (
+                          {canWrite && m.status === "cancelled" && (
                             <button
                               onClick={() => handleUpdateStatus(m.id, "active")}
                               className="rounded border border-emerald-600 px-2 py-0.5 text-xs text-emerald-400 hover:bg-emerald-600/10"
@@ -924,7 +930,7 @@ export default function OwnerMembershipsPage() {
         </div>
       )}
 
-      {showEnrollModal && (
+      {canWrite && showEnrollModal && (
         <EnrollModal
           plans={plans}
           clients={clients}
