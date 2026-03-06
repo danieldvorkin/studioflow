@@ -1130,3 +1130,108 @@ export const API_TOKENS = gql`
     }
   }
 `;
+
+// ─── Studio Pages ─────────────────────────────────────────────────────────────
+
+export const STUDIO_PAGES = gql`
+  query StudioPages($studioId: ID) {
+    studioPages(studioId: $studioId) {
+      id
+      title
+      slug
+      content
+      published
+      position
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const STUDIO_PAGE = gql`
+  query StudioPage($id: ID!, $studioId: ID) {
+    studioPage(id: $id, studioId: $studioId) {
+      id
+      title
+      slug
+      content
+      published
+      position
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const CREATE_STUDIO_PAGE = gql`
+  mutation CreateStudioPage(
+    $title: String!
+    $content: String
+    $published: Boolean
+    $position: Int
+  ) {
+    createStudioPage(
+      input: {
+        title: $title
+        content: $content
+        published: $published
+        position: $position
+      }
+    ) {
+      studioPage {
+        id
+        title
+        slug
+        content
+        published
+        position
+        createdAt
+        updatedAt
+      }
+      errors
+    }
+  }
+`;
+
+export const UPDATE_STUDIO_PAGE = gql`
+  mutation UpdateStudioPage(
+    $id: ID!
+    $title: String
+    $content: String
+    $published: Boolean
+    $position: Int
+    $slug: String
+  ) {
+    updateStudioPage(
+      input: {
+        id: $id
+        title: $title
+        content: $content
+        published: $published
+        position: $position
+        slug: $slug
+      }
+    ) {
+      studioPage {
+        id
+        title
+        slug
+        content
+        published
+        position
+        createdAt
+        updatedAt
+      }
+      errors
+    }
+  }
+`;
+
+export const DELETE_STUDIO_PAGE = gql`
+  mutation DeleteStudioPage($id: ID!) {
+    deleteStudioPage(input: { id: $id }) {
+      success
+      errors
+    }
+  }
+`;

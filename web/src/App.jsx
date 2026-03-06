@@ -58,12 +58,14 @@ import Pricing from "./pages/Pricing";
 import OwnerSubscription from "./pages/OwnerSubscription";
 import OwnerApiTokens from "./pages/OwnerApiTokens";
 import ApiDocs from "./pages/ApiDocs";
+import OwnerPages from "./pages/OwnerPages";
+import StudioPageView from "./pages/StudioPageView";
 const Dashboard = lazy(() => import("./pages/dashboard"));
 const Profile = lazy(() => import("./pages/profile"));
 import { useTheme } from "./theme/ThemeProvider";
 import { useCurrency } from "./currency/CurrencyProvider";
 import { useLocationContext } from "./location/LocationProvider";
-import { STUDIO_SETTINGS } from "./apollo/queries";
+import { STUDIO_SETTINGS, STUDIO_PAGES } from "./apollo/queries";
 import { useStudio } from "./studio/StudioProvider";
 import NotificationBell from "./components/NotificationBell";
 import SubscriptionStatusBanner from "./components/SubscriptionStatusBanner";
@@ -154,6 +156,13 @@ function AppShell() {
     variables: isClient ? { studioId: selectedStudioId } : undefined,
     skip: isClient && !selectedStudioId,
   });
+
+  const { data: studioPagesData } = useQuery(STUDIO_PAGES, {
+    variables: isClient ? { studioId: selectedStudioId } : undefined,
+    skip: isClient && !selectedStudioId,
+    fetchPolicy: "cache-and-network",
+  });
+  const studioPages = studioPagesData?.studioPages || [];
   const dashboardTitle =
     studioSettingsData?.studioSettings?.dashboardTitle ||
     "-- Select a studio --";
@@ -230,6 +239,16 @@ function AppShell() {
             <NavItem to="/my-orders">My orders</NavItem>
           </NavFolder>
 
+          {studioPages.length > 0 && (
+            <NavFolder label="Pages" defaultOpen>
+              {studioPages.map((p) => (
+                <NavItem key={p.id} to={`/studio-pages/${p.id}`}>
+                  {p.title}
+                </NavItem>
+              ))}
+            </NavFolder>
+          )}
+
           {(isGodmode || isOwner || isModerator) && (
             <NavFolder label="Owner" defaultOpen>
               <NavItem to="/owner">Owner</NavItem>
@@ -241,6 +260,7 @@ function AppShell() {
               <NavItem to="/owner/shop">Shop</NavItem>
               <NavItem to="/owner/subscription">Subscription</NavItem>
               <NavItem to="/owner/api-tokens">API Tokens</NavItem>
+              <NavItem to="/owner/pages">Pages</NavItem>
               <NavItem to="/locations">Locations</NavItem>
             </NavFolder>
           )}
@@ -401,6 +421,21 @@ function AppShell() {
                   )}
                 </NavFolder>
 
+                {studioPages.length > 0 && (
+                  <NavFolder label="Pages" defaultOpen variant="mobile">
+                    {studioPages.map((p) => (
+                      <NavItem
+                        key={p.id}
+                        to={`/studio-pages/${p.id}`}
+                        variant="mobile"
+                        onNavigate={() => setMobileNavOpen(false)}
+                      >
+                        {p.title}
+                      </NavItem>
+                    ))}
+                  </NavFolder>
+                )}
+
                 {(isGodmode || isOwner || isModerator) && (
                   <NavFolder label="Owner" defaultOpen variant="mobile">
                     <NavItem
@@ -444,6 +479,13 @@ function AppShell() {
                       onNavigate={() => setMobileNavOpen(false)}
                     >
                       API Tokens
+                    </NavItem>
+                    <NavItem
+                      to="/owner/pages"
+                      variant="mobile"
+                      onNavigate={() => setMobileNavOpen(false)}
+                    >
+                      Pages
                     </NavItem>
                     <NavItem
                       to="/locations"
@@ -786,6 +828,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <OwnerApiTokens />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/owner/pages"
+            element={
+              <RoleGate allow={["owner", "godmode"]}>
+                <OwnerPages />
+              </RoleGate>
+            }
+          />
+          <Route
+            path="/studio-pages/:id"
+            element={
+              <ProtectedRoute>
+                <StudioPageView />
               </ProtectedRoute>
             }
           />

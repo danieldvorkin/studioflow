@@ -97,5 +97,10 @@ module Types
     # API token management (owner only)
     field :create_api_token, mutation: Mutations::CreateApiToken, null: true
     field :revoke_api_token, mutation: Mutations::RevokeApiToken, null: true
+
+    # Custom studio pages (owner only)
+    field :create_studio_page, mutation: Mutations::CreateStudioPage, null: true
+    field :update_studio_page, mutation: Mutations::UpdateStudioPage, null: true
+    field :delete_studio_page, mutation: Mutations::DeleteStudioPage, null: true
   end
 end
