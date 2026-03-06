@@ -10,7 +10,7 @@ module Api
           return render json: { error: "No client profile linked to this account" }, status: :not_found unless client
 
           bookings = client.bookings.where(archived: false)
-                          .includes(:class_session => :class_template)
+                          .includes(class_session: :class_template)
                           .order("class_sessions.start_time DESC")
 
           render json: {

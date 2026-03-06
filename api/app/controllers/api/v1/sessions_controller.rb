@@ -22,8 +22,8 @@ module Api
           sessions = sessions.where("start_time <= ?", to)
         end
 
-        per_page = [[params.fetch(:per_page, 25).to_i, 1].max, 100].min
-        page     = [params.fetch(:page, 1).to_i, 1].max
+        per_page = [ [ params.fetch(:per_page, 25).to_i, 1 ].max, 100 ].min
+        page     = [ params.fetch(:page, 1).to_i, 1 ].max
         total    = sessions.count
         sessions = sessions.offset((page - 1) * per_page).limit(per_page)
 
