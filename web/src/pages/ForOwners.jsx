@@ -361,6 +361,55 @@ export default function ForOwners() {
           </div>
         </section>
 
+        {/* API teaser */}
+        <section className="mx-auto max-w-6xl px-4 py-12">
+          <div className="rounded-2xl border border-indigo-500/20 bg-gradient-to-br from-indigo-500/10 via-sky-500/5 to-transparent p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-indigo-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                StudioFlow API · v1
+              </div>
+              <h3 className="text-xl font-bold text-white">
+                Build on top of your studio data.
+              </h3>
+              <p className="text-sm text-slate-400 max-w-lg">
+                Owners can generate long-lived API tokens and connect StudioFlow
+                to any tool — Notion, Slack, Google Sheets, Zapier, or custom
+                scripts. Your data, your automation, your way.
+              </p>
+              <div className="flex flex-wrap gap-3 pt-1">
+                {[
+                  "REST API",
+                  "Bearer token auth",
+                  "JSON",
+                  "Owner-only access",
+                ].map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full border border-indigo-700/50 bg-indigo-900/30 px-2.5 py-1 text-[10px] font-semibold text-indigo-300"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col gap-2.5 shrink-0">
+              <Link
+                to="/for-developers"
+                className="inline-flex items-center justify-center rounded-xl bg-indigo-500 px-5 py-2.5 text-sm font-bold text-slate-950 hover:bg-indigo-400 transition"
+              >
+                Explore the API →
+              </Link>
+              <Link
+                to="/api-docs"
+                className="inline-flex items-center justify-center rounded-xl border border-slate-700 bg-slate-900/60 px-5 py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-800 transition text-center"
+              >
+                View docs
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* Social proof */}
         <section className="mx-auto max-w-4xl px-4 py-8 pb-24">
           <div className="grid gap-5 md:grid-cols-2">

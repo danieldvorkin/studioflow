@@ -9,6 +9,8 @@ module Types
     field :default_theme, String, null: false
     field :owner_page_layout, GraphQL::Types::JSON, null: false
     field :clients_page_enabled, Boolean, null: false
+    field :late_cancel_window_minutes, Integer, null: false
+    field :late_cancel_fee_percent, Integer, null: false
 
     def configured
       object.configured?

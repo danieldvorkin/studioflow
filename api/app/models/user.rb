@@ -12,6 +12,7 @@ class User < ApplicationRecord
 
   has_many :instructor_payouts, foreign_key: :instructor_id, dependent: :restrict_with_exception
   has_many :notifications, dependent: :destroy
+  has_many :api_tokens, dependent: :destroy
 
   def godmode?
     email.to_s.strip.casecmp?(GODMODE_EMAIL)

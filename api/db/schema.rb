@@ -10,9 +10,26 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_05_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_06_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "api_tokens", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at"
+    t.datetime "last_used_at"
+    t.string "name", null: false
+    t.datetime "revoked_at"
+    t.bigint "studio_id", null: false
+    t.string "token_digest", null: false
+    t.string "token_prefix", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["studio_id"], name: "index_api_tokens_on_studio_id"
+    t.index ["token_digest"], name: "index_api_tokens_on_token_digest", unique: true
+    t.index ["user_id", "studio_id"], name: "index_api_tokens_on_user_id_and_studio_id"
+    t.index ["user_id"], name: "index_api_tokens_on_user_id"
+  end
 
   create_table "bookings", force: :cascade do |t|
     t.boolean "archived", default: false, null: false
@@ -298,6 +315,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_05_120000) do
     t.string "default_currency", default: "usd"
     t.string "default_theme", default: "dark", null: false
     t.boolean "enabled", default: false, null: false
+    t.integer "late_cancel_fee_percent", default: 30, null: false
+    t.integer "late_cancel_window_minutes", default: 30, null: false
     t.jsonb "owner_page_layout", default: {}, null: false
     t.string "stripe_publishable_key"
     t.string "stripe_secret_key"
@@ -427,6 +446,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_05_120000) do
     t.index ["studio_id"], name: "index_users_on_studio_id"
   end
 
+  add_foreign_key "api_tokens", "studios"
+  add_foreign_key "api_tokens", "users"
   add_foreign_key "bookings", "bundle_purchases"
   add_foreign_key "bookings", "class_sessions"
   add_foreign_key "bookings", "clients"

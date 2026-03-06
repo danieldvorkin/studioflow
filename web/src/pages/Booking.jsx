@@ -44,6 +44,13 @@ function BookingForm({ session, studioIdForBooking, stripeConfigured }) {
   const roleName = (user?.roleName || "").toString().toLowerCase();
   const isClientUser = roleName === "client";
 
+  const _duration = session?.classTemplate?.durationMinutes || 50;
+  const _cutoffMs = 2 * _duration * 60 * 1000;
+  const bookingWindowClosed =
+    isClientUser &&
+    session?.startTime &&
+    new Date(session.startTime) - Date.now() < _cutoffMs;
+
   const { data: myClientData } = useQuery(MY_CLIENT, {
     skip: !user,
     variables: isClientUser
@@ -272,7 +279,7 @@ function BookingForm({ session, studioIdForBooking, stripeConfigured }) {
         }
 
         addToast({ message: "Booking confirmed", type: "success" });
-        navigate("/dashboard");
+        navigate(`/bookings/${booking.id}`);
         return;
       }
 
@@ -349,7 +356,7 @@ function BookingForm({ session, studioIdForBooking, stripeConfigured }) {
       }
 
       addToast({ message: "Booking confirmed", type: "success" });
-      navigate("/dashboard");
+      navigate(`/bookings/${booking.id}`);
     } catch (e) {
       addToast({ message: e.message || "Booking failed", type: "error" });
     } finally {
@@ -388,6 +395,36 @@ function BookingForm({ session, studioIdForBooking, stripeConfigured }) {
   const currency = (session.classTemplate?.currency || "cad").toLowerCase();
   const currencyLabel = currency.toUpperCase();
   const currencySymbol = currency === "usd" ? "$" : "CA$";
+
+  if (bookingWindowClosed) {
+    return (
+      <div className="mx-auto max-w-lg p-6">
+        <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-5">
+          <p className="text-sm font-semibold text-rose-300">
+            Booking window closed
+          </p>
+          <p className="mt-1 text-xs text-rose-300/80">
+            Bookings close {2 * _duration} minutes before class start. This
+            class has already passed or is starting very soon.
+          </p>
+          <p className="mt-3 text-xs text-slate-400">
+            <strong className="text-slate-200">
+              {session.classTemplate?.title}
+            </strong>
+            {" · "}
+            {new Date(session.startTime).toLocaleString()}
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="mt-4 inline-flex items-center rounded-full border border-slate-600 px-4 py-1.5 text-xs text-slate-200 hover:bg-slate-800"
+          >
+            ← Go back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const priceDollars = session.classTemplate?.priceCents
     ? (session.classTemplate.priceCents / 100).toFixed(2)

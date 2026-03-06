@@ -7,6 +7,20 @@ Rails.application.routes.draw do
   post "/webhooks", to: "webhooks#receive"
   post "/contact",  to: "contacts#create"
 
+  # ── Owner-managed API tokens (JWT-authenticated) ─────────────────────────────
+  # Used by the web dashboard to generate / list / revoke long-lived API tokens.
+  namespace :api do
+    resources :tokens, only: [ :index, :create, :destroy ]
+  end
+
+  # ── Public REST API (API-token-authenticated) ─────────────────────────────────
+  namespace :api do
+    namespace :v1 do
+      get  "me",     to: "me#show"
+      get  "studio", to: "me#studio"
+    end
+  end
+
   # Native iOS Google Sign-In REST endpoint
   # Accepts: { id_token: "..." } or { access_token: "..." }
   # Returns: { token: "<jwt>", user: { ... } }

@@ -327,59 +327,61 @@ export default function BookingsPage({ scope = "visible" }) {
                                 b.payment?.status === "succeeded" ||
                                 !!b.bundlePurchase;
                               return (
-                                <li
-                                  key={b.id}
-                                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-800 bg-slate-950/30 px-3 py-2 text-xs"
-                                >
-                                  <div className="flex min-w-[180px] flex-1 flex-col">
-                                    <Link
-                                      to={`/bookings/${b.id}`}
-                                      className="font-medium text-slate-200 hover:text-sky-300"
-                                    >
-                                      {b.client?.name ||
-                                        b.client?.email ||
-                                        "Client"}
-                                    </Link>
-                                    {b.client?.email && (
-                                      <span className="text-[11px] text-slate-500">
-                                        {b.client.email}
+                                <li key={b.id}>
+                                  <Link
+                                    to={`/bookings/${b.id}`}
+                                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-800 bg-slate-950/30 px-3 py-2 text-xs hover:border-slate-700 hover:bg-slate-900"
+                                  >
+                                    <div className="flex min-w-[180px] flex-1 flex-col">
+                                      <span className="font-medium text-slate-200 hover:text-sky-300">
+                                        {b.client?.name ||
+                                          b.client?.email ||
+                                          "Client"}
                                       </span>
-                                    )}
-                                  </div>
+                                      {b.client?.email && (
+                                        <span className="text-[11px] text-slate-500">
+                                          {b.client.email}
+                                        </span>
+                                      )}
+                                    </div>
 
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    <span
-                                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.15em] ${
-                                        b.status === "cancelled"
-                                          ? "bg-rose-900/60 text-rose-200"
-                                          : b.status === "waitlisted"
-                                            ? "bg-amber-800/60 text-amber-100"
-                                            : "bg-emerald-900/60 text-emerald-100"
-                                      }`}
-                                    >
-                                      {b.status}
-                                    </span>
-
-                                    <span
-                                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.15em] ${
-                                        paid
-                                          ? "bg-emerald-900/40 text-emerald-100"
-                                          : "bg-slate-800 text-slate-200"
-                                      }`}
-                                    >
-                                      {paid ? "Paid" : "Unpaid"}
-                                    </span>
-
-                                    {b.status !== "cancelled" && (
-                                      <button
-                                        type="button"
-                                        onClick={() => handleCancel(b.id)}
-                                        className="rounded-full bg-slate-800 px-3 py-1 text-[11px] text-slate-100 hover:bg-rose-600/80 hover:text-rose-50"
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <span
+                                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.15em] ${
+                                          b.status === "cancelled"
+                                            ? "bg-rose-900/60 text-rose-200"
+                                            : b.status === "waitlisted"
+                                              ? "bg-amber-800/60 text-amber-100"
+                                              : "bg-emerald-900/60 text-emerald-100"
+                                        }`}
                                       >
-                                        Cancel
-                                      </button>
-                                    )}
-                                  </div>
+                                        {b.status}
+                                      </span>
+
+                                      <span
+                                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.15em] ${
+                                          paid
+                                            ? "bg-emerald-900/40 text-emerald-100"
+                                            : "bg-slate-800 text-slate-200"
+                                        }`}
+                                      >
+                                        {paid ? "Paid" : "Unpaid"}
+                                      </span>
+
+                                      {b.status !== "cancelled" && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            handleCancel(b.id);
+                                          }}
+                                          className="rounded-full bg-slate-800 px-3 py-1 text-[11px] text-slate-100 hover:bg-rose-600/80 hover:text-rose-50"
+                                        >
+                                          Cancel
+                                        </button>
+                                      )}
+                                    </div>
+                                  </Link>
                                 </li>
                               );
                             })}
@@ -462,105 +464,109 @@ export default function BookingsPage({ scope = "visible" }) {
 
           <ul className="flex max-h-[480px] flex-col gap-2 overflow-auto text-sm">
             {filteredBookings.map((b) => (
-              <li
-                key={b.id}
-                className="flex items-start justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900 px-3 py-2.5"
-              >
-                <div className="flex flex-1 flex-col gap-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <Link
-                      to={`/bookings/${b.id}`}
-                      className="text-sm font-medium text-slate-50 hover:text-sky-300"
-                    >
-                      {b.classSession.classTemplate?.title || "Class"}
-                    </Link>
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.15em] ${
-                        b.status === "cancelled"
-                          ? "bg-rose-900/60 text-rose-200"
-                          : b.status === "waitlisted"
-                            ? "bg-amber-800/60 text-amber-100"
-                            : "bg-emerald-900/60 text-emerald-100"
-                      }`}
-                    >
-                      {b.status}
-                    </span>
-                  </div>
-                  <div className="text-xs text-slate-400">
-                    {new Date(b.classSession.startTime).toLocaleString()}
-                  </div>
-                  <div className="mt-1 flex flex-wrap gap-2 text-[11px] text-slate-400">
-                    <span>Client: {b.client.name}</span>
-                    {b.classSession.instructor && (
-                      <span>Instructor: {b.classSession.instructor.name}</span>
-                    )}
-                    {b.classSession.room && (
-                      <span>Room: {b.classSession.room}</span>
-                    )}
-                    {b.bundlePurchase && (
-                      <span>
-                        Payment: Bundle credit
-                        {b.bundlePurchase.bundleProduct?.title
-                          ? ` • ${b.bundlePurchase.bundleProduct.title}`
-                          : ""}
-                        {Number.isFinite(b.bundlePurchase.creditsRemaining) &&
-                        Number.isFinite(b.bundlePurchase.creditsTotal)
-                          ? ` • ${b.bundlePurchase.creditsRemaining}/${b.bundlePurchase.creditsTotal} remaining`
-                          : ""}
+              <li key={b.id}>
+                <Link
+                  to={`/bookings/${b.id}`}
+                  className="flex items-start justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900 px-3 py-2.5 hover:border-slate-700 hover:bg-slate-800/60"
+                >
+                  <div className="flex flex-1 flex-col gap-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-medium text-slate-50">
+                        {b.classSession.classTemplate?.title || "Class"}
                       </span>
-                    )}
-                    {b.payment && (
-                      <span>
-                        Payment:{" "}
-                        {b.payment.status === "succeeded"
-                          ? "Paid"
-                          : b.payment.status}{" "}
-                        ${(b.payment.amountCents / 100).toFixed(2)}{" "}
-                        {b.payment.currency.toUpperCase()}
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.15em] ${
+                          b.status === "cancelled"
+                            ? "bg-rose-900/60 text-rose-200"
+                            : b.status === "waitlisted"
+                              ? "bg-amber-800/60 text-amber-100"
+                              : "bg-emerald-900/60 text-emerald-100"
+                        }`}
+                      >
+                        {b.status}
                       </span>
-                    )}
-                    {!b.payment && !b.bundlePurchase && (
-                      <span>Payment: {b.paid ? "Paid" : "Unpaid"}</span>
-                    )}
+                    </div>
+                    <div className="text-xs text-slate-400">
+                      {new Date(b.classSession.startTime).toLocaleString()}
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-2 text-[11px] text-slate-400">
+                      <span>Client: {b.client.name}</span>
+                      {b.classSession.instructor && (
+                        <span>
+                          Instructor: {b.classSession.instructor.name}
+                        </span>
+                      )}
+                      {b.classSession.room && (
+                        <span>Room: {b.classSession.room}</span>
+                      )}
+                      {b.bundlePurchase && (
+                        <span>
+                          Payment: Bundle credit
+                          {b.bundlePurchase.bundleProduct?.title
+                            ? ` • ${b.bundlePurchase.bundleProduct.title}`
+                            : ""}
+                          {Number.isFinite(b.bundlePurchase.creditsRemaining) &&
+                          Number.isFinite(b.bundlePurchase.creditsTotal)
+                            ? ` • ${b.bundlePurchase.creditsRemaining}/${b.bundlePurchase.creditsTotal} remaining`
+                            : ""}
+                        </span>
+                      )}
+                      {b.payment && (
+                        <span>
+                          Payment:{" "}
+                          {b.payment.status === "succeeded"
+                            ? "Paid"
+                            : b.payment.status}{" "}
+                          ${(b.payment.amountCents / 100).toFixed(2)}{" "}
+                          {b.payment.currency.toUpperCase()}
+                        </span>
+                      )}
+                      {!b.payment && !b.bundlePurchase && (
+                        <span>Payment: {b.paid ? "Paid" : "Unpaid"}</span>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="flex flex-col items-end gap-1 text-xs">
-                  <Link
-                    to={`/bookings/${b.id}`}
-                    className="rounded-full border border-slate-600 px-3 py-1 text-slate-200 hover:bg-slate-800"
-                  >
-                    View
-                  </Link>
-                  {(isOwner || isInstructor) && b.status !== "cancelled" && (
-                    <button
-                      type="button"
-                      onClick={() => handleCancel(b.id)}
-                      className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-100 hover:bg-rose-600/80 hover:text-rose-50"
-                    >
-                      Cancel
-                    </button>
-                  )}
-                  {(isOwner || isInstructor) &&
-                    b.status === "cancelled" &&
-                    !b.archived && (
-                      <div className="flex flex-wrap justify-end gap-1">
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/bookings/${b.id}?rebook=1`)}
-                          className="rounded-full bg-emerald-700/80 px-3 py-1 text-xs text-emerald-50 hover:bg-emerald-500"
-                        >
-                          Re-book
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleArchive(b.id)}
-                          className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-100 hover:bg-slate-700"
-                        >
-                          Archive
-                        </button>
-                      </div>
+                  <div className="flex flex-col items-end gap-1 text-xs">
+                    {(isOwner || isInstructor) && b.status !== "cancelled" && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleCancel(b.id);
+                        }}
+                        className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-100 hover:bg-rose-600/80 hover:text-rose-50"
+                      >
+                        Cancel
+                      </button>
                     )}
-                </div>
+                    {(isOwner || isInstructor) &&
+                      b.status === "cancelled" &&
+                      !b.archived && (
+                        <div className="flex flex-wrap justify-end gap-1">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              navigate(`/bookings/${b.id}?rebook=1`);
+                            }}
+                            className="rounded-full bg-emerald-700/80 px-3 py-1 text-xs text-emerald-50 hover:bg-emerald-500"
+                          >
+                            Re-book
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleArchive(b.id);
+                            }}
+                            className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-100 hover:bg-slate-700"
+                          >
+                            Archive
+                          </button>
+                        </div>
+                      )}
+                  </div>
+                </Link>
               </li>
             ))}
           </ul>

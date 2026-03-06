@@ -218,12 +218,28 @@ export default function Sessions() {
                     Booked
                   </Link>
                 ) : (
-                  <Link
-                    to={`/booking/${s.id}`}
-                    className="inline-flex items-center rounded-full bg-sky-500 px-3 py-1 font-semibold text-on-accent hover:bg-sky-400"
-                  >
-                    Book
-                  </Link>
+                  (() => {
+                    const _duration = s.classTemplate?.durationMinutes || 50;
+                    const _cutoffMs = 2 * _duration * 60 * 1000;
+                    const _bookingClosed =
+                      isClientUser &&
+                      new Date(s.startTime) - Date.now() < _cutoffMs;
+                    return _bookingClosed ? (
+                      <span
+                        title={`Booking closed — class starts in less than ${2 * _duration} min`}
+                        className="inline-flex cursor-not-allowed items-center rounded-full border border-slate-600 px-3 py-1 text-xs font-semibold text-slate-500"
+                      >
+                        Closed
+                      </span>
+                    ) : (
+                      <Link
+                        to={`/booking/${s.id}`}
+                        className="inline-flex items-center rounded-full bg-sky-500 px-3 py-1 font-semibold text-on-accent hover:bg-sky-400"
+                      >
+                        Book
+                      </Link>
+                    );
+                  })()
                 )}
                 {(canEditSession(user, s) || canDelete) && (
                   <>

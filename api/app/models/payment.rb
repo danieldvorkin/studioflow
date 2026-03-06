@@ -10,7 +10,8 @@ class Payment < ApplicationRecord
     pending: "pending",
     succeeded: "succeeded",
     failed: "failed",
-    refunded: "refunded"
+    refunded: "refunded",
+    partially_refunded: "partially_refunded"
   }, validate: true
 
   private

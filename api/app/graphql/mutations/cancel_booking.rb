@@ -4,10 +4,12 @@ module Mutations
 
     field :success, Boolean, null: false
     field :errors, [ String ], null: false
+    field :cancellation_fee_cents, Integer, null: true
+    field :refund_cents, Integer, null: true
 
     def resolve(id:)
       user = context[:current_user]
-      return { success: false, errors: [ "Not authenticated" ] } unless user
+      return { success: false, errors: [ "Not authenticated" ], cancellation_fee_cents: nil, refund_cents: nil } unless user
 
       booking =
         if user.client?
@@ -45,6 +47,8 @@ module Mutations
       )
 
       errors = []
+      cancellation_fee_cents = nil
+      refund_cents = nil
 
       payment = booking.payment
       if payment&.succeeded? && payment.stripe_payment_intent_id.present?
@@ -52,8 +56,43 @@ module Mutations
         if settings.configured?
           begin
             Stripe.api_key = settings.stripe_secret_key
-            refund = Stripe::Refund.create(payment_intent: payment.stripe_payment_intent_id)
-            payment.update!(status: :refunded, raw_response: (payment.raw_response || {}).merge(refund: refund.to_hash))
+
+            # Determine if a late-cancellation fee applies
+            minutes_until_class = (cs.start_time - Time.current) / 60.0
+            window = settings.late_cancel_window_minutes.to_i
+            fee_percent = settings.late_cancel_fee_percent.to_i
+            paid_cents = payment.amount_cents.to_i
+
+            if minutes_until_class >= 0 && minutes_until_class < window && fee_percent > 0 && paid_cents > 0
+              # Partial refund: only return (100 - fee_percent)% of the charge
+              cancellation_fee_cents = (paid_cents * fee_percent / 100.0).round
+              refund_amount = paid_cents - cancellation_fee_cents
+
+              if refund_amount > 0
+                refund = Stripe::Refund.create(
+                  payment_intent: payment.stripe_payment_intent_id,
+                  amount: refund_amount
+                )
+                payment.update!(
+                  status: :partially_refunded,
+                  raw_response: (payment.raw_response || {}).merge(refund: refund.to_hash)
+                )
+              else
+                # Fee consumed the entire amount — no Stripe refund call needed
+                payment.update!(status: :partially_refunded)
+              end
+
+              refund_cents = refund_amount
+            else
+              # Full refund
+              refund = Stripe::Refund.create(payment_intent: payment.stripe_payment_intent_id)
+              payment.update!(
+                status: :refunded,
+                raw_response: (payment.raw_response || {}).merge(refund: refund.to_hash)
+              )
+              refund_cents = paid_cents
+              cancellation_fee_cents = 0
+            end
           rescue Stripe::StripeError => e
             payment.update(error_message: e.message)
             errors << "Booking cancelled, but refund failed: #{e.message}"
@@ -63,9 +102,9 @@ module Mutations
         end
       end
 
-      { success: errors.empty?, errors: errors }
+      { success: errors.empty?, errors: errors, cancellation_fee_cents: cancellation_fee_cents, refund_cents: refund_cents }
     rescue ActiveRecord::RecordInvalid => e
-      { success: false, errors: [ e.message ] }
+      { success: false, errors: [ e.message ], cancellation_fee_cents: nil, refund_cents: nil }
     end
   end
 end

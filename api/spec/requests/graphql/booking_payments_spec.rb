@@ -110,7 +110,7 @@ RSpec.describe 'Booking payments', type: :request do
 
       it 'allows booking with a new card without clientId (creates membership)' do
         template_b = create(:class_template, studio: studio_b, instructor: instructor_b, price_cents: 2_400, currency: 'cad')
-        session_b = create(:class_session, studio: studio_b, class_template: template_b, instructor: instructor_b, start_time: Time.zone.parse('2026-03-02 10:30'))
+        session_b = create(:class_session, studio: studio_b, class_template: template_b, instructor: instructor_b, start_time: 2.days.from_now)
 
         intent = double('Stripe::PaymentIntent', status: 'succeeded', id: 'pi_client_1', to_hash: { 'id' => 'pi_client_1' })
         allow(Stripe::PaymentIntent).to receive(:create).and_return(intent)
@@ -130,7 +130,7 @@ RSpec.describe 'Booking payments', type: :request do
 
       it 'allows booking using an existing membership clientId (saved-card style)' do
         template_b = create(:class_template, studio: studio_b, instructor: instructor_b, price_cents: 2_400, currency: 'cad')
-        session_b = create(:class_session, studio: studio_b, class_template: template_b, instructor: instructor_b, start_time: Time.zone.parse('2026-03-02 10:30'))
+        session_b = create(:class_session, studio: studio_b, class_template: template_b, instructor: instructor_b, start_time: 2.days.from_now)
 
         membership = create(:client, studio: studio_b, user: client_user, stripe_default_payment_method_id: 'pm_default')
 

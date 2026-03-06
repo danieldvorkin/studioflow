@@ -51,10 +51,13 @@ import MyOrdersPage from "./pages/MyOrders";
 import ForOwners from "./pages/ForOwners";
 import ForInstructors from "./pages/ForInstructors";
 import ForClients from "./pages/ForClients";
+import ForDevelopers from "./pages/ForDevelopers";
 import Contact from "./pages/Contact";
 import Team from "./pages/Team";
 import Pricing from "./pages/Pricing";
 import OwnerSubscription from "./pages/OwnerSubscription";
+import OwnerApiTokens from "./pages/OwnerApiTokens";
+import ApiDocs from "./pages/ApiDocs";
 const Dashboard = lazy(() => import("./pages/dashboard"));
 const Profile = lazy(() => import("./pages/profile"));
 import { useTheme } from "./theme/ThemeProvider";
@@ -237,6 +240,7 @@ function AppShell() {
               <NavItem to="/owner/bundles">Bundles</NavItem>
               <NavItem to="/owner/shop">Shop</NavItem>
               <NavItem to="/owner/subscription">Subscription</NavItem>
+              <NavItem to="/owner/api-tokens">API Tokens</NavItem>
               <NavItem to="/locations">Locations</NavItem>
             </NavFolder>
           )}
@@ -431,6 +435,13 @@ function AppShell() {
                       onNavigate={() => setMobileNavOpen(false)}
                     >
                       Subscription
+                    </NavItem>
+                    <NavItem
+                      to="/owner/api-tokens"
+                      variant="mobile"
+                      onNavigate={() => setMobileNavOpen(false)}
+                    >
+                      API Tokens
                     </NavItem>
                     <NavItem
                       to="/locations"
@@ -695,9 +706,11 @@ function App() {
         <Route path="/for-owners" element={<ForOwners />} />
         <Route path="/for-instructors" element={<ForInstructors />} />
         <Route path="/for-clients" element={<ForClients />} />
+        <Route path="/for-developers" element={<ForDevelopers />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/team" element={<Team />} />
+        <Route path="/api-docs" element={<ApiDocs />} />
         {/* Public class landing page — no auth required */}
         <Route
           path="/c/:studioCode/:templateId"
@@ -761,6 +774,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <OwnerSubscription />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/owner/api-tokens"
+            element={
+              <ProtectedRoute>
+                <OwnerApiTokens />
               </ProtectedRoute>
             }
           />

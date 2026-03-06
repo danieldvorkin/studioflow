@@ -45,7 +45,9 @@ module Mutations
       if cs.instructor_id && InstructorClientBlock.exists?(instructor_id: cs.instructor_id, client_id: client.id)
       return { booking: nil, errors: [ "This client is blocked from booking with the instructor for this class" ] }
       end
-
+      if (err = client_booking_cutoff_error(cs, user))
+        return { booking: nil, errors: [ err ] }
+      end
       status = cs.seats_available > 0 ? "booked" : "waitlisted"
       booking = Booking.new(studio_id: studio_id, client: client, class_session: cs, status: Booking.statuses[status])
 

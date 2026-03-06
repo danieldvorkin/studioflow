@@ -9,6 +9,8 @@ module Mutations
     argument :default_theme, String, required: false
     argument :owner_page_layout, GraphQL::Types::JSON, required: false
     argument :clients_page_enabled, Boolean, required: false
+    argument :late_cancel_window_minutes, Integer, required: false
+    argument :late_cancel_fee_percent, Integer, required: false
 
     field :payment_settings, Types::PaymentSettingType, null: true
     field :errors, [ String ], null: false
@@ -35,6 +37,12 @@ module Mutations
       settings.default_theme = attrs[:default_theme] if attrs.key?(:default_theme) && !attrs[:default_theme].nil?
       settings.owner_page_layout = attrs[:owner_page_layout] if attrs.key?(:owner_page_layout) && !attrs[:owner_page_layout].nil?
       settings.clients_page_enabled = attrs[:clients_page_enabled] if attrs.key?(:clients_page_enabled) && !attrs[:clients_page_enabled].nil?
+      if attrs.key?(:late_cancel_window_minutes) && !attrs[:late_cancel_window_minutes].nil?
+        settings.late_cancel_window_minutes = attrs[:late_cancel_window_minutes]
+      end
+      if attrs.key?(:late_cancel_fee_percent) && !attrs[:late_cancel_fee_percent].nil?
+        settings.late_cancel_fee_percent = attrs[:late_cancel_fee_percent]
+      end
 
       if settings.save
         { payment_settings: settings, errors: [] }

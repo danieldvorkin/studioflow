@@ -27,6 +27,17 @@ module Types
       context[:current_user]
     end
 
+    # List API tokens for the current owner's studio
+    field :api_tokens, [ Types::ApiTokenType ], null: false,
+      description: "List API tokens for the current studio (owner only)"
+    def api_tokens
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authorized" unless user
+      raise GraphQL::ExecutionError, "Owner access required" unless user.owner? || user.godmode?
+
+      user.studio.api_tokens.where(user_id: user.id).order(created_at: :desc)
+    end
+
     # Public class landing page — no auth required
     field :public_class_page, Types::PublicClassPageType, null: true,
       description: "Fetch public class info by studio invite code and template ID (no auth required)" do

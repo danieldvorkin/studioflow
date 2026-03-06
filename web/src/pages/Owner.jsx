@@ -891,6 +891,19 @@ function OwnerModules({
         ),
       },
       {
+        id: "late_cancel",
+        title: "Late cancellation policy",
+        defaultWidth: 1,
+        defaultHeight: 280,
+        render: () => (
+          <LateCancelPolicyModule
+            paymentSettings={paymentSettings}
+            updatePaymentSettings={updatePaymentSettings}
+            addToast={addToast}
+          />
+        ),
+      },
+      {
         id: "bookings",
         title: "Bookings",
         defaultWidth: 1,
@@ -1802,6 +1815,113 @@ function StripePaymentsModule({
           className="mt-2 inline-flex items-center rounded-full bg-sky-500 px-3 py-1 text-[11px] font-semibold text-on-accent hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Save Stripe settings
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function LateCancelPolicyModule({
+  paymentSettings,
+  updatePaymentSettings,
+  addToast,
+}) {
+  const [windowMinutes, setWindowMinutes] = useState(
+    paymentSettings?.lateCancelWindowMinutes ?? 30,
+  );
+  const [feePercent, setFeePercent] = useState(
+    paymentSettings?.lateCancelFeePercent ?? 30,
+  );
+
+  // Keep local state in sync when settings load
+  useEffect(() => {
+    if (paymentSettings) {
+      setWindowMinutes(paymentSettings.lateCancelWindowMinutes ?? 30);
+      setFeePercent(paymentSettings.lateCancelFeePercent ?? 30);
+    }
+  }, [paymentSettings]);
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await updatePaymentSettings({
+        variables: {
+          lateCancelWindowMinutes: parseInt(windowMinutes, 10),
+          lateCancelFeePercent: parseInt(feePercent, 10),
+        },
+      });
+      const payload = res.data?.updatePaymentSettings;
+      const errors = payload?.errors || [];
+      if (errors.length || !payload?.paymentSettings) {
+        throw new Error(errors.join(", ") || "Could not update policy");
+      }
+      addToast({ message: "Late cancellation policy saved", type: "success" });
+    } catch (err) {
+      addToast({ message: err.message || "Update failed", type: "error" });
+    }
+  };
+
+  return (
+    <div className="flex h-full min-h-0 flex-col rounded-2xl border border-slate-800 bg-slate-900/80 p-3 text-xs text-slate-200">
+      <div className="mb-2">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.25em] text-sky-400">
+          Late cancellation policy
+        </h2>
+        <p className="mt-0.5 text-[10px] text-slate-500">
+          Clients who cancel within the cancellation window will be charged the
+          fee percentage below, deducted from their refund.
+        </p>
+      </div>
+
+      <form
+        className="min-h-0 flex-1 space-y-3 overflow-auto"
+        onSubmit={handleSave}
+      >
+        <div className="space-y-1">
+          <label className="text-[11px] font-medium text-slate-300">
+            Cancellation window (minutes before class)
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={1440}
+            value={windowMinutes}
+            onChange={(e) => setWindowMinutes(e.target.value)}
+            className="w-32 rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-[11px] text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+          />
+          <p className="text-[10px] text-slate-500">
+            Set to 0 to disable the late-cancel fee entirely.
+          </p>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-[11px] font-medium text-slate-300">
+            Fee percentage (%)
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            value={feePercent}
+            onChange={(e) => setFeePercent(e.target.value)}
+            className="w-32 rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-[11px] text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+          />
+          <p className="text-[10px] text-slate-500">
+            Percentage of the class price retained as a late-cancellation fee.
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-amber-800/40 bg-amber-900/20 p-2 text-[10px] text-amber-300">
+          Example: {feePercent}% fee on a $10 class = $
+          {((feePercent / 100) * 10).toFixed(2)} retained, $
+          {(10 - (feePercent / 100) * 10).toFixed(2)} refunded.
+        </div>
+
+        <button
+          type="submit"
+          className="mt-2 inline-flex items-center rounded-full bg-sky-500 px-3 py-1 text-[11px] font-semibold text-on-accent hover:bg-sky-400"
+        >
+          Save policy
         </button>
       </form>
     </div>

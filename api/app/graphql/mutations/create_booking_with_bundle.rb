@@ -49,6 +49,10 @@ module Mutations
         return { booking: nil, payment: nil, bundle_purchase: nil, errors: [ "This client is blocked from booking with the instructor for this class" ] }
       end
 
+      if (err = client_booking_cutoff_error(class_session, user))
+        return { booking: nil, payment: nil, bundle_purchase: nil, errors: [ err ] }
+      end
+
       bundle_purchase = BundlePurchase.where(studio_id: studio_id).find(bundle_purchase_id)
       if bundle_purchase.client_id != client.id
         return { booking: nil, payment: nil, bundle_purchase: nil, errors: [ "Bundle purchase does not belong to this client" ] }

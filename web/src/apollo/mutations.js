@@ -240,6 +240,8 @@ export const CANCEL_BOOKING = gql`
     cancelBooking(input: { id: $id }) {
       success
       errors
+      cancellationFeeCents
+      refundCents
     }
   }
 `;
@@ -1040,6 +1042,8 @@ export const UPDATE_PAYMENT_SETTINGS = gql`
     $defaultTheme: String
     $ownerPageLayout: JSON
     $clientsPageEnabled: Boolean
+    $lateCancelWindowMinutes: Int
+    $lateCancelFeePercent: Int
   ) {
     updatePaymentSettings(
       input: {
@@ -1052,6 +1056,8 @@ export const UPDATE_PAYMENT_SETTINGS = gql`
         defaultTheme: $defaultTheme
         ownerPageLayout: $ownerPageLayout
         clientsPageEnabled: $clientsPageEnabled
+        lateCancelWindowMinutes: $lateCancelWindowMinutes
+        lateCancelFeePercent: $lateCancelFeePercent
       }
     ) {
       paymentSettings {
@@ -1064,6 +1070,8 @@ export const UPDATE_PAYMENT_SETTINGS = gql`
         defaultTheme
         ownerPageLayout
         clientsPageEnabled
+        lateCancelWindowMinutes
+        lateCancelFeePercent
       }
       errors
     }
@@ -1633,6 +1641,36 @@ export const DISMISS_NOTIFICATION = gql`
         id
         dismissed
         dismissedAt
+      }
+      errors
+    }
+  }
+`;
+
+export const CREATE_API_TOKEN = gql`
+  mutation CreateApiToken($name: String!) {
+    createApiToken(input: { name: $name }) {
+      apiToken {
+        id
+        name
+        prefix
+        active
+        createdAt
+      }
+      rawToken
+      errors
+    }
+  }
+`;
+
+export const REVOKE_API_TOKEN = gql`
+  mutation RevokeApiToken($id: ID!) {
+    revokeApiToken(input: { id: $id }) {
+      apiToken {
+        id
+        name
+        active
+        revokedAt
       }
       errors
     }

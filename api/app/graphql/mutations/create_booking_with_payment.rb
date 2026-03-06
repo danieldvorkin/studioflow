@@ -58,6 +58,9 @@ module Mutations
       if class_session.instructor_id && InstructorClientBlock.exists?(instructor_id: class_session.instructor_id, client_id: client.id)
       return { booking: nil, payment: nil, errors: [ "This client is blocked from booking with the instructor for this class" ] }
       end
+      if (err = client_booking_cutoff_error(class_session, user))
+        return { booking: nil, payment: nil, errors: [ err ] }
+      end
       class_template = class_session.class_template
       currency = class_template.currency.presence || "cad"
 

@@ -396,11 +396,17 @@ export const BOOKINGS = gql`
       classSession {
         id
         startTime
+        endTime
         room
+        capacity
+        seatsAvailable
         classTemplate {
           id
           title
+          description
           priceCents
+          durationMinutes
+          currency
         }
         instructor {
           id
@@ -447,11 +453,17 @@ export const MY_BOOKINGS = gql`
       classSession {
         id
         startTime
+        endTime
         room
+        capacity
+        seatsAvailable
         classTemplate {
           id
           title
+          description
           priceCents
+          durationMinutes
+          currency
         }
         instructor {
           id
@@ -535,6 +547,8 @@ export const PAYMENT_SETTINGS = gql`
       defaultTheme
       ownerPageLayout
       clientsPageEnabled
+      lateCancelWindowMinutes
+      lateCancelFeePercent
     }
   }
 `;
@@ -546,6 +560,8 @@ export const PAYMENT_PUBLIC_SETTINGS = gql`
       defaultCurrency
       enabled
       configured
+      lateCancelWindowMinutes
+      lateCancelFeePercent
     }
   }
 `;
@@ -1072,5 +1088,20 @@ export const MY_NOTIFICATIONS = gql`
 export const MY_UNREAD_NOTIFICATION_COUNT = gql`
   query MyUnreadNotificationCount {
     myUnreadNotificationCount
+  }
+`;
+
+export const API_TOKENS = gql`
+  query ApiTokens {
+    apiTokens {
+      id
+      name
+      prefix
+      active
+      revokedAt
+      expiresAt
+      lastUsedAt
+      createdAt
+    }
   }
 `;

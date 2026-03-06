@@ -1004,6 +1004,9 @@ export default function Landing() {
             <Link to="/contact" className="transition hover:text-white">
               Contact
             </Link>
+            <Link to="/for-developers" className="transition hover:text-white">
+              Developers
+            </Link>
           </nav>
           <div className="flex items-center gap-2.5">
             <Link
@@ -1378,7 +1381,7 @@ export default function Landing() {
               Built for every role in your studio.
             </h2>
           </div>
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
+          <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {[
               {
                 role: "Studio Owners",
@@ -1420,6 +1423,20 @@ export default function Landing() {
                   "Saved cards for instant checkout",
                   "Favorite classes for fast rebooking",
                   "Booking history always accessible",
+                ],
+              },
+              {
+                role: "Developers",
+                color: "text-indigo-400",
+                border: "border-indigo-500/20",
+                bg: "bg-indigo-500/5",
+                tagline: "Your data.\nYour integrations.",
+                link: "/for-developers",
+                perks: [
+                  "REST API with Bearer token auth",
+                  "Generate & revoke tokens in the dashboard",
+                  "Build automations, dashboards, alerts",
+                  "More endpoints shipping every sprint",
                 ],
               },
             ].map(({ role, color, border, bg, tagline, perks, link }) => (
@@ -1655,6 +1672,12 @@ export default function Landing() {
               <a href="#contact" className="transition hover:text-slate-400">
                 Contact
               </a>
+              <Link
+                to="/for-developers"
+                className="transition hover:text-slate-400"
+              >
+                Developers
+              </Link>
               <Link to="/signin" className="transition hover:text-slate-400">
                 Sign in
               </Link>

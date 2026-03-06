@@ -91,5 +91,9 @@ module Types
     field :mark_notification_read,     mutation: Mutations::MarkNotificationRead,     null: true
     field :mark_all_notifications_read, mutation: Mutations::MarkAllNotificationsRead, null: true
     field :dismiss_notification,       mutation: Mutations::DismissNotification,      null: true
+
+    # API token management (owner only)
+    field :create_api_token, mutation: Mutations::CreateApiToken, null: true
+    field :revoke_api_token, mutation: Mutations::RevokeApiToken, null: true
   end
 end
