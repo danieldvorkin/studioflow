@@ -1,4 +1,4 @@
-<h2>Your <%= @tier_label %> trial has ended</h2>
+<h1>Your trial has ended</h1>
 
 <p>Hi <%= @user.name.presence || @user.email %>,</p>
 
@@ -12,11 +12,8 @@
   Upgrading will immediately restore access to all your premium features.
 </p>
 
-<p>
-  <a href="<%= @billing_url %>">Upgrade your plan →</a>
-</p>
+<a href="<%= @billing_url %>" class="btn">Upgrade your plan</a>
 
-<p>
-  Thanks,<br>
-  The StudioFlow Team
-</p>
+<% content_for :footer do %>
+  You received this email because your StudioFlow trial has ended.
+<% end %>

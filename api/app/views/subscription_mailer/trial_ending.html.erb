@@ -1,4 +1,4 @@
-<h2>Your <%= @tier_label %> trial is ending soon</h2>
+<h1>Your trial is ending soon ⏳</h1>
 
 <p>Hi <%= @user.name.presence || @user.email %>,</p>
 
@@ -13,13 +13,10 @@
   trial expires.
 </p>
 
-<p>
-  <a href="<%= @billing_url %>">Manage your subscription →</a>
-</p>
+<a href="<%= @billing_url %>" class="btn">Manage your subscription</a>
 
-<p>If you have any questions, just reply to this email — we're happy to help.</p>
+<p style="font-size:13px">If you have any questions, just reply to this email — we're happy to help.</p>
 
-<p>
-  Thanks,<br>
-  The StudioFlow Team
-</p>
+<% content_for :footer do %>
+  You received this email because your StudioFlow trial is ending soon.
+<% end %>

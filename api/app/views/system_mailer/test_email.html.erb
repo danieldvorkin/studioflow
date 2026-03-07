@@ -1,30 +1,9 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>
-      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; padding: 0; }
-      .wrapper { max-width: 540px; margin: 40px auto; background: #1e293b; border: 1px solid #334155; border-radius: 12px; overflow: hidden; }
-      .header  { background: #0ea5e9; padding: 24px 32px; text-align: center; }
-      .header h1 { margin: 0; color: #fff; font-size: 20px; font-weight: 700; letter-spacing: 0.05em; }
-      .body    { padding: 32px; }
-      .body p  { margin: 0 0 12px; color: #cbd5e1; font-size: 14px; line-height: 1.6; }
-      .badge   { display: inline-block; background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 8px 16px; font-size: 12px; color: #94a3b8; margin-top: 8px; }
-      .footer  { padding: 16px 32px; border-top: 1px solid #334155; text-align: center; font-size: 11px; color: #475569; }
-    </style>
-  </head>
-  <body>
-    <div class="wrapper">
-      <div class="header">
-        <h1>Studio<strong style="color:#bae6fd">Flow</strong> — Test Email</h1>
-      </div>
-      <div class="body">
-        <p>This is an automated test sent from the StudioFlow godmode panel to confirm that your email server is configured and operational.</p>
-        <p>If you received this message, your Resend SMTP relay is working correctly. 🎉</p>
-        <div class="badge">Sent at: <%= @sent_at.strftime("%Y-%m-%d %H:%M:%S UTC") %></div>
-      </div>
-      <div class="footer">Sent by StudioFlow · This is a system test email</div>
-    </div>
-  </body>
-</html>
+<h1>Test Email</h1>
+<p>This is an automated test sent from the StudioFlow godmode panel to confirm that your email server is configured and operational.</p>
+<p>If you received this message, your Resend SMTP relay is working correctly. 🎉</p>
+
+<div class="meta-badge">Sent at: <%= @sent_at.strftime("%Y-%m-%d %H:%M:%S UTC") %></div>
+
+<% content_for :footer do %>
+  Sent by StudioFlow · This is a system test email
+<% end %>

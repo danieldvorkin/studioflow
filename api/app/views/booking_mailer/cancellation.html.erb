@@ -1,28 +1,26 @@
 <h1>Your booking was cancelled</h1>
 
-<p>
-  Hi <%= @booking&.client&.name.presence || @booking&.client&.email %>,
-</p>
+<p>Hi <%= @booking&.client&.name.presence || @booking&.client&.email %>,</p>
 
-<p>
-  Your booking for <strong><%= @booking&.class_session&.class_template&.title || 'your class' %></strong> was cancelled.
-</p>
+<p>Your booking for <strong><%= @booking&.class_session&.class_template&.title || 'your class' %></strong> has been cancelled.</p>
 
-<ul>
+<div class="order-card">
   <% if (start_time = @booking&.class_session&.start_time) %>
-    <li><strong>When:</strong> <%= start_time.strftime('%B %-d, %Y at %-I:%M %p') %></li>
+    <div class="order-row">
+      <span class="lbl">When</span>
+      <span class="val"><%= start_time.strftime('%B %-d, %Y at %-I:%M %p') %></span>
+    </div>
   <% end %>
   <% if (location_name = @booking&.class_session&.class_template&.studio_location&.name) %>
-    <li><strong>Location:</strong> <%= location_name %></li>
+    <div class="order-row">
+      <span class="lbl">Location</span>
+      <span class="val"><%= location_name %></span>
+    </div>
   <% end %>
-</ul>
+</div>
 
-<p>
-  If this was unexpected, please contact the studio.
-</p>
+<p>If this was unexpected, please contact the studio directly.</p>
 
-<p>
-  Thanks,
-  <br>
-  Pilates Studio
-</p>
+<% content_for :footer do %>
+  You received this email because a booking was cancelled through StudioFlow.
+<% end %>

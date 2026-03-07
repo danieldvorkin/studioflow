@@ -1,4 +1,4 @@
-<h2>Payment failed for your StudioFlow subscription</h2>
+<h1>Payment failed ⚠️</h1>
 
 <p>Hi <%= @user.name.presence || @user.email %>,</p>
 
@@ -12,11 +12,8 @@
   We'll retry the charge automatically, but we recommend updating your card now.
 </p>
 
-<p>
-  <a href="<%= @billing_url %>">Update payment method →</a>
-</p>
+<a href="<%= @billing_url %>" class="btn">Update payment method</a>
 
-<p>
-  Thanks,<br>
-  The StudioFlow Team
-</p>
+<% content_for :footer do %>
+  You received this email because a payment failed for your StudioFlow subscription.
+<% end %>

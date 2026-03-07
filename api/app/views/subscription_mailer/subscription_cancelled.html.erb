@@ -1,4 +1,4 @@
-<h2>Your StudioFlow subscription has been cancelled</h2>
+<h1>Subscription cancelled</h1>
 
 <p>Hi <%= @user.name.presence || @user.email %>,</p>
 
@@ -12,11 +12,8 @@
   You can re-subscribe at any time.
 </p>
 
-<p>
-  <a href="<%= @billing_url %>">View plans and resubscribe →</a>
-</p>
+<a href="<%= @billing_url %>" class="btn">View plans and resubscribe</a>
 
-<p>
-  Thanks,<br>
-  The StudioFlow Team
-</p>
+<% content_for :footer do %>
+  You received this email because your StudioFlow subscription was cancelled.
+<% end %>

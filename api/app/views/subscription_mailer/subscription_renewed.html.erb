@@ -1,4 +1,4 @@
-<h2>Your StudioFlow <%= @tier_label %> has been renewed</h2>
+<h1>Subscription renewed ✓</h1>
 
 <p>Hi <%= @user.name.presence || @user.email %>,</p>
 
@@ -15,7 +15,6 @@
 
 <p>Thank you for being a StudioFlow customer!</p>
 
-<p>
-  Thanks,<br>
-  The StudioFlow Team
-</p>
+<% content_for :footer do %>
+  You received this email because your StudioFlow subscription was renewed.
+<% end %>

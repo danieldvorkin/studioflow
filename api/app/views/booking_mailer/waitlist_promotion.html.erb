@@ -1,27 +1,33 @@
-<h1>You're in — waitlist promotion</h1>
+<h1>You're in — waitlist promoted 🎉</h1>
+
+<p>Hi <%= @booking&.client&.name.presence || @booking&.client&.email %>,</p>
 
 <p>
-  Hi <%= @booking&.client&.name.presence || @booking&.client&.email %>,
+  Good news: you were promoted from the waitlist and now have a confirmed spot in
+  <strong><%= @booking&.class_session&.class_template&.title || 'your class' %></strong>.
 </p>
 
-<p>
-  Good news: you were promoted from the waitlist and now have a spot in <strong><%= @booking&.class_session&.class_template&.title || 'your class' %></strong>.
-</p>
-
-<ul>
+<div class="order-card">
   <% if (start_time = @booking&.class_session&.start_time) %>
-    <li><strong>When:</strong> <%= start_time.strftime('%B %-d, %Y at %-I:%M %p') %></li>
+    <div class="order-row">
+      <span class="lbl">When</span>
+      <span class="val"><%= start_time.strftime('%B %-d, %Y at %-I:%M %p') %></span>
+    </div>
   <% end %>
   <% if (location_name = @booking&.class_session&.class_template&.studio_location&.name) %>
-    <li><strong>Location:</strong> <%= location_name %></li>
+    <div class="order-row">
+      <span class="lbl">Location</span>
+      <span class="val"><%= location_name %></span>
+    </div>
   <% end %>
   <% if (room = @booking&.class_session&.room).present? %>
-    <li><strong>Room:</strong> <%= room %></li>
+    <div class="order-row">
+      <span class="lbl">Room</span>
+      <span class="val"><%= room %></span>
+    </div>
   <% end %>
-</ul>
+</div>
 
-<p>
-  Thanks,
-  <br>
-  Pilates Studio
-</p>
+<% content_for :footer do %>
+  You received this email because you were promoted from the waitlist on StudioFlow.
+<% end %>
