@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useMutation, useQuery } from "@apollo/client";
 import { useNavigate } from "react-router-dom";
 import { MY_STUDIO } from "../../apollo/queries";
@@ -7,9 +7,12 @@ import {
   COMPLETE_ONBOARDING,
   CREATE_STUDIO_LOCATION,
   CREATE_PLATFORM_SUBSCRIPTION_CHECKOUT,
+  UPDATE_PROFILE,
 } from "../../apollo/mutations";
 import { useAuth } from "../../auth/AuthProvider";
 import { useCurrency } from "../../currency/CurrencyProvider";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const STEPS = [
   { id: "profile", label: "Studio profile" },
@@ -89,6 +92,45 @@ function ProfileStep({ studio, onNext, onSkip }) {
   const [errors, setErrors] = useState([]);
   const [saving, setSaving] = useState(false);
   const [updateStudio] = useMutation(UPDATE_STUDIO);
+  const [updateProfile] = useMutation(UPDATE_PROFILE);
+  const { user, refetch: refetchUser } = useAuth();
+
+  // Avatar upload
+  const avatarInputRef = useRef(null);
+  const [avatarPreview, setAvatarPreview] = useState(user?.avatarUrl || null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState("");
+
+  const uploadAvatar = async (file) => {
+    setAvatarError("");
+    setUploadingAvatar(true);
+    try {
+      const token = localStorage.getItem("pilates_token");
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(`${API_URL}/uploads/avatar`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `Upload failed (${res.status})`);
+      }
+      const { url } = await res.json();
+      await updateProfile({ variables: { avatarUrl: url } });
+      setAvatarPreview(url);
+      try {
+        await refetchUser?.();
+      } catch {
+        /* ignore */
+      }
+    } catch (err) {
+      setAvatarError(err.message || "Avatar upload failed");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const handleNameChange = (e) => {
     const val = e.target.value;
@@ -136,6 +178,86 @@ function ProfileStep({ studio, onNext, onSkip }) {
         <p className="mt-1 text-sm text-slate-400">
           This is what clients and staff will see everywhere in the app.
         </p>
+      </div>
+
+      {/* Optional personal avatar */}
+      <div>
+        <label className="block text-xs font-semibold uppercase tracking-widest text-slate-400 mb-2">
+          Your profile photo
+          <span className="ml-1.5 rounded-full bg-slate-700 px-1.5 py-0.5 text-[9px] normal-case tracking-wide text-slate-400">
+            optional
+          </span>
+        </label>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => avatarInputRef.current?.click()}
+            disabled={uploadingAvatar}
+            className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-slate-600 bg-slate-800 text-slate-400 transition hover:border-sky-500 hover:text-sky-400 disabled:opacity-60"
+          >
+            {avatarPreview ? (
+              <img
+                src={avatarPreview}
+                alt="Profile"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <svg
+                className="h-6 w-6"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+                />
+              </svg>
+            )}
+            {uploadingAvatar && (
+              <div className="absolute inset-0 flex items-center justify-center bg-slate-900/60 rounded-full">
+                <svg
+                  className="h-4 w-4 animate-spin text-sky-400"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8H4z"
+                  />
+                </svg>
+              </div>
+            )}
+          </button>
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) uploadAvatar(file);
+              e.target.value = "";
+            }}
+          />
+          <div className="text-xs text-slate-500">
+            {avatarPreview ? "Click to change" : "Click the circle to upload"}
+          </div>
+        </div>
+        {avatarError && (
+          <p className="mt-1 text-xs text-rose-400">{avatarError}</p>
+        )}
       </div>
 
       <FieldGroup label="Studio name" required>

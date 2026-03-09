@@ -8,6 +8,42 @@ class UploadsController < ApplicationController
   ALLOWED_CONTENT_TYPES = %w[image/jpeg image/png image/gif image/webp image/svg+xml].freeze
   MAX_BYTES = 10.megabytes
 
+  # Avatar upload — available to any authenticated user (not owner-only).
+  # POST /uploads/avatar
+  def avatar
+    user = resolve_current_user
+    return render json: { error: "Not authenticated" }, status: :unauthorized unless user
+
+    file = params[:file]
+    return render json: { error: "No file provided" }, status: :unprocessable_entity if file.blank?
+
+    content_type = file.content_type.to_s
+    unless ALLOWED_CONTENT_TYPES.include?(content_type)
+      return render json: { error: "Unsupported file type. Allowed: #{ALLOWED_CONTENT_TYPES.join(', ')}" },
+                    status: :unprocessable_entity
+    end
+
+    if file.size > MAX_BYTES
+      return render json: { error: "File too large (max #{MAX_BYTES / 1.megabyte}MB)" },
+                    status: :unprocessable_entity
+    end
+
+    blob = ActiveStorage::Blob.create_and_upload!(
+      io:           file.tempfile,
+      filename:     file.original_filename,
+      content_type: content_type,
+      metadata:     { studio_id: user.studio_id, uploaded_by: user.id, purpose: "avatar" }
+    )
+
+    url = Rails.application.routes.url_helpers.rails_blob_url(blob, host: request.base_url)
+    render json: { url: url }, status: :created
+  rescue => e
+    Rails.logger.error("UploadsController#avatar error: #{e.class}: #{e.message}")
+    render json: { error: "Upload failed" }, status: :internal_server_error
+  end
+
+  # WYSIWYG page editor upload — owner only.
+  # POST /uploads
   def create
     user = resolve_current_user
     return render json: { error: "Not authenticated" }, status: :unauthorized unless user

@@ -70,6 +70,7 @@ export default function Owner() {
 
   const { data, loading, refetch } = useQuery(ALL_USERS, {
     skip: !user,
+    fetchPolicy: "network-only",
   });
   const {
     data: bookingsData,
@@ -633,6 +634,7 @@ function OwnerModules({
                                 <th className="px-3 py-2">Role</th>
                                 <th className="px-3 py-2">Active</th>
                                 <th className="px-3 py-2">Available</th>
+                                <th className="px-3 py-2">Also Instr.</th>
                                 <th className="px-3 py-2 text-right">
                                   View as
                                 </th>
@@ -710,6 +712,22 @@ function OwnerModules({
                                         ? "Available"
                                         : "Unavailable"}
                                     </button>
+                                  </td>
+                                  <td className="px-3 py-2">
+                                    {u.role === 0 ? (
+                                      <button
+                                        type="button"
+                                        title="Allow this owner to be assigned as an instructor and receive payouts"
+                                        onClick={() =>
+                                          handleToggle(u, "alsoInstructor")
+                                        }
+                                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${u.alsoInstructor ? "bg-violet-500/15 text-violet-300" : "bg-slate-800 text-slate-500"}`}
+                                      >
+                                        {u.alsoInstructor ? "Yes" : "No"}
+                                      </button>
+                                    ) : (
+                                      <span className="text-slate-700">—</span>
+                                    )}
                                   </td>
                                   <td className="px-3 py-2 text-right">
                                     {u.id !== currentUser.id && (
@@ -1342,7 +1360,7 @@ function OwnerModules({
                   }}
                   onToggleWidth={() => {
                     const current = moduleWidths?.[m.id] ?? m.defaultWidth ?? 1;
-                    const nextWidth = current === 1 ? 2 : 1;
+                    const nextWidth = current >= 3 ? 1 : current + 1;
                     const nextWidths = {
                       ...(moduleWidths || {}),
                       [m.id]: nextWidth,
@@ -1450,25 +1468,34 @@ function SortableOwnerModule({
                 e.stopPropagation();
                 onToggleWidth?.();
               }}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800"
+              className="inline-flex h-8 items-center justify-center gap-1 rounded-full border border-slate-700 bg-slate-900 px-2 text-slate-200 hover:bg-slate-800"
               aria-label={`Toggle width for ${title}`}
-              title={width === 2 ? "Set narrow" : "Set wide"}
+              title={
+                width >= 3
+                  ? "Set narrow (1 col)"
+                  : width === 2
+                    ? "Set full width (3 cols)"
+                    : "Set wide (2 cols)"
+              }
             >
-              {width === 2 ? (
+              {width >= 3 ? (
                 <svg
                   viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
+                  width="14"
+                  height="14"
                   aria-hidden="true"
                   className="opacity-90"
                 >
-                  <path fill="currentColor" d="M7 5h10v14H7V5Zm2 2v10h6V7H9Z" />
+                  <path
+                    fill="currentColor"
+                    d="M3 5h4v14H3V5Zm5 0h4v14H8V5Zm5 0h4v14h-4V5ZM5 7v10h0V7Zm5 0v10h0V7Zm5 0v10h0V7Z"
+                  />
                 </svg>
-              ) : (
+              ) : width === 2 ? (
                 <svg
                   viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
+                  width="14"
+                  height="14"
                   aria-hidden="true"
                   className="opacity-90"
                 >
@@ -1477,7 +1504,20 @@ function SortableOwnerModule({
                     d="M4 5h7v14H4V5Zm9 0h7v14h-7V5ZM6 7v10h3V7H6Zm9 0v10h3V7h-3Z"
                   />
                 </svg>
+              ) : (
+                <svg
+                  viewBox="0 0 24 24"
+                  width="14"
+                  height="14"
+                  aria-hidden="true"
+                  className="opacity-90"
+                >
+                  <path fill="currentColor" d="M7 5h10v14H7V5Zm2 2v10h6V7H9Z" />
+                </svg>
               )}
+              <span className="text-[10px] font-bold tabular-nums">
+                {width >= 3 ? 3 : width === 2 ? 2 : 1}
+              </span>
             </button>
           </div>
         </div>

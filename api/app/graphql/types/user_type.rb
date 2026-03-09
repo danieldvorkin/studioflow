@@ -10,6 +10,7 @@ module Types
     field :godmode, Boolean, null: false, method: :godmode?
     field :active, Boolean, null: false
     field :available_for_sessions, Boolean, null: false
+    field :also_instructor, Boolean, null: false
 
     field :instructor_compensation_type, String, null: false
     field :instructor_default_split_percent, Integer, null: false

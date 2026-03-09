@@ -1,6 +1,6 @@
 import { useDocumentTitle } from "../../../hooks/useDocumentTitle";
 import { useMutation, useQuery } from "@apollo/client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import {
   CardElement,
@@ -38,6 +38,7 @@ import {
   SkeletonBillingCard,
   SkeletonTransactionRows,
 } from "./Skeleton";
+import ImageCropModal from "./ImageCropModal";
 
 function formatMoney(cents, currency) {
   const amount = (Number(cents) || 0) / 100;
@@ -51,6 +52,8 @@ function formatMoney(cents, currency) {
     return `${c} ${amount.toFixed(2)}`;
   }
 }
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function Profile() {
   useDocumentTitle("My Profile");
@@ -72,6 +75,64 @@ export default function Profile() {
   });
   const [dirty, setDirty] = useState(false);
 
+  // Avatar upload state
+  const avatarInputRef = useRef(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [cropSrc, setCropSrc] = useState(null);
+
+  const uploadAvatar = async (file) => {
+    setUploadingAvatar(true);
+    try {
+      const token = localStorage.getItem("pilates_token");
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(`${API_URL}/uploads/avatar`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `Upload failed (${res.status})`);
+      }
+      const { url } = await res.json();
+      // Persist directly so the avatar is saved even without touching other fields
+      const mutation = await updateProfile({ variables: { avatarUrl: url } });
+      const payload = mutation.data?.updateProfile;
+      const errors = payload?.errors || [];
+      if (errors.length || !payload?.user)
+        throw new Error(errors.join(", ") || "Failed to save avatar");
+      setAvatarPreview(url);
+      // Update localStorage immediately so the next page refresh shows the avatar at first paint
+      try {
+        const stored = localStorage.getItem("pilates_user");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          localStorage.setItem(
+            "pilates_user",
+            JSON.stringify({ ...parsed, avatarUrl: url }),
+          );
+        }
+      } catch {
+        /* ignore */
+      }
+      addToast({ message: "Profile photo updated", type: "success" });
+      try {
+        await auth.refetch?.();
+      } catch {
+        /* ignore */
+      }
+    } catch (err) {
+      addToast({
+        message: err.message || "Avatar upload failed",
+        type: "error",
+      });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   useEffect(() => {
     if (!user) return;
     setForm((f) => ({
@@ -79,6 +140,7 @@ export default function Profile() {
       name: user.name || "",
       email: user.email || "",
     }));
+    setAvatarPreview(user.avatarUrl || null);
   }, [user]);
 
   const emailChanged = useMemo(() => {
@@ -268,6 +330,20 @@ export default function Profile() {
 
   return (
     <div className="flex w-full flex-col gap-6">
+      {cropSrc && (
+        <ImageCropModal
+          src={cropSrc}
+          onConfirm={(croppedFile) => {
+            URL.revokeObjectURL(cropSrc);
+            setCropSrc(null);
+            uploadAvatar(croppedFile);
+          }}
+          onCancel={() => {
+            URL.revokeObjectURL(cropSrc);
+            setCropSrc(null);
+          }}
+        />
+      )}
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-50">
           Profile
@@ -281,6 +357,109 @@ export default function Profile() {
         <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">
           Profile details
         </h2>
+
+        {/* Avatar upload */}
+        <div className="mt-4 flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => avatarInputRef.current?.click()}
+            disabled={uploadingAvatar}
+            className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-slate-600 bg-slate-800 text-slate-400 transition hover:border-sky-500 hover:text-sky-400 disabled:opacity-60"
+            title="Upload profile photo"
+          >
+            {avatarPreview ? (
+              <img
+                src={avatarPreview}
+                alt="Profile"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <svg
+                className="h-7 w-7"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+                />
+              </svg>
+            )}
+            {uploadingAvatar && (
+              <div className="absolute inset-0 flex items-center justify-center rounded-full bg-slate-900/70">
+                <svg
+                  className="h-5 w-5 animate-spin text-sky-400"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8H4z"
+                  />
+                </svg>
+              </div>
+            )}
+            {/* Camera overlay */}
+            {!uploadingAvatar && (
+              <div className="absolute inset-0 flex items-end justify-end p-1 opacity-0 hover:opacity-100 transition-opacity">
+                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-sky-500">
+                  <svg
+                    className="h-3 w-3 text-white"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z"
+                    />
+                  </svg>
+                </div>
+              </div>
+            )}
+          </button>
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                const url = URL.createObjectURL(file);
+                setCropSrc(url);
+              }
+              e.target.value = "";
+            }}
+          />
+          <div>
+            <p className="text-sm font-medium text-slate-200">{form.name}</p>
+            <p className="mt-0.5 text-xs text-slate-500">
+              Click the avatar to upload a new photo. JPG, PNG, or WebP up to 10
+              MB.
+            </p>
+          </div>
+        </div>
+
         <form
           onSubmit={saveProfile}
           className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2"

@@ -4,6 +4,7 @@ module Mutations
   class UpdateProfile < BaseMutation
     argument :name, String, required: false
     argument :email, String, required: false
+    argument :avatar_url, String, required: false
     argument :password, String, required: false
     argument :password_confirmation, String, required: false
     argument :current_password, String, required: false

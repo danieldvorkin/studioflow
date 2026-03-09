@@ -23,6 +23,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.45.0",
+    "react-image-crop": "^11.0.10",
     "react-router-dom": "^6.14.1"
   },
   "devDependencies": {

@@ -9,6 +9,7 @@ const CURRENT_USER = gql`
       studioId
       email
       name
+      avatarUrl
       role
       roleName
       godmode

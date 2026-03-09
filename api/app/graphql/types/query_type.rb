@@ -260,15 +260,20 @@ module Types
     end
 
     field :instructors, [ Types::UserType ], null: false,
-    description: "List instructor users (owner and staff)"
+    description: "List instructor users, including owners who have opted in as instructors"
     def instructors
     user = context[:current_user]
     require_management_access!(user)
 
+    instructor_role = User::ROLES[:instructor]
+    owner_role      = User::ROLES[:owner]
+
     if user.platform_staff?
-      User.where(role: User::ROLES[:instructor]).order(:name)
+      User.where("role = ? OR (role = ? AND also_instructor = ?)", instructor_role, owner_role, true).order(:name)
     else
-      User.where(studio_id: user.studio_id, role: User::ROLES[:instructor]).order(:name)
+      User.where(studio_id: user.studio_id)
+          .where("role = ? OR (role = ? AND also_instructor = ?)", instructor_role, owner_role, true)
+          .order(:name)
     end
     end
 
@@ -331,12 +336,11 @@ module Types
         scope = scope.where(studio_id: studio_id) if studio_id.present?
         scope
       else
-        # Regular owners see only staff and instructors from their studio.
-        # Other owners are excluded (owners cannot manage peers) and clients
-        # belong in the clients section, not the user management table.
+        # Regular owners see staff, instructors, and other owners from their studio.
+        # Clients belong in the clients section, not the user management table.
         User.where(
           studio_id: user.studio_id,
-          role: [ User::ROLES[:staff], User::ROLES[:instructor] ]
+          role: [ User::ROLES[:owner], User::ROLES[:staff], User::ROLES[:instructor] ]
         ).order(:email)
       end
     end

@@ -149,6 +149,7 @@ export const UPDATE_USER = gql`
     $role: Int
     $active: Boolean
     $availableForSessions: Boolean
+    $alsoInstructor: Boolean
     $instructorCompensationType: String
     $instructorDefaultSplitPercent: Int
     $instructorDefaultFlatRateCents: Int
@@ -162,6 +163,7 @@ export const UPDATE_USER = gql`
         role: $role
         active: $active
         availableForSessions: $availableForSessions
+        alsoInstructor: $alsoInstructor
         instructorCompensationType: $instructorCompensationType
         instructorDefaultSplitPercent: $instructorDefaultSplitPercent
         instructorDefaultFlatRateCents: $instructorDefaultFlatRateCents
@@ -176,6 +178,7 @@ export const UPDATE_USER = gql`
         roleName
         active
         availableForSessions
+        alsoInstructor
         instructorCompensationType
         instructorDefaultSplitPercent
         instructorDefaultFlatRateCents
@@ -208,6 +211,7 @@ export const UPDATE_PROFILE = gql`
   mutation UpdateProfile(
     $name: String
     $email: String
+    $avatarUrl: String
     $password: String
     $passwordConfirmation: String
     $currentPassword: String
@@ -216,6 +220,7 @@ export const UPDATE_PROFILE = gql`
       input: {
         name: $name
         email: $email
+        avatarUrl: $avatarUrl
         password: $password
         passwordConfirmation: $passwordConfirmation
         currentPassword: $currentPassword
@@ -225,6 +230,7 @@ export const UPDATE_PROFILE = gql`
         id
         email
         name
+        avatarUrl
         role
         roleName
         active

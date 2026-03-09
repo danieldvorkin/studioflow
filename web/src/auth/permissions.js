@@ -27,7 +27,11 @@ export function isStaff(user) {
 
 export function isInstructor(user) {
   const role = roleName(user);
-  return role === "instructor";
+  if (role === "instructor") return true;
+  // Owners who have opted in as instructors should also be treated as instructors
+  // for session assignment and payouts.
+  if (role === "owner" && user?.alsoInstructor === true) return true;
+  return false;
 }
 
 export function isClient(user) {

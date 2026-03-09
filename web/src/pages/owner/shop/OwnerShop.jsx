@@ -1185,10 +1185,10 @@ function ItemsTab({
   const [activeFilter, setActiveFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-
-  useEffect(() => {
+  const handlePageSize = (s) => {
+    setPageSize(s);
     setPage(1);
-  }, [search, typeFilter, activeFilter, pageSize]);
+  };
 
   const filtered = shopItems.filter((item) => {
     if (typeFilter !== "all" && item.itemType !== typeFilter) return false;
@@ -1214,7 +1214,10 @@ function ItemsTab({
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
             placeholder="Search items…"
             className="w-44 rounded-full border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-100 outline-none placeholder:text-slate-500 focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
           />
@@ -1223,7 +1226,10 @@ function ItemsTab({
               <button
                 key={f}
                 type="button"
-                onClick={() => setTypeFilter(f)}
+                onClick={() => {
+                  setTypeFilter(f);
+                  setPage(1);
+                }}
                 className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition ${
                   typeFilter === f
                     ? "bg-sky-500 text-on-accent"
@@ -1243,7 +1249,10 @@ function ItemsTab({
               <button
                 key={val}
                 type="button"
-                onClick={() => setActiveFilter(val)}
+                onClick={() => {
+                  setActiveFilter(val);
+                  setPage(1);
+                }}
                 className={`rounded-full px-3 py-1 text-xs font-medium transition ${
                   activeFilter === val
                     ? "bg-slate-600 text-slate-100"
@@ -1393,7 +1402,7 @@ function ItemsTab({
         total={filtered.length}
         pageSize={pageSize}
         onPage={setPage}
-        onPageSize={setPageSize}
+        onPageSize={handlePageSize}
       />
     </div>
   );
@@ -1404,7 +1413,6 @@ function ItemsTab({
 function OrdersTab({
   shopOrders,
   ordersLoading,
-  onStatusChange,
   onOrderClick,
   initialSearch = "",
 }) {
@@ -1414,10 +1422,10 @@ function OrdersTab({
   const [sort, setSort] = useState("newest");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-
-  useEffect(() => {
+  const handlePageSize = (s) => {
+    setPageSize(s);
     setPage(1);
-  }, [search, statusFilter, sort, pageSize]);
+  };
 
   const statuses = ["all", "pending", "paid", "cancelled", "returned"];
 
@@ -1470,7 +1478,10 @@ function OrdersTab({
         <input
           type="text"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
           placeholder="Search client or item…"
           className="w-52 rounded-full border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-100 outline-none placeholder:text-slate-500 focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
         />
@@ -1478,7 +1489,10 @@ function OrdersTab({
           {/* Sort */}
           <select
             value={sort}
-            onChange={(e) => setSort(e.target.value)}
+            onChange={(e) => {
+              setSort(e.target.value);
+              setPage(1);
+            }}
             className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-300 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 cursor-pointer"
           >
             <option value="newest">Newest first</option>
@@ -1497,7 +1511,10 @@ function OrdersTab({
               <button
                 key={s}
                 type="button"
-                onClick={() => setStatusFilter(s)}
+                onClick={() => {
+                  setStatusFilter(s);
+                  setPage(1);
+                }}
                 className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition ${
                   statusFilter === s
                     ? "bg-sky-500 text-on-accent"
@@ -1612,7 +1629,7 @@ function OrdersTab({
         total={filtered.length}
         pageSize={pageSize}
         onPage={setPage}
-        onPageSize={setPageSize}
+        onPageSize={handlePageSize}
       />
     </div>
   );

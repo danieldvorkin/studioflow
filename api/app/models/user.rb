@@ -40,6 +40,13 @@ class User < ApplicationRecord
     read_attribute(:role) == ROLES[:instructor]
   end
 
+  # True when this user can be assigned to sessions and receive payouts as an
+  # instructor — either because their role IS instructor, or because they are an
+  # owner who has opted in via the also_instructor flag.
+  def acts_as_instructor?
+    instructor? || (owner? && also_instructor?)
+  end
+
   def client?
     read_attribute(:role) == ROLES[:client]
   end
@@ -50,13 +57,13 @@ class User < ApplicationRecord
 
   validates :instructor_compensation_type,
             inclusion: { in: %w[revenue_share flat_rate] },
-            if: -> { instructor? }
+            if: -> { acts_as_instructor? }
   validates :instructor_default_split_percent,
             numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 100 },
-            if: -> { instructor? }
+            if: -> { acts_as_instructor? }
   validates :instructor_default_flat_rate_cents,
             numericality: { only_integer: true, greater_than_or_equal_to: 0 },
-            if: -> { instructor? }
+            if: -> { acts_as_instructor? }
 
   has_many :instructor_client_blocks, foreign_key: :instructor_id, dependent: :destroy
 

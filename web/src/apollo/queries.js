@@ -167,11 +167,13 @@ export const CURRENT_USER = gql`
       studioId
       email
       name
+      avatarUrl
       role
       roleName
       godmode
       active
       availableForSessions
+      alsoInstructor
     }
   }
 `;
@@ -295,6 +297,7 @@ export const ALL_USERS = gql`
       roleName
       active
       availableForSessions
+      alsoInstructor
       instructorCompensationType
       instructorDefaultSplitPercent
       instructorDefaultFlatRateCents

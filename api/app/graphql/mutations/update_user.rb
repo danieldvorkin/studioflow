@@ -8,6 +8,7 @@ module Mutations
     argument :role, Integer, required: false
     argument :active, Boolean, required: false
     argument :available_for_sessions, Boolean, required: false
+    argument :also_instructor, Boolean, required: false
 
     argument :instructor_compensation_type, String, required: false
     argument :instructor_default_split_percent, Integer, required: false
