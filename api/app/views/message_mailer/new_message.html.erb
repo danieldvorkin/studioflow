@@ -4,11 +4,7 @@
 
 <p><strong><%= @sender.name.presence || @sender.email %></strong> sent you a message:</p>
 
-<div class="order-card">
-  <div class="order-row">
-    <span class="val"><%= @message.body.truncate(500) %></span>
-  </div>
-</div>
+<div class="field-value"><%= @message.body.truncate(500) %></div>
 
 <a href="<%= @conversation_url %>" class="btn">View conversation</a>
 

@@ -73,7 +73,6 @@ end
 group :development do
   gem "graphiql-rails"
   gem "graphql-voyager-rails"
-  gem "ruby-lsp", require: false
 end
 
 group :test do

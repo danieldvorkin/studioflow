@@ -157,11 +157,11 @@ export default function ConversationView() {
               key={msg.id}
               className={`flex ${isMine ? "justify-end" : "justify-start"}`}
             >
-              <div className={`flex items-end gap-2 max-w-[75%] ${isMine ? "flex-row-reverse" : ""}`}>
+              <div className={`flex items-end gap-2 max-w-[75%] min-w-0 ${isMine ? "flex-row-reverse" : ""}`}>
                 {!isMine && <UserAvatar user={msg.sender} size="md" />}
-                <div>
+                <div className="min-w-0">
                   <div
-                    className={`rounded-2xl px-4 py-2 text-sm ${
+                    className={`rounded-2xl px-4 py-2 text-sm break-words overflow-hidden ${
                       isMine
                         ? "bg-sky-500 text-white rounded-br-md"
                         : "bg-[var(--app-panel-2)] text-[var(--app-fg)] rounded-bl-md"

@@ -3,7 +3,7 @@ class ApplicationMailer < ActionMailer::Base
   layout "mailer"
 
   def self.default_from_address
-    "noreply@joinstudioflow.com"
+    ENV.fetch("MAILER_FROM", "noreply@joinstudioflow.com")
   end
 
   # Returns the web app base URL, environment-aware.
