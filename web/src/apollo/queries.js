@@ -1193,6 +1193,94 @@ export const CREATE_STUDIO_PAGE = gql`
   }
 `;
 
+// ── Messaging ──────────────────────────────────────────────────────────────
+
+const MESSAGE_FRAGMENT = gql`
+  fragment MessageFields on Message {
+    id
+    conversationId
+    senderId
+    body
+    readAt
+    createdAt
+    sender {
+      id
+      name
+      email
+      avatarUrl
+    }
+  }
+`;
+
+const CONVERSATION_FRAGMENT = gql`
+  ${MESSAGE_FRAGMENT}
+  fragment ConversationFields on Conversation {
+    id
+    studioId
+    createdAt
+    unreadCount
+    otherParticipant {
+      id
+      name
+      email
+      avatarUrl
+      roleName
+    }
+    lastMessage {
+      ...MessageFields
+    }
+  }
+`;
+
+export const MY_CONVERSATIONS = gql`
+  ${CONVERSATION_FRAGMENT}
+  query MyConversations {
+    myConversations {
+      ...ConversationFields
+    }
+  }
+`;
+
+export const CONVERSATION = gql`
+  ${MESSAGE_FRAGMENT}
+  query Conversation($id: ID!) {
+    conversation(id: $id) {
+      id
+      studioId
+      createdAt
+      unreadCount
+      otherParticipant {
+        id
+        name
+        email
+        avatarUrl
+        roleName
+      }
+      messages {
+        ...MessageFields
+      }
+    }
+  }
+`;
+
+export const MY_UNREAD_MESSAGES_COUNT = gql`
+  query MyUnreadMessagesCount {
+    myUnreadMessagesCount
+  }
+`;
+
+export const MESSAGEABLE_USERS = gql`
+  query MessageableUsers {
+    messageableUsers {
+      id
+      name
+      email
+      avatarUrl
+      roleName
+    }
+  }
+`;
+
 export const UPDATE_STUDIO_PAGE = gql`
   mutation UpdateStudioPage(
     $id: ID!

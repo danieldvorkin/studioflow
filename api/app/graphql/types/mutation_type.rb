@@ -102,5 +102,10 @@ module Types
     field :create_studio_page, mutation: Mutations::CreateStudioPage, null: true
     field :update_studio_page, mutation: Mutations::UpdateStudioPage, null: true
     field :delete_studio_page, mutation: Mutations::DeleteStudioPage, null: true
+
+    # Messaging
+    field :create_conversation,    mutation: Mutations::CreateConversation,   null: true
+    field :send_message,           mutation: Mutations::SendMessage,          null: true
+    field :mark_conversation_read, mutation: Mutations::MarkConversationRead, null: true
   end
 end

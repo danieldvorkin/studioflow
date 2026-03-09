@@ -1,0 +1,17 @@
+<h1>New message</h1>
+
+<p>Hi <%= @recipient.name.presence || @recipient.email %>,</p>
+
+<p><strong><%= @sender.name.presence || @sender.email %></strong> sent you a message:</p>
+
+<div class="order-card">
+  <div class="order-row">
+    <span class="val"><%= @message.body.truncate(500) %></span>
+  </div>
+</div>
+
+<a href="<%= @conversation_url %>" class="btn">View conversation</a>
+
+<% content_for :footer do %>
+  You received this email because someone sent you a message on StudioFlow.
+<% end %>

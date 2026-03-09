@@ -1039,6 +1039,77 @@ module Types
       nil
     end
 
+    # ── Messaging ──────────────────────────────────────────────
+    field :my_conversations, [Types::ConversationType], null: false, description: "Current user's conversations ordered by latest message"
+    def my_conversations
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authenticated" unless user
+
+      Conversation
+        .joins(:conversation_participants)
+        .where(conversation_participants: { user_id: user.id })
+        .left_joins(:messages)
+        .group("conversations.id")
+        .order(Arel.sql("MAX(messages.created_at) DESC NULLS LAST"))
+    end
+
+    field :conversation, Types::ConversationType, null: true, description: "Single conversation with messages" do
+      argument :id, ID, required: true
+    end
+    def conversation(id:)
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authenticated" unless user
+
+      conv = Conversation.find_by(id: id)
+      return nil unless conv
+      return nil unless conv.conversation_participants.exists?(user_id: user.id)
+
+      conv
+    end
+
+    field :my_unread_messages_count, Integer, null: false, description: "Total unread messages across all conversations"
+    def my_unread_messages_count
+      user = context[:current_user]
+      return 0 unless user
+
+      Message
+        .joins(conversation: :conversation_participants)
+        .where(conversation_participants: { user_id: user.id })
+        .where.not(sender_id: user.id)
+        .where(read_at: nil)
+        .count
+    end
+
+    field :messageable_users, [Types::UserType], null: false, description: "Users the current user is allowed to message"
+    def messageable_users
+      user = context[:current_user]
+      raise GraphQL::ExecutionError, "Not authenticated" unless user
+
+      studio_users = User.where(studio_id: user.studio_id, active: true).where.not(id: user.id)
+
+      if user.platform_staff? || user.owner?
+        studio_users
+      elsif user.staff?
+        studio_users
+      elsif user.instructor?
+        # Instructors can message clients and owners
+        studio_users.where(role: [User::ROLES[:client], User::ROLES[:owner]])
+      elsif user.client?
+        # Clients can message instructors (not blocked) and owners
+        owners = studio_users.where(role: User::ROLES[:owner])
+        client_record = Client.find_by(user_id: user.id, studio_id: user.studio_id)
+        if client_record
+          blocked_instructor_ids = InstructorClientBlock.where(client_id: client_record.id).pluck(:instructor_id)
+          instructors = studio_users.where(role: User::ROLES[:instructor]).where.not(id: blocked_instructor_ids)
+          User.where(id: owners.select(:id)).or(User.where(id: instructors.select(:id)))
+        else
+          owners
+        end
+      else
+        User.none
+      end
+    end
+
     private
 
     # Management access: owner, staff, or platform staff (godmode + moderator)

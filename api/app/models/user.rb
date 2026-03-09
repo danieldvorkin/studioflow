@@ -59,6 +59,9 @@ class User < ApplicationRecord
             if: -> { instructor? }
 
   has_many :instructor_client_blocks, foreign_key: :instructor_id, dependent: :destroy
+  has_many :conversation_participants, dependent: :destroy
+  has_many :conversations, through: :conversation_participants
+  has_many :sent_messages, class_name: "Message", foreign_key: :sender_id, dependent: :destroy
 
   has_many :favorite_class_sessions, dependent: :destroy
   has_many :favorited_class_sessions, through: :favorite_class_sessions, source: :class_session

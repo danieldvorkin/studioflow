@@ -60,12 +60,18 @@ import OwnerApiTokens from "./pages/owner/settings/OwnerApiTokens";
 import ApiDocs from "./pages/public/ApiDocs";
 import OwnerPages from "./pages/owner/settings/OwnerPages";
 import StudioPageView from "./pages/shared/StudioPageView";
+import Inbox from "./pages/shared/Inbox";
+import ConversationView from "./pages/shared/ConversationView";
 const Dashboard = lazy(() => import("./pages/shared/dashboard"));
 const Profile = lazy(() => import("./pages/shared/profile"));
 import { useTheme } from "./theme/ThemeProvider";
 import { useCurrency } from "./currency/CurrencyProvider";
 import { useLocationContext } from "./location/LocationProvider";
-import { STUDIO_SETTINGS, STUDIO_PAGES } from "./apollo/queries";
+import {
+  STUDIO_SETTINGS,
+  STUDIO_PAGES,
+  MY_UNREAD_MESSAGES_COUNT,
+} from "./apollo/queries";
 import { useStudio } from "./studio/StudioProvider";
 import NotificationBell from "./components/shared/NotificationBell";
 import SubscriptionStatusBanner from "./components/shared/SubscriptionStatusBanner";
@@ -178,6 +184,12 @@ function AppShell() {
 
   const canManageStudio = isGodmode || isOwner || isStaff || isModerator;
 
+  const { data: unreadMsgData } = useQuery(MY_UNREAD_MESSAGES_COUNT, {
+    pollInterval: 30000,
+    skip: !user,
+  });
+  const unreadMsgCount = unreadMsgData?.myUnreadMessagesCount || 0;
+
   useEffect(() => {
     mobileNavOpenRef.current = mobileNavOpen;
   }, [mobileNavOpen]);
@@ -217,6 +229,16 @@ function AppShell() {
         <nav className="flex flex-col gap-2 text-sm font-medium text-slate-300">
           <NavFolder label="General" defaultOpen>
             <NavItem to="/dashboard">Dashboard</NavItem>
+            <NavItem to="/messages" end={false}>
+              <span className="flex items-center justify-between w-full">
+                Messages
+                {unreadMsgCount > 0 && (
+                  <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-sky-500 px-1.5 text-[10px] font-bold text-white">
+                    {unreadMsgCount > 99 ? "99+" : unreadMsgCount}
+                  </span>
+                )}
+              </span>
+            </NavItem>
             <NavItem to="/profile">Profile</NavItem>
           </NavFolder>
 
@@ -356,6 +378,21 @@ function AppShell() {
                     onNavigate={() => setMobileNavOpen(false)}
                   >
                     Dashboard
+                  </NavItem>
+                  <NavItem
+                    to="/messages"
+                    end={false}
+                    variant="mobile"
+                    onNavigate={() => setMobileNavOpen(false)}
+                  >
+                    <span className="flex items-center justify-between w-full">
+                      Messages
+                      {unreadMsgCount > 0 && (
+                        <span className="ml-auto flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-sky-500 px-1.5 text-[10px] font-bold text-white">
+                          {unreadMsgCount > 99 ? "99+" : unreadMsgCount}
+                        </span>
+                      )}
+                    </span>
                   </NavItem>
                   <NavItem
                     to="/profile"
@@ -780,6 +817,22 @@ function App() {
                 <Suspense fallback={<PageSpinner />}>
                   <Profile />
                 </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/messages"
+            element={
+              <ProtectedRoute>
+                <Inbox />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/messages/:id"
+            element={
+              <ProtectedRoute>
+                <ConversationView />
               </ProtectedRoute>
             }
           />

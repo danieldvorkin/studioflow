@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_06_203509) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_09_012647) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -241,6 +241,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_06_203509) do
     t.index ["user_id"], name: "index_clients_on_user_id"
   end
 
+  create_table "conversation_participants", force: :cascade do |t|
+    t.bigint "conversation_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["conversation_id", "user_id"], name: "index_conversation_participants_on_conversation_id_and_user_id", unique: true
+    t.index ["conversation_id"], name: "index_conversation_participants_on_conversation_id"
+    t.index ["user_id"], name: "index_conversation_participants_on_user_id"
+  end
+
+  create_table "conversations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "studio_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["studio_id"], name: "index_conversations_on_studio_id"
+  end
+
   create_table "favorite_class_sessions", force: :cascade do |t|
     t.bigint "class_session_id", null: false
     t.datetime "created_at", null: false
@@ -317,6 +334,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_06_203509) do
     t.datetime "updated_at", null: false
     t.index ["studio_id", "position"], name: "index_membership_plans_on_studio_id_and_position"
     t.index ["studio_id"], name: "index_membership_plans_on_studio_id"
+  end
+
+  create_table "messages", force: :cascade do |t|
+    t.text "body", null: false
+    t.bigint "conversation_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "read_at"
+    t.bigint "sender_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["conversation_id", "created_at"], name: "index_messages_on_conversation_id_and_created_at"
+    t.index ["conversation_id"], name: "index_messages_on_conversation_id"
+    t.index ["sender_id"], name: "index_messages_on_sender_id"
   end
 
   create_table "notifications", force: :cascade do |t|
@@ -519,6 +548,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_06_203509) do
   add_foreign_key "client_payment_methods", "users"
   add_foreign_key "clients", "studios"
   add_foreign_key "clients", "users"
+  add_foreign_key "conversation_participants", "conversations"
+  add_foreign_key "conversation_participants", "users"
+  add_foreign_key "conversations", "studios"
   add_foreign_key "favorite_class_sessions", "class_sessions"
   add_foreign_key "favorite_class_sessions", "users"
   add_foreign_key "instructor_client_blocks", "clients"
@@ -528,6 +560,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_06_203509) do
   add_foreign_key "instructor_payouts", "users", column: "created_by_id"
   add_foreign_key "instructor_payouts", "users", column: "instructor_id"
   add_foreign_key "membership_plans", "studios"
+  add_foreign_key "messages", "conversations"
+  add_foreign_key "messages", "users", column: "sender_id"
   add_foreign_key "notifications", "studios"
   add_foreign_key "notifications", "users"
   add_foreign_key "payment_settings", "studios"

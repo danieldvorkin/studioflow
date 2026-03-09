@@ -1676,3 +1676,57 @@ export const REVOKE_API_TOKEN = gql`
     }
   }
 `;
+
+// ── Messaging ──────────────────────────────────────────────────────────────
+
+export const CREATE_CONVERSATION = gql`
+  mutation CreateConversation($recipientId: ID!) {
+    createConversation(input: { recipientId: $recipientId }) {
+      conversation {
+        id
+        otherParticipant {
+          id
+          name
+          email
+          avatarUrl
+          roleName
+        }
+      }
+      errors
+    }
+  }
+`;
+
+export const SEND_MESSAGE = gql`
+  mutation SendMessage($conversationId: ID!, $body: String!) {
+    sendMessage(input: { conversationId: $conversationId, body: $body }) {
+      message {
+        id
+        conversationId
+        senderId
+        body
+        readAt
+        createdAt
+        sender {
+          id
+          name
+          email
+          avatarUrl
+        }
+      }
+      errors
+    }
+  }
+`;
+
+export const MARK_CONVERSATION_READ = gql`
+  mutation MarkConversationRead($conversationId: ID!) {
+    markConversationRead(input: { conversationId: $conversationId }) {
+      conversation {
+        id
+        unreadCount
+      }
+      errors
+    }
+  }
+`;

@@ -1,0 +1,9 @@
+Hi <%= @recipient.name.presence || @recipient.email %>,
+
+<%= @sender.name.presence || @sender.email %> sent you a message:
+
+"<%= @message.body.truncate(500) %>"
+
+View the conversation: <%= @conversation_url %>
+
+You received this email because someone sent you a message on StudioFlow.
