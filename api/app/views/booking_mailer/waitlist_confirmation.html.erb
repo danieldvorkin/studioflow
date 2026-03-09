@@ -1,0 +1,51 @@
+<h1>You're on the waitlist ✋</h1>
+
+<p>Hi <%= @booking&.client&.name.presence || @booking&.client&.email %>,</p>
+
+<p>
+  You've been added to the waitlist for
+  <strong><%= @booking&.class_session&.class_template&.title || 'your class' %></strong>.
+  We'll let you know as soon as a spot opens up.
+</p>
+
+<div class="order-card">
+  <% if (start_time = @booking&.class_session&.start_time) %>
+    <div class="order-row">
+      <span class="lbl">When</span>
+      <span class="val"><%= start_time.strftime('%B %-d, %Y at %-I:%M %p') %></span>
+    </div>
+  <% end %>
+  <% if (location_name = @booking&.class_session&.class_template&.studio_location&.name) %>
+    <div class="order-row">
+      <span class="lbl">Location</span>
+      <span class="val"><%= location_name %></span>
+    </div>
+  <% end %>
+  <% if (room = @booking&.class_session&.room).present? %>
+    <div class="order-row">
+      <span class="lbl">Room</span>
+      <span class="val"><%= room %></span>
+    </div>
+  <% end %>
+  <% if (price_cents = @booking&.price_cents).to_i > 0 %>
+    <div class="order-row">
+      <span class="lbl">Payment</span>
+      <span class="val">No charge until confirmed</span>
+    </div>
+  <% end %>
+  <div class="order-row">
+    <span class="lbl">Status</span>
+    <span class="val">Waitlisted</span>
+  </div>
+</div>
+
+<p style="font-size: 14px; color: #94a3b8;">
+  <strong style="color: #e2e8f0;">Your card will not be charged</strong> until a spot opens
+  and you're confirmed. If you change your mind, you can cancel your waitlist spot at any time.
+</p>
+
+<a href="<%= @booking_url %>" class="btn">View waitlist spot</a>
+
+<% content_for :footer do %>
+  You received this email because you joined the waitlist for a class through StudioFlow.
+<% end %>

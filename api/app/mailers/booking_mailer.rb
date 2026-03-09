@@ -13,9 +13,17 @@ class BookingMailer < ApplicationMailer
     mail(to: instructor.email, subject: "New booking: #{@booking.class_session.class_template&.title || 'a class'}")
   end
 
+  def waitlist_confirmation
+    @booking = params[:booking]
+    @booking_url = booking_url_for(@booking)
+    mail(to: @booking.client.email, subject: "You're on the waitlist — spot reserved")
+  end
+
   def waitlist_promotion
     @booking = params[:booking]
-    mail(to: @booking.client.email, subject: "You were promoted from the waitlist")
+    @payment = params[:payment]
+    @booking_url = booking_url_for(@booking)
+    mail(to: @booking.client.email, subject: "You're in — waitlist spot confirmed! 🎉")
   end
 
   def cancellation

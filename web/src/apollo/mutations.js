@@ -366,6 +366,20 @@ export const SEND_BOOKING_PAYMENT_REMINDER = gql`
   }
 `;
 
+export const PROMOTE_FROM_WAITLIST = gql`
+  mutation PromoteFromWaitlist($id: ID!) {
+    promoteFromWaitlist(input: { id: $id }) {
+      success
+      errors
+      booking {
+        id
+        status
+        waitlistPosition
+      }
+    }
+  }
+`;
+
 export const CREATE_CLASS_SESSION = gql`
   mutation CreateClassSession(
     $classTemplateId: ID!

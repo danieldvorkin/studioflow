@@ -430,6 +430,9 @@ function BookingForm({ session, studioIdForBooking, stripeConfigured }) {
     ? (session.classTemplate.priceCents / 100).toFixed(2)
     : null;
 
+  const isWaitlisting =
+    typeof session.seatsAvailable === "number" && session.seatsAvailable <= 0;
+
   const showBundleOption = shouldShowBundlePayments;
   const canPayWithBundle = eligibleBundlePurchases.length > 0;
   const loadingBundleData = bundleProductsLoading || myBundlePurchasesLoading;
@@ -699,6 +702,24 @@ function BookingForm({ session, studioIdForBooking, stripeConfigured }) {
                 </>
               )}
           </div>
+
+          {/* Waitlist no-charge notice */}
+          {isWaitlisting && paymentSource !== "bundle" && priceDollars && (
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/8 px-3 py-2.5 text-xs">
+              <p className="font-semibold text-amber-200">
+                This class is full — you're joining the waitlist
+              </p>
+              <p className="mt-1 text-amber-300/80">
+                <strong className="text-amber-200">
+                  Your card will not be charged today.
+                </strong>{" "}
+                If a spot opens up and you're confirmed, your saved card will be
+                charged automatically and you'll receive a confirmation email
+                with your receipt.
+              </p>
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={
@@ -706,22 +727,30 @@ function BookingForm({ session, studioIdForBooking, stripeConfigured }) {
               (paymentSource !== "bundle" && !stripeConfigured) ||
               (paymentSource === "bundle" && !canPayWithBundle)
             }
-            className="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-sky-500 px-3 py-2 text-sm font-semibold text-on-accent hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-70"
+            className={`mt-2 inline-flex w-full items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold text-on-accent disabled:cursor-not-allowed disabled:opacity-70 ${
+              isWaitlisting && paymentSource !== "bundle"
+                ? "bg-amber-500 hover:bg-amber-400"
+                : "bg-sky-500 hover:bg-sky-400"
+            }`}
           >
             {paymentSource === "bundle"
               ? "Book using bundle credits"
-              : priceDollars
-                ? `Pay ${currencySymbol}${priceDollars} ${currencyLabel} & book`
-                : "Confirm booking"}
+              : isWaitlisting && priceDollars
+                ? "Join waitlist — no charge today"
+                : priceDollars
+                  ? `Pay ${currencySymbol}${priceDollars} ${currencyLabel} & book`
+                  : "Confirm booking"}
           </button>
         </form>
         <aside className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 text-sm">
           <h2 className="text-sm font-semibold text-slate-50">
             {submitting
               ? "Processing…"
-              : priceDollars
-                ? `Pay ${currencySymbol}${priceDollars} ${currencyLabel} & book`
-                : "Confirm booking"}
+              : isWaitlisting && priceDollars && paymentSource !== "bundle"
+                ? "Join waitlist — no charge today"
+                : priceDollars
+                  ? `Pay ${currencySymbol}${priceDollars} ${currencyLabel} & book`
+                  : "Confirm booking"}
           </h2>
           <div className="mt-3 space-y-2 text-xs text-slate-300">
             <div className="flex justify-between">
@@ -773,12 +802,21 @@ function BookingForm({ session, studioIdForBooking, stripeConfigured }) {
             {priceDollars && (
               <>
                 <div className="mt-2 h-px bg-slate-800" />
-                <div className="flex justify-between text-sm font-semibold text-slate-50">
-                  <span>Total</span>
-                  <span>
-                    {currencyLabel} {priceDollars}
-                  </span>
-                </div>
+                {isWaitlisting && paymentSource !== "bundle" ? (
+                  <div className="flex justify-between text-sm font-semibold text-amber-300">
+                    <span>Charged on confirmation</span>
+                    <span>
+                      {currencyLabel} {priceDollars}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex justify-between text-sm font-semibold text-slate-50">
+                    <span>Total</span>
+                    <span>
+                      {currencyLabel} {priceDollars}
+                    </span>
+                  </div>
+                )}
               </>
             )}
           </div>

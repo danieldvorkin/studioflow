@@ -14,9 +14,14 @@ class NotificationJob < ApplicationJob
       instructor = booking.class_session.instructor
       BookingMailer.with(booking: booking).instructor_confirmation.deliver_now if instructor&.email.present?
 
+    when :waitlist_confirmation
+      booking = Booking.find(resource_id)
+      BookingMailer.with(booking: booking).waitlist_confirmation.deliver_now
+
     when :waitlist_promotion
       booking = Booking.find(resource_id)
-      BookingMailer.with(booking: booking).waitlist_promotion.deliver_now
+      payment = booking.payment
+      BookingMailer.with(booking: booking, payment: payment).waitlist_promotion.deliver_now
 
     when :booking_cancellation
       booking = Booking.find(resource_id)

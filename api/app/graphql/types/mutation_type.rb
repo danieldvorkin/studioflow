@@ -12,6 +12,7 @@ module Types
     field :delete_class_session, mutation: Mutations::DeleteClassSession, null: true
     field :create_booking, mutation: Mutations::CreateBooking, null: true
     field :cancel_booking, mutation: Mutations::CancelBooking, null: true
+    field :promote_from_waitlist, mutation: Mutations::PromoteFromWaitlist, null: true
     field :archive_booking, mutation: Mutations::ArchiveBooking, null: true
     field :mark_no_show_booking, mutation: Mutations::MarkNoShowBooking, null: true
     field :rebook_booking, mutation: Mutations::RebookBooking, null: true

@@ -183,10 +183,13 @@ function ClientGuidancePanel({ booking, isFree, session }) {
       },
     ].filter(Boolean);
   } else if (booking.status === "waitlisted") {
+    const position = booking.waitlistPosition;
     items = [
       {
         icon: "⏳",
-        label: "You're queued up",
+        label: position
+          ? `You're #${position} in the queue`
+          : "You're queued up",
         text: "No spot is available right now — if one opens you'll be automatically confirmed.",
         color: "text-amber-400",
       },
@@ -924,9 +927,16 @@ export default function BookingShow() {
 
         {booking.status === "waitlisted" && (
           <div className="mt-4 rounded-xl border border-amber-500/25 bg-amber-500/8 px-4 py-3">
-            <p className="text-sm font-semibold text-amber-200">
-              You&rsquo;re on the waitlist
-            </p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold text-amber-200">
+                You&rsquo;re on the waitlist
+              </p>
+              {booking.waitlistPosition && (
+                <span className="shrink-0 rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[11px] font-bold text-amber-300 ring-1 ring-amber-500/30">
+                  #{booking.waitlistPosition} in queue
+                </span>
+              )}
+            </div>
             <ul className="mt-2 space-y-1.5 text-xs text-amber-300/80">
               <li className="flex items-start gap-1.5">
                 <span className="mt-0.5 shrink-0">•</span>

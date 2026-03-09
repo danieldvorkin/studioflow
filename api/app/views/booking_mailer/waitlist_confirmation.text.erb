@@ -1,0 +1,23 @@
+You're on the waitlist
+
+Hi <%= @booking&.client&.name.presence || @booking&.client&.email %>,
+
+You've been added to the waitlist for <%= @booking&.class_session&.class_template&.title || 'your class' %>. We'll let you know as soon as a spot opens up.
+
+<% if (start_time = @booking&.class_session&.start_time) %>
+When: <%= start_time.strftime('%B %-d, %Y at %-I:%M %p') %>
+<% end %>
+<% if (location_name = @booking&.class_session&.class_template&.studio_location&.name) %>
+Location: <%= location_name %>
+<% end %>
+<% if (room = @booking&.class_session&.room).present? %>
+Room: <%= room %>
+<% end %>
+Payment: No charge until confirmed
+
+Your card will not be charged until a spot opens and you're confirmed. If you change your mind, you can cancel your waitlist spot at any time.
+
+View your waitlist spot: <%= @booking_url %>
+
+Thanks,
+Pilates Studio

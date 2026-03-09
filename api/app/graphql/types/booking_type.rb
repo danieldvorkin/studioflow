@@ -12,5 +12,19 @@ module Types
     field :payment, Types::PaymentType, null: true
     field :bundle_purchase, Types::BundlePurchaseType, null: true
     field :created_at, GraphQL::Types::ISO8601DateTime, null: false
+    field :waitlist_position, Integer, null: true
+
+    def waitlist_position
+      return nil unless object.waitlisted?
+
+      object
+        .class_session
+        .bookings
+        .where(status: Booking.statuses[:waitlisted])
+        .order(:created_at)
+        .pluck(:id)
+        .index(object.id)
+        &.+(1)
+    end
   end
 end

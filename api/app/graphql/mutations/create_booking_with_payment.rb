@@ -56,7 +56,7 @@ module Mutations
       end
 
       if class_session.instructor_id && InstructorClientBlock.exists?(instructor_id: class_session.instructor_id, client_id: client.id)
-      return { booking: nil, payment: nil, errors: [ "This client is blocked from booking with the instructor for this class" ] }
+        return { booking: nil, payment: nil, errors: [ "This client is blocked from booking with the instructor for this class" ] }
       end
       if (err = client_booking_cutoff_error(class_session, user))
         return { booking: nil, payment: nil, errors: [ err ] }
@@ -68,7 +68,8 @@ module Mutations
         return { booking: nil, payment: nil, errors: [ "Class has no price configured" ] }
       end
 
-      status = class_session.seats_available > 0 ? "booked" : "waitlisted"
+      status     = class_session.seats_available > 0 ? "booked" : "waitlisted"
+      waitlisted = status == "waitlisted"
 
       # Validate booking before touching Stripe so we don't charge if it can't be created
       preview_booking = Booking.new(
@@ -86,6 +87,35 @@ module Mutations
 
       Stripe.api_key = settings.stripe_secret_key
 
+      # ── Waitlist path: save card for later, do NOT charge now ─────────────
+      if waitlisted
+        begin
+          ensure_payment_method_saved(client, payment_method_id, settings)
+        rescue Stripe::StripeError => e
+          # Non-fatal — we still create the waitlist booking even if card attachment fails.
+          # The studio can send a payment reminder when the client gets promoted.
+          Rails.logger.warn("[CreateBookingWithPayment] Could not save card for waitlist booking: #{e.message}")
+        end
+
+        booking = Booking.create!(
+          studio_id:   studio_id,
+          client:      client,
+          class_session: class_session,
+          status:      Booking.statuses[:waitlisted],
+          paid:        false,
+          price_cents: class_template.price_cents
+        )
+
+        begin
+          NotificationJob.perform_now(:waitlist_confirmation, booking.id)
+        rescue => e
+          Rails.logger.error("[CreateBookingWithPayment] Waitlist notification failed for booking #{booking.id}: #{e.message}")
+        end
+
+        return { booking: booking, payment: nil, errors: [] }
+      end
+
+      # ── Booked path: charge Stripe now ────────────────────────────────────
       begin
         intent_params = {
           amount: class_template.price_cents,
@@ -105,9 +135,7 @@ module Mutations
 
         intent_params[:customer] = client.stripe_customer_id if client.stripe_customer_id.present?
 
-        intent = Stripe::PaymentIntent.create(
-          intent_params
-        )
+        intent = Stripe::PaymentIntent.create(intent_params)
       rescue Stripe::StripeError => e
         return { booking: nil, payment: nil, errors: [ e.message ] }
       end
@@ -124,7 +152,7 @@ module Mutations
           studio_id: studio_id,
           client: client,
           class_session: class_session,
-          status: Booking.statuses[status],
+          status: Booking.statuses[:booked],
           paid: true,
           price_cents: class_template.price_cents
         )
@@ -134,15 +162,15 @@ module Mutations
         end
 
         payment = Payment.create!(
-          studio_id: studio_id,
-          booking: booking,
-          client: client,
-          class_session: class_session,
-          amount_cents: class_template.price_cents,
-          currency: currency,
-          status: "succeeded",
-          stripe_payment_intent_id: intent.id,
-          raw_response: intent.to_hash
+          studio_id:                   studio_id,
+          booking:                     booking,
+          client:                      client,
+          class_session:               class_session,
+          amount_cents:                class_template.price_cents,
+          currency:                    currency,
+          status:                      "succeeded",
+          stripe_payment_intent_id:    intent.id,
+          raw_response:                intent.to_hash
         )
       end
 
@@ -155,6 +183,35 @@ module Mutations
       end
 
       { booking: booking, payment: payment, errors: [] }
+    end
+
+    private
+
+    # Attaches the payment method to the client's Stripe customer and saves it
+    # as their default so WaitlistChargeService can charge it on promotion.
+    def ensure_payment_method_saved(client, payment_method_id, settings)
+      Stripe.api_key = settings.stripe_secret_key
+
+      if client.stripe_customer_id.blank?
+        customer = Stripe::Customer.create(
+          email:    client.email,
+          name:     client.name,
+          metadata: { client_id: client.id }
+        )
+        client.update_column(:stripe_customer_id, customer.id)
+      end
+
+      pm = Stripe::PaymentMethod.retrieve(payment_method_id)
+      Stripe::PaymentMethod.attach(payment_method_id, { customer: client.stripe_customer_id }) if pm.customer.blank?
+
+      card = pm.card
+      client.update!(
+        stripe_default_payment_method_id:        payment_method_id,
+        stripe_default_payment_method_brand:     card&.brand,
+        stripe_default_payment_method_last4:     card&.last4,
+        stripe_default_payment_method_exp_month: card&.exp_month,
+        stripe_default_payment_method_exp_year:  card&.exp_year
+      )
     end
   end
 end

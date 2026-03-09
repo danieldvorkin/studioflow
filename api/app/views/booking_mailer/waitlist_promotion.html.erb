@@ -1,9 +1,9 @@
-<h1>You're in — waitlist promoted 🎉</h1>
+<h1>You're in — spot confirmed! 🎉</h1>
 
 <p>Hi <%= @booking&.client&.name.presence || @booking&.client&.email %>,</p>
 
 <p>
-  Good news: you were promoted from the waitlist and now have a confirmed spot in
+  Great news: you've been moved from the waitlist into a confirmed spot in
   <strong><%= @booking&.class_session&.class_template&.title || 'your class' %></strong>.
 </p>
 
@@ -26,7 +26,36 @@
       <span class="val"><%= room %></span>
     </div>
   <% end %>
+  <% if @payment %>
+    <div class="order-row">
+      <span class="lbl">Amount charged</span>
+      <span class="val"><%= @payment.currency.upcase %> $<%= '%.2f' % (@payment.amount_cents / 100.0) %></span>
+    </div>
+    <div class="order-row">
+      <span class="lbl">Payment status</span>
+      <span class="val">Paid ✅</span>
+    </div>
+  <% elsif @booking&.price_cents.to_i > 0 %>
+    <div class="order-row">
+      <span class="lbl">Payment</span>
+      <span class="val">Outstanding — please pay to secure your spot</span>
+    </div>
+  <% end %>
 </div>
+
+<% if @payment %>
+  <p style="font-size: 14px; color: #94a3b8;">
+    Your saved card was charged automatically when your spot was confirmed.
+    No further action is needed.
+  </p>
+<% elsif @booking&.price_cents.to_i > 0 %>
+  <p style="font-size: 14px; color: #f59e0b;">
+    <strong style="color: #fbbf24;">Payment required:</strong> we weren't able to charge
+    your card automatically. Please log in to complete payment and secure your spot.
+  </p>
+<% end %>
+
+<a href="<%= @booking_url %>" class="btn">View booking</a>
 
 <% content_for :footer do %>
   You received this email because you were promoted from the waitlist on StudioFlow.

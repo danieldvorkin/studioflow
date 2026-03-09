@@ -7,6 +7,7 @@ import {
   CANCEL_BOOKING,
   MARK_NO_SHOW_BOOKING,
   SEND_BOOKING_PAYMENT_REMINDER,
+  PROMOTE_FROM_WAITLIST,
 } from "../../../apollo/mutations";
 import { useToast } from "../../../components/shared/ToastProvider";
 import { useAuth } from "../../../auth/AuthProvider";
@@ -57,6 +58,9 @@ export default function SessionManage() {
   const [sendReminder, { loading: sendingReminder }] = useMutation(
     SEND_BOOKING_PAYMENT_REMINDER,
   );
+  const [promoteFromWaitlist, { loading: promoting }] = useMutation(
+    PROMOTE_FROM_WAITLIST,
+  );
 
   const allBookings = data?.bookings ?? EMPTY_BOOKINGS;
 
@@ -66,6 +70,14 @@ export default function SessionManage() {
 
   const confirmedBookings = useMemo(
     () => allBookings.filter((b) => b.status === "booked"),
+    [allBookings],
+  );
+
+  const waitlistedBookings = useMemo(
+    () =>
+      allBookings
+        .filter((b) => b.status === "waitlisted")
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)),
     [allBookings],
   );
 
@@ -145,6 +157,24 @@ export default function SessionManage() {
     }
   };
 
+  const handlePromote = async (bookingId) => {
+    try {
+      const res = await promoteFromWaitlist({ variables: { id: bookingId } });
+      const payload = res.data?.promoteFromWaitlist;
+      if (!payload?.success) {
+        addToast({
+          message: (payload?.errors || ["Could not promote"]).join(", "),
+          type: "error",
+        });
+      } else {
+        addToast({ message: "Client promoted from waitlist", type: "success" });
+        refetch();
+      }
+    } catch (e) {
+      addToast({ message: e.message || "Promote failed", type: "error" });
+    }
+  };
+
   if (!canManage) {
     return (
       <div className="mx-auto max-w-4xl p-6">
@@ -171,7 +201,8 @@ export default function SessionManage() {
     );
   }
 
-  const actionsBusy = cancelling || markingNoShow || sendingReminder;
+  const actionsBusy =
+    cancelling || markingNoShow || sendingReminder || promoting;
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-5">
@@ -234,6 +265,65 @@ export default function SessionManage() {
           </div>
         </div>
       </div>
+
+      {/* Waitlist Queue */}
+      {waitlistedBookings.length > 0 && (
+        <section className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-amber-300">
+              Waitlist Queue
+              <span className="ml-2 rounded-full bg-amber-500/20 px-2 py-0.5 text-[11px] font-bold text-amber-200">
+                {waitlistedBookings.length}
+              </span>
+            </h2>
+            <span className="text-[11px] text-slate-500">
+              {capacity != null && stats.confirmed < capacity
+                ? `${capacity - stats.confirmed} seat${capacity - stats.confirmed !== 1 ? "s" : ""} available`
+                : "No seats available"}
+            </span>
+          </div>
+          <ul className="flex flex-col gap-2">
+            {waitlistedBookings.map((booking, idx) => (
+              <li
+                key={booking.id}
+                className="flex flex-col gap-2 rounded-xl border border-amber-500/20 bg-slate-900/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-[11px] font-bold text-amber-300">
+                    #{idx + 1}
+                  </span>
+                  <div className="flex min-w-0 flex-col gap-0.5">
+                    <span className="text-sm font-medium text-slate-50">
+                      {booking.client.name}
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      {booking.client.email}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-shrink-0 flex-wrap items-center gap-1.5">
+                  <button
+                    type="button"
+                    disabled={actionsBusy}
+                    onClick={() => handlePromote(booking.id)}
+                    className="rounded-full border border-emerald-500/50 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold text-emerald-300 hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Promote to booked
+                  </button>
+                  <button
+                    type="button"
+                    disabled={actionsBusy}
+                    onClick={() => handleCancel(booking.id)}
+                    className="rounded-full border border-rose-600/50 px-2.5 py-1 text-[11px] font-semibold text-rose-300 hover:bg-rose-600/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Status Filter */}
       <div className="flex flex-wrap gap-2">

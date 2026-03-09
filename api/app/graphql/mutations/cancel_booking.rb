@@ -27,7 +27,9 @@ module Mutations
         next_wait = booking.class_session.bookings.where(status: Booking.statuses[:waitlisted]).order(:created_at).first
         if next_wait
           next_wait.update!(status: Booking.statuses[:booked])
-          # Notify the promoted booking
+          # Attempt to charge their saved card for the confirmed spot
+          settings = PaymentSetting.instance_for(next_wait.studio)
+          WaitlistChargeService.call(booking: next_wait, settings: settings)
           NotificationJob.perform_now(:waitlist_promotion, next_wait.id)
         end
       end

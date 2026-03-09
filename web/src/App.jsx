@@ -60,6 +60,7 @@ import OwnerApiTokens from "./pages/owner/settings/OwnerApiTokens";
 import ApiDocs from "./pages/public/ApiDocs";
 import OwnerPages from "./pages/owner/settings/OwnerPages";
 import StudioPageView from "./pages/shared/StudioPageView";
+import Analytics from "./pages/owner/analytics";
 const Dashboard = lazy(() => import("./pages/shared/dashboard"));
 const Profile = lazy(() => import("./pages/shared/profile"));
 import { useTheme } from "./theme/ThemeProvider";
@@ -962,6 +963,14 @@ function App() {
             }
           />
           <Route path="/favorites" element={<Navigate to="/saved" replace />} />
+          <Route
+            path="/analytics"
+            element={
+              <RoleGate allow={["owner", "staff", "moderator", "godmode"]}>
+                <Analytics />
+              </RoleGate>
+            }
+          />
           <Route
             path="/clients"
             element={

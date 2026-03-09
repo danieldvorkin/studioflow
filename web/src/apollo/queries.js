@@ -370,6 +370,7 @@ export const BOOKINGS = gql`
       studioId
       slug
       status
+      waitlistPosition
       paid
       priceCents
       archived
@@ -427,6 +428,7 @@ export const MY_BOOKINGS = gql`
       studioId
       slug
       status
+      waitlistPosition
       paid
       priceCents
       archived
@@ -924,6 +926,7 @@ export const SESSION_BOOKINGS = gql`
       studioId
       slug
       status
+      waitlistPosition
       paid
       priceCents
       archived
