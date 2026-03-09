@@ -19,7 +19,7 @@ RSpec.describe BookingMailer, type: :mailer do
   it 'builds a waitlist promotion email' do
     mail = described_class.with(booking: booking).waitlist_promotion
     expect(mail.to).to eq([ 'client@example.com' ])
-    expect(mail.subject).to eq('You were promoted from the waitlist')
+    expect(mail.subject).to eq("You're in — waitlist spot confirmed! 🎉")
   end
 
   it 'builds a cancellation email' do
