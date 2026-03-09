@@ -6,7 +6,7 @@ import { InMemoryCache } from "@apollo/client";
 import { MemoryRouter } from "react-router-dom";
 
 // ─── Module mocks ─────────────────────────────────────────────────────────────
-vi.mock("../../components/ToastProvider", () => ({
+vi.mock("../../components/shared/ToastProvider", () => ({
   useToast: () => ({ addToast: vi.fn() }),
   ToastProvider: ({ children }) => children,
 }));
@@ -38,7 +38,7 @@ vi.mock("../../theme/ThemeProvider", () => ({
 }));
 
 // ─── Page import ──────────────────────────────────────────────────────────────
-import OwnerMembershipsPage from "../../pages/OwnerMemberships.jsx";
+import OwnerMembershipsPage from "../../pages/owner/memberships/OwnerMemberships.jsx";
 import {
   MEMBERSHIP_PLANS,
   CLIENT_MEMBERSHIPS,

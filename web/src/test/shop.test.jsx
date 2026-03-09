@@ -162,7 +162,7 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 // Shop page (client-facing)
 // ---------------------------------------------------------------------------
-import ShopPage from "../pages/Shop";
+import ShopPage from "../pages/client/Shop";
 
 describe("ShopPage", () => {
   beforeEach(() => {
@@ -324,7 +324,7 @@ describe("ShopPage", () => {
 // ---------------------------------------------------------------------------
 // OwnerShop page (owner-facing management)
 // ---------------------------------------------------------------------------
-import OwnerShopPage from "../pages/OwnerShop";
+import OwnerShopPage from "../pages/owner/shop/OwnerShop";
 
 describe("OwnerShopPage", () => {
   beforeEach(() => {
@@ -353,6 +353,7 @@ describe("OwnerShopPage", () => {
 
   it("shows '+ Add item' button on items tab", () => {
     renderOwnerShop();
+    fireEvent.click(screen.getByRole("button", { name: /Items/i }));
     expect(
       screen.getByRole("button", { name: /Add item/i }),
     ).toBeInTheDocument();
@@ -360,12 +361,14 @@ describe("OwnerShopPage", () => {
 
   it("reveals the create form when '+ Add item' is clicked", () => {
     renderOwnerShop();
+    fireEvent.click(screen.getByRole("button", { name: /Items/i }));
     fireEvent.click(screen.getByRole("button", { name: /Add item/i }));
     expect(screen.getByPlaceholderText(/Yoga mat/i)).toBeInTheDocument();
   });
 
   it("hides the create form when Cancel is clicked after opening", () => {
     renderOwnerShop();
+    fireEvent.click(screen.getByRole("button", { name: /Items/i }));
     fireEvent.click(screen.getByRole("button", { name: /Add item/i }));
     // Two Cancel buttons appear: the toggle and the ItemForm's cancel button.
     // Click the first one to close.
@@ -376,12 +379,14 @@ describe("OwnerShopPage", () => {
   it("displays existing shop items", () => {
     apolloState.shopItems = [makeShopItem({ title: "Premium Strap" })];
     renderOwnerShop();
+    fireEvent.click(screen.getByRole("button", { name: /Items/i }));
     expect(screen.getByText("Premium Strap")).toBeInTheDocument();
   });
 
   it("shows 'No shop items yet' when items list is empty", () => {
     apolloState.shopItems = [];
     renderOwnerShop();
+    fireEvent.click(screen.getByRole("button", { name: /Items/i }));
     expect(screen.getByText(/No shop items yet/i)).toBeInTheDocument();
   });
 

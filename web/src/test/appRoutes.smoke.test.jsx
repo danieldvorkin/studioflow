@@ -97,7 +97,7 @@ vi.mock("../currency/CurrencyProvider", () => ({
   CurrencyProvider: ({ children }) => children,
 }));
 
-vi.mock("../components/ToastProvider", () => ({
+vi.mock("../components/shared/ToastProvider", () => ({
   useToast: (() => {
     const toast = { addToast: vi.fn() };
     return () => toast;

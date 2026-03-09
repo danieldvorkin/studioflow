@@ -24,7 +24,7 @@ vi.mock("../../currency/CurrencyProvider", () => ({
   CurrencyProvider: ({ children }) => children,
 }));
 
-vi.mock("../../components/ToastProvider", () => ({
+vi.mock("../../components/shared/ToastProvider", () => ({
   useToast: () => ({ addToast: vi.fn() }),
   ToastProvider: ({ children }) => children,
 }));
@@ -60,7 +60,7 @@ vi.mock("../../auth/AuthProvider", () => ({
 }));
 
 // ─── Page import ──────────────────────────────────────────────────────────────
-import BundlesPage from "../../pages/Bundles.jsx";
+import BundlesPage from "../../pages/owner/shop/Bundles.jsx";
 import {
   BUNDLE_PRODUCTS,
   CLASS_TEMPLATES,

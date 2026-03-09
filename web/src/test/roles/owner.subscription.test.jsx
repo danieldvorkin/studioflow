@@ -104,7 +104,7 @@ beforeEach(async () => {
   setMockAuth({ user: owner });
 
   if (!OwnerSubscription) {
-    const mod = await import("../../pages/OwnerSubscription");
+    const mod = await import("../../pages/owner/settings/OwnerSubscription");
     OwnerSubscription = mod.default;
   }
 });

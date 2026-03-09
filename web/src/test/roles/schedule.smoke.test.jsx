@@ -28,7 +28,7 @@ vi.mock("@apollo/client", () => ({
 vi.mock("../../apollo/client", () => ({ default: {} }));
 
 // ── Provider mocks (from baseMocks pattern) ───────────────────────────────────
-vi.mock("../../components/ToastProvider", () => ({
+vi.mock("../../components/shared/ToastProvider", () => ({
   useToast: () => ({ addToast: vi.fn() }),
   ToastProvider: ({ children }) => children,
 }));
@@ -100,7 +100,7 @@ vi.mock("../../studio/StudioProvider", () => ({
 }));
 
 // ── Page import (after all mocks) ─────────────────────────────────────────────
-import Schedule from "../../pages/Schedule.jsx";
+import Schedule from "../../pages/shared/Schedule.jsx";
 
 function setUser(overrides = {}) {
   authState.user = {

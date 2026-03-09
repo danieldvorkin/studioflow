@@ -17,7 +17,7 @@ import { currentUserMock } from "../helpers/apolloMocks";
 
 // Mock the complex InstructorPayoutsModule sub-component to keep tests focused
 // on the page-level access control, not the module's own queries.
-vi.mock("../../components/InstructorPayoutsModule", () => ({
+vi.mock("../../components/instructor/InstructorPayoutsModule", () => ({
   default: () =>
     React.createElement(
       "div",
@@ -26,7 +26,7 @@ vi.mock("../../components/InstructorPayoutsModule", () => ({
     ),
 }));
 
-import InstructorPayoutsPage from "../../pages/InstructorPayouts.jsx";
+import InstructorPayoutsPage from "../../pages/owner/payouts/InstructorPayouts.jsx";
 
 function renderPage(mocks) {
   return render(

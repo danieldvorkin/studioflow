@@ -8,7 +8,7 @@ import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { setMockAuth } from "../mocks/baseMocks";
 import { staffUser, ownerUser } from "../helpers/users";
 import { CLIENTS, CURRENT_USER } from "../../apollo/queries";
-import ClientsPage from "../../pages/Clients.jsx";
+import ClientsPage from "../../pages/owner/clients/Clients.jsx";
 import { currentUserMock } from "../helpers/apolloMocks";
 
 const mockClients = [

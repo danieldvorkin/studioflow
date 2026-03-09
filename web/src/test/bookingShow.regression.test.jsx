@@ -5,7 +5,7 @@ import { MockedProvider } from "@apollo/client/testing";
 import { InMemoryCache } from "@apollo/client";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 
-vi.mock("../components/ToastProvider", () => ({
+vi.mock("../components/shared/ToastProvider", () => ({
   useToast: () => ({ addToast: vi.fn() }),
   ToastProvider: ({ children }) => children,
 }));
@@ -36,7 +36,7 @@ vi.mock("../auth/AuthProvider", () => ({
   }),
 }));
 
-import BookingShow from "../pages/BookingShow.jsx";
+import BookingShow from "../pages/shared/BookingShow.jsx";
 import { BOOKINGS } from "../apollo/queries.js";
 
 describe("BookingShow regression", () => {

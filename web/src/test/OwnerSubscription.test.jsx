@@ -12,7 +12,7 @@ import { MemoryRouter } from "react-router-dom";
 import "./mocks/baseMocks";
 import { setMockAuth } from "./mocks/baseMocks";
 import { ownerUser, clientUser } from "./helpers/users";
-import OwnerSubscription from "../pages/OwnerSubscription";
+import OwnerSubscription from "../pages/owner/settings/OwnerSubscription";
 
 // ---------------------------------------------------------------------------
 // Apollo mock — stateful so each test can configure query/mutation behaviour

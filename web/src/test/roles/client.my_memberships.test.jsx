@@ -32,7 +32,7 @@ vi.mock("../../currency/CurrencyProvider", () => ({
   CurrencyProvider: ({ children }) => children,
 }));
 
-vi.mock("../../components/ToastProvider", () => ({
+vi.mock("../../components/shared/ToastProvider", () => ({
   useToast: () => ({ addToast: vi.fn() }),
   ToastProvider: ({ children }) => children,
 }));
@@ -77,7 +77,7 @@ vi.mock("../../studio/StudioProvider", () => ({
 }));
 
 // ─── Page import ──────────────────────────────────────────────────────────────
-import MyMembershipsPage from "../../pages/MyMemberships.jsx";
+import MyMembershipsPage from "../../pages/client/MyMemberships.jsx";
 import {
   MEMBERSHIP_PLANS,
   CLIENT_MEMBERSHIPS,

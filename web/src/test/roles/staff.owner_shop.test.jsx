@@ -11,7 +11,7 @@ import { ownerUser, staffUser, clientUser } from "../helpers/users";
 import { currentUserMock } from "../helpers/apolloMocks";
 import { PAYMENT_SETTINGS } from "../../apollo/queries";
 
-import OwnerShopPage from "../../pages/OwnerShop.jsx";
+import OwnerShopPage from "../../pages/owner/shop/OwnerShop.jsx";
 
 const stripeNotConfiguredMock = {
   request: { query: PAYMENT_SETTINGS, variables: {} },

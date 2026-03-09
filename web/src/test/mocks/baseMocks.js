@@ -38,7 +38,7 @@ export function getMockAddToast() {
   return toastState.addToast;
 }
 
-vi.mock("../../components/ToastProvider", () => ({
+vi.mock("../../components/shared/ToastProvider", () => ({
   useToast: () => ({ addToast: toastState.addToast }),
   ToastProvider: ({ children }) => children,
 }));

@@ -8,7 +8,7 @@ import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { setMockAuth } from "../mocks/baseMocks";
 import { clientUser } from "../helpers/users";
 import { MY_BOOKINGS } from "../../apollo/queries";
-import BookingsPage from "../../pages/Bookings.jsx";
+import BookingsPage from "../../pages/shared/Bookings.jsx";
 
 vi.mock("../../studio/StudioProvider", () => ({
   useStudio: () => ({

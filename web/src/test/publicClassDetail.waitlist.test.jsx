@@ -28,7 +28,7 @@ vi.mock("../currency/CurrencyProvider", () => ({
   CurrencyProvider: ({ children }) => children,
 }));
 
-import PublicClassDetail from "../pages/PublicClassDetail.jsx";
+import PublicClassDetail from "../pages/public/PublicClassDetail.jsx";
 import { PUBLIC_CLASS_PAGE } from "../apollo/queries.js";
 
 const BASE_SESSION = {

@@ -22,7 +22,7 @@ import {
   CREATE_BOOKING_WITH_PAYMENT,
 } from "../../apollo/mutations";
 
-import Booking from "../../pages/Booking.jsx";
+import Booking from "../../pages/client/Booking.jsx";
 
 vi.mock("../../studio/StudioProvider", () => ({
   useStudio: () => ({

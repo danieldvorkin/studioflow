@@ -11,7 +11,7 @@ import { clientUser } from "../helpers/users";
 import { currentUserMock } from "../helpers/apolloMocks";
 import { MY_SHOP_ORDERS } from "../../apollo/queries";
 
-import MyOrdersPage from "../../pages/MyOrders.jsx";
+import MyOrdersPage from "../../pages/client/MyOrders.jsx";
 
 const emptyOrdersMock = {
   request: { query: MY_SHOP_ORDERS, variables: {} },

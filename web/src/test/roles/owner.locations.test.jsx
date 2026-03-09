@@ -10,7 +10,7 @@ import { setMockAuth } from "../mocks/baseMocks";
 import { ownerUser, staffUser, clientUser } from "../helpers/users";
 import { currentUserMock, studioLocationsMock } from "../helpers/apolloMocks";
 
-import LocationsPage from "../../pages/Locations.jsx";
+import LocationsPage from "../../pages/owner/settings/Locations.jsx";
 
 const mockLocations = [
   {

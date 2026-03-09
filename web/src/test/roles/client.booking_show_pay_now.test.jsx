@@ -6,7 +6,7 @@ import { InMemoryCache } from "@apollo/client";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 
 const addToast = vi.fn();
-vi.mock("../../components/ToastProvider", () => ({
+vi.mock("../../components/shared/ToastProvider", () => ({
   useToast: () => ({ addToast }),
   ToastProvider: ({ children }) => children,
 }));
@@ -46,7 +46,7 @@ vi.mock("../../auth/AuthProvider", () => ({
   }),
 }));
 
-import BookingShow from "../../pages/BookingShow.jsx";
+import BookingShow from "../../pages/shared/BookingShow.jsx";
 import {
   MY_BOOKINGS,
   PAYMENT_PUBLIC_SETTINGS,

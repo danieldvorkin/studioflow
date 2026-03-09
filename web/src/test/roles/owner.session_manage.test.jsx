@@ -12,7 +12,7 @@ import { InMemoryCache } from "@apollo/client";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 
 const addToast = vi.fn();
-vi.mock("../../components/ToastProvider", () => ({
+vi.mock("../../components/shared/ToastProvider", () => ({
   useToast: () => ({ addToast }),
   ToastProvider: ({ children }) => children,
 }));
@@ -36,7 +36,7 @@ vi.mock("../../auth/AuthProvider", () => ({
   AuthProvider: ({ children }) => children,
 }));
 
-import SessionManage from "../../pages/SessionManage.jsx";
+import SessionManage from "../../pages/owner/classes/SessionManage.jsx";
 import { SESSION_BOOKINGS } from "../../apollo/queries.js";
 import {
   CANCEL_BOOKING,

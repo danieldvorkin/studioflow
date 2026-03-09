@@ -6,7 +6,7 @@ import "./index.css";
 import App from "./App.jsx";
 import client from "./apollo/client";
 import { AuthProvider } from "./auth/AuthProvider";
-import { ToastProvider } from "./components/ToastProvider";
+import { ToastProvider } from "./components/shared/ToastProvider";
 import { StudioProvider } from "./studio/StudioProvider";
 import { ThemeProvider } from "./theme/ThemeProvider";
 import { LocationProvider } from "./location/LocationProvider";
