@@ -7,6 +7,7 @@ FactoryBot.define do
     duration_minutes { 50 }
     price_cents { 0 }
     currency { "cad" }
+    approved { true }
 
     association :instructor, factory: %i[user instructor]
 

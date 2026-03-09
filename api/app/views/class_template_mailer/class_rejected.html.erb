@@ -1,0 +1,28 @@
+<h1>Update on your class submission</h1>
+
+<p>Hi <%= @instructor&.name.presence || @instructor&.email %>,</p>
+
+<p>
+  Your submitted class <strong>"<%= @template.title %>"</strong> has been moved back
+  to <em>pending review</em> by the studio owner. This may mean further edits are
+  needed before it can go live.
+</p>
+
+<div class="order-card">
+  <div class="order-row">
+    <span class="lbl">Class</span>
+    <span class="val"><%= @template.title %></span>
+  </div>
+  <% if @template.description.present? %>
+  <div class="order-row">
+    <span class="lbl">Description</span>
+    <span class="val"><%= @template.description %></span>
+  </div>
+  <% end %>
+</div>
+
+<p>Please reach out to your studio owner for more details, then update and resubmit the class.</p>
+
+<% content_for :footer do %>
+  You received this because you submitted a class for approval on StudioFlow.
+<% end %>

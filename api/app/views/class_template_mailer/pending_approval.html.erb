@@ -1,0 +1,45 @@
+<h1>New class pending your approval</h1>
+
+<p>Hi <%= @owner&.name.presence || @owner&.email %>,</p>
+
+<p>
+  <strong><%= @template.instructor&.name.presence || @template.instructor&.email || "An instructor" %></strong>
+  has submitted a new class for you to review:
+</p>
+
+<div class="order-card">
+  <div class="order-row">
+    <span class="lbl">Class title</span>
+    <span class="val"><%= @template.title %></span>
+  </div>
+  <% if @template.description.present? %>
+  <div class="order-row">
+    <span class="lbl">Description</span>
+    <span class="val"><%= @template.description %></span>
+  </div>
+  <% end %>
+  <% if @template.duration_minutes.present? %>
+  <div class="order-row">
+    <span class="lbl">Duration</span>
+    <span class="val"><%= @template.duration_minutes %> minutes</span>
+  </div>
+  <% end %>
+  <% if @template.capacity.present? %>
+  <div class="order-row">
+    <span class="lbl">Capacity</span>
+    <span class="val"><%= @template.capacity %> spots</span>
+  </div>
+  <% end %>
+  <% if @template.instructor.present? %>
+  <div class="order-row">
+    <span class="lbl">Instructor</span>
+    <span class="val"><%= @template.instructor.name.presence || @template.instructor.email %></span>
+  </div>
+  <% end %>
+</div>
+
+<a href="<%= @review_url %>" class="btn">Review in StudioFlow</a>
+
+<% content_for :footer do %>
+  You received this because you are an owner of a StudioFlow studio.
+<% end %>

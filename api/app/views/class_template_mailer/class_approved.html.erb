@@ -1,0 +1,33 @@
+<h1>Your class has been approved 🎉</h1>
+
+<p>Hi <%= @instructor&.name.presence || @instructor&.email %>,</p>
+
+<p>
+  Great news! Your class <strong>"<%= @template.title %>"</strong> has been approved
+  and is now live on StudioFlow. You can start adding sessions below.
+</p>
+
+<div class="order-card">
+  <div class="order-row">
+    <span class="lbl">Class</span>
+    <span class="val"><%= @template.title %></span>
+  </div>
+  <% if @template.duration_minutes.present? %>
+  <div class="order-row">
+    <span class="lbl">Duration</span>
+    <span class="val"><%= @template.duration_minutes %> minutes</span>
+  </div>
+  <% end %>
+  <% if @template.capacity.present? %>
+  <div class="order-row">
+    <span class="lbl">Max capacity</span>
+    <span class="val"><%= @template.capacity %> spots</span>
+  </div>
+  <% end %>
+</div>
+
+<a href="<%= @sessions_url %>" class="btn">Add sessions →</a>
+
+<% content_for :footer do %>
+  You received this because you submitted a class for approval on StudioFlow.
+<% end %>

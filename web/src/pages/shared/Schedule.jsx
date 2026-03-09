@@ -251,6 +251,7 @@ export default function Schedule() {
 
   const { data: templatesData } = useQuery(CLASS_TEMPLATES, {
     skip: !canCreateSessions,
+    fetchPolicy: "cache-and-network",
     variables: {
       studioLocationId: locationId || null,
       instructorId: userIsInstructor ? currentUser?.id : undefined,

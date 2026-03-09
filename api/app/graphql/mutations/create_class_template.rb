@@ -22,6 +22,15 @@ module Mutations
 
       attrs[:studio_id] = user.studio_id
 
+      if user.instructor?
+        # Instructors are always assigned to their own templates; pending approval
+        attrs[:instructor_id] = user.id
+        attrs[:approved] = false
+      else
+        # Owner/staff/moderator/godmode: templates are immediately approved
+        attrs[:approved] = true
+      end
+
       unless user&.godmode? || user&.owner? || user&.moderator?
         attrs.delete(:compensation_type)
         attrs.delete(:instructor_split_percent)
@@ -30,6 +39,8 @@ module Mutations
 
       ct = ClassTemplate.new(attrs)
       if ct.save
+        # Notify owners when an instructor submits a class for approval
+        NotificationJob.perform_later(:class_template_submitted, ct.id) if user.instructor?
         { class_template: ct, errors: [] }
       else
         { class_template: nil, errors: ct.errors.full_messages }

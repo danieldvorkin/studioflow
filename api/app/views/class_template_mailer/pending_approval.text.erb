@@ -1,0 +1,16 @@
+New class pending your approval
+
+Hi <%= @owner&.name.presence || @owner&.email %>,
+
+<%= @template.instructor&.name.presence || @template.instructor&.email || "An instructor" %> has submitted a new class for you to review.
+
+Class: <%= @template.title %>
+<% if @template.description.present? %>Description: <%= @template.description %><% end %>
+<% if @template.duration_minutes.present? %>Duration: <%= @template.duration_minutes %> minutes<% end %>
+<% if @template.capacity.present? %>Capacity: <%= @template.capacity %> spots<% end %>
+
+Review and approve or reject this class in StudioFlow:
+<%= @review_url %>
+
+Thanks,
+StudioFlow

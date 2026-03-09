@@ -53,6 +53,67 @@ class NotificationJob < ApplicationJob
         SubscriptionMailer.subscription_renewed(user: user, subscription: sub).deliver_now
       end
 
+    # ── Class template notifications ───────────────────────────────────────
+    when :class_template_submitted
+      template = ClassTemplate.find_by(id: resource_id)
+      return unless template
+
+      studio = template.studio
+      instructor = template.instructor
+      owner_users = studio.users.where(role: User::ROLES[:owner])
+
+      owner_users.each do |owner|
+        Notification.find_or_create_by!(
+          user: owner,
+          studio: studio,
+          kind: "class_template_submitted",
+          title: "New class pending approval: \"#{template.title}\""
+        ) do |n|
+          n.body       = "#{instructor&.name.presence || instructor&.email || 'An instructor'} submitted a class for your review."
+          n.action_url = "/templates"
+        end
+
+        ClassTemplateMailer.with(owner: owner, template: template).pending_approval.deliver_later
+      rescue StandardError => e
+        Rails.logger.error("NotificationJob class_template_submitted email failed for owner #{owner.id}: #{e.message}")
+      end
+
+    when :class_template_approved
+      template = ClassTemplate.find_by(id: resource_id)
+      return unless template
+
+      instructor = template.instructor
+      return unless instructor
+
+      Notification.create!(
+        user:       instructor,
+        studio:     template.studio,
+        kind:       "class_template_approved",
+        title:      "Your class \"#{template.title}\" was approved",
+        body:       "You can now add sessions and make it available to clients.",
+        action_url: "/templates/#{template.id}/sessions"
+      )
+
+      ClassTemplateMailer.with(instructor: instructor, template: template).class_approved.deliver_later
+
+    when :class_template_rejected
+      template = ClassTemplate.find_by(id: resource_id)
+      return unless template
+
+      instructor = template.instructor
+      return unless instructor
+
+      Notification.create!(
+        user:       instructor,
+        studio:     template.studio,
+        kind:       "class_template_rejected",
+        title:      "Update on your class \"#{template.title}\"",
+        body:       "The studio owner has moved your class back to pending review.",
+        action_url: "/templates"
+      )
+
+      ClassTemplateMailer.with(instructor: instructor, template: template).class_rejected.deliver_later
+
     else
       Rails.logger.warn("NotificationJob: unknown kind '#{kind}'")
     end

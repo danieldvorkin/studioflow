@@ -114,9 +114,17 @@ RSpec.describe "Class template mutations", type: :request do
       expect(payload["success"]).to be true
     end
 
-    it "rejects an instructor from deleting a template" do
+    it "allows instructor to delete their own unapproved template" do
       sign_in(instructor)
-      ct = create(:class_template, instructor: instructor)
+      ct = create(:class_template, instructor: instructor, approved: false)
+      json = graphql_post(query: mutation, variables: { id: ct.id.to_s })
+      payload = json.dig("data", "deleteClassTemplate")
+      expect(payload["success"]).to be true
+    end
+
+    it "rejects an instructor from deleting an approved template" do
+      sign_in(instructor)
+      ct = create(:class_template, instructor: instructor, approved: true)
       json = graphql_post(query: mutation, variables: { id: ct.id.to_s })
       payload = json.dig("data", "deleteClassTemplate")
       # Pundit error caught by rescue StandardError, returned in payload

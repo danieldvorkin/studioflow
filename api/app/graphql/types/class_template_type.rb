@@ -13,5 +13,7 @@ module Types
     field :compensation_type, String, null: true
     field :instructor_split_percent, Integer, null: true
     field :instructor_flat_rate_cents, Integer, null: true
+
+    field :approved, Boolean, null: false
   end
 end

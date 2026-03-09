@@ -1,12 +1,18 @@
 import { useDocumentTitle } from "../../../hooks/useDocumentTitle";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@apollo/client";
-import { Link } from "react-router-dom";
-import { CLASS_TEMPLATES, INSTRUCTORS } from "../../../apollo/queries";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  CLASS_TEMPLATES,
+  CLASS_SESSIONS,
+  INSTRUCTORS,
+  MY_STUDIO,
+} from "../../../apollo/queries";
 import {
   CREATE_CLASS_TEMPLATE,
   UPDATE_CLASS_TEMPLATE,
   DELETE_CLASS_TEMPLATE,
+  APPROVE_CLASS_TEMPLATE,
 } from "../../../apollo/mutations";
 import { useToast } from "../../../components/shared/ToastProvider";
 import { useLocationContext } from "../../../location/LocationProvider";
@@ -17,13 +23,339 @@ import {
   isStaff,
 } from "../../../auth/permissions";
 
+function ClassPreviewModal({
+  template,
+  onClose,
+  onEdit,
+  onDelete,
+  onApprove,
+  canApprove,
+  studioCode,
+}) {
+  const [shareCopied, setShareCopied] = useState(false);
+
+  const { data: sessionsData, loading: sessionsLoading } = useQuery(
+    CLASS_SESSIONS,
+    {
+      variables: { from: null, to: null },
+      skip: !template,
+      fetchPolicy: "cache-and-network",
+    },
+  );
+
+  useEffect(() => {
+    if (!template) return undefined;
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [template, onClose]);
+
+  if (!template) return null;
+
+  const now = new Date();
+  const sessions = (sessionsData?.classSessions || [])
+    .filter(
+      (s) => s.classTemplate?.id === template.id && new Date(s.startTime) > now,
+    )
+    .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
+    .slice(0, 5);
+
+  const priceDisplay =
+    template.priceCents != null
+      ? `${(template.currency || "cad").toUpperCase()} ${(template.priceCents / 100).toFixed(2)}`
+      : null;
+
+  const handleShare = () => {
+    if (!studioCode) return;
+    const url = `${window.location.origin}/c/${studioCode}/${template.id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    });
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+    >
+      {/* Backdrop */}
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        aria-label="Close preview"
+        onClick={onClose}
+      />
+
+      {/* Dialog */}
+      <div className="relative z-10 flex w-full max-w-3xl flex-col max-h-[90vh] overflow-hidden rounded-3xl border border-slate-700 bg-slate-950 shadow-2xl shadow-black/60">
+        {/* Header bar */}
+        <div className="flex items-center justify-between gap-3 border-b border-slate-800 px-6 py-4">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center rounded-full border border-sky-500/40 bg-sky-500/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-widest text-sky-400">
+              Client preview
+            </span>
+            <span className="text-sm text-slate-400">— what clients see</span>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Scrollable body */}
+        <div className="flex flex-1 min-h-0 flex-col overflow-y-auto">
+          {/* Client-facing hero */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-sky-950/40 px-6 py-8">
+            <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-sky-500/10 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-violet-500/8 blur-3xl" />
+            <div className="relative">
+              <h1 className="text-2xl font-bold tracking-tight text-slate-50">
+                {template.title}
+              </h1>
+              {template.description && (
+                <p className="mt-2 text-sm leading-relaxed text-slate-300 max-w-lg">
+                  {template.description}
+                </p>
+              )}
+              <div className="mt-4 flex flex-wrap gap-2">
+                {template.instructor?.name && (
+                  <div className="flex items-center gap-2 rounded-full border border-slate-700/80 bg-slate-800/60 px-3 py-1.5">
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-sky-500/20 text-[9px] text-sky-300">
+                      ✦
+                    </span>
+                    <span className="text-xs font-medium text-slate-200">
+                      {template.instructor.name}
+                    </span>
+                  </div>
+                )}
+                {template.durationMinutes && (
+                  <div className="flex items-center gap-1.5 rounded-full border border-slate-700/80 bg-slate-800/60 px-3 py-1.5">
+                    <span className="text-[11px] text-slate-400">⏱</span>
+                    <span className="text-xs font-medium text-slate-200">
+                      {template.durationMinutes} min
+                    </span>
+                  </div>
+                )}
+                {priceDisplay && (
+                  <div className="flex items-center gap-1.5 rounded-full border border-sky-500/30 bg-sky-500/10 px-3 py-1.5">
+                    <span className="text-xs font-bold text-sky-300">
+                      {priceDisplay}
+                    </span>
+                    <span className="text-[10px] text-sky-400/60">
+                      / session
+                    </span>
+                  </div>
+                )}
+                {template.capacity && (
+                  <div className="flex items-center gap-1.5 rounded-full border border-slate-700/80 bg-slate-800/60 px-3 py-1.5">
+                    <span className="text-[11px] text-slate-400">👥</span>
+                    <span className="text-xs font-medium text-slate-200">
+                      {template.capacity} spots max
+                    </span>
+                  </div>
+                )}
+                {template.studioLocation?.name && (
+                  <div className="flex items-center gap-1.5 rounded-full border border-slate-700/80 bg-slate-800/60 px-3 py-1.5">
+                    <span className="text-[11px] text-slate-400">📍</span>
+                    <span className="text-xs font-medium text-slate-200">
+                      {template.studioLocation.name}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Upcoming sessions preview */}
+          <div className="px-6 py-5 space-y-3">
+            <h2 className="text-sm font-bold text-slate-200">
+              Upcoming sessions
+            </h2>
+            {sessionsLoading ? (
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="h-14 rounded-xl bg-slate-800/60 animate-pulse"
+                  />
+                ))}
+              </div>
+            ) : sessions.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900/40 p-6 text-center">
+                <p className="text-sm text-slate-400">
+                  No upcoming sessions scheduled yet.
+                </p>
+                <Link
+                  to={`/templates/${template.id}/sessions`}
+                  onClick={onClose}
+                  className="mt-2 inline-flex items-center rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200 hover:bg-slate-800"
+                >
+                  Add sessions →
+                </Link>
+              </div>
+            ) : (
+              <ul className="space-y-2">
+                {sessions.map((s) => {
+                  const d = new Date(s.startTime);
+                  const weekday = d.toLocaleDateString(undefined, {
+                    weekday: "short",
+                  });
+                  const dateNum = d.toLocaleDateString(undefined, {
+                    day: "numeric",
+                  });
+                  const month = d.toLocaleDateString(undefined, {
+                    month: "short",
+                  });
+                  const time = d.toLocaleTimeString(undefined, {
+                    hour: "numeric",
+                    minute: "2-digit",
+                  });
+                  const soldOut =
+                    typeof s.seatsAvailable === "number" &&
+                    s.seatsAvailable <= 0;
+
+                  return (
+                    <li
+                      key={s.id}
+                      className="flex items-center justify-between gap-4 rounded-xl border border-slate-700/60 bg-slate-900/70 px-4 py-3"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="flex w-11 shrink-0 flex-col items-center rounded-lg border border-slate-700/60 bg-slate-800/60 px-1.5 py-1 text-center">
+                          <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                            {weekday}
+                          </span>
+                          <span className="text-base font-bold leading-tight text-slate-50">
+                            {dateNum}
+                          </span>
+                          <span className="text-[9px] text-slate-500">
+                            {month}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold text-slate-50">
+                            {time}
+                          </div>
+                          <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+                            {s.instructor?.name && (
+                              <span>{s.instructor.name}</span>
+                            )}
+                            {s.room && <span>· Room {s.room}</span>}
+                            {!soldOut &&
+                              typeof s.seatsAvailable === "number" && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-300">
+                                  <span className="h-1 w-1 rounded-full bg-emerald-400" />
+                                  {s.seatsAvailable} spot
+                                  {s.seatsAvailable !== 1 ? "s" : ""} left
+                                </span>
+                              )}
+                            {soldOut && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] text-amber-300">
+                                Waitlist open
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="shrink-0">
+                        <span className="inline-flex items-center rounded-full bg-sky-500 px-3 py-1 text-xs font-semibold text-white opacity-60 cursor-default">
+                          Book now
+                        </span>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        {/* Owner action bar */}
+        <div className="border-t border-slate-800 bg-slate-900/80 px-6 py-4">
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-500">
+            Owner actions
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                onEdit();
+                onClose();
+              }}
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-600 bg-slate-800/60 px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition"
+            >
+              ✎ Edit details
+            </button>
+            <Link
+              to={`/templates/${template.id}/sessions`}
+              onClick={onClose}
+              className="inline-flex items-center gap-1.5 rounded-full border border-sky-500/60 bg-sky-500/10 px-4 py-2 text-xs font-semibold text-sky-300 hover:bg-sky-500/20 transition"
+            >
+              📅 View sessions
+            </Link>
+            {studioCode && (
+              <button
+                type="button"
+                onClick={handleShare}
+                className="inline-flex items-center gap-1.5 rounded-full border border-violet-500/60 bg-violet-500/10 px-4 py-2 text-xs font-semibold text-violet-300 hover:bg-violet-500/20 transition"
+              >
+                {shareCopied ? "✓ Link copied!" : "↱ Share public link"}
+              </button>
+            )}
+            {studioCode && (
+              <a
+                href={`/c/${studioCode}/${template.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-600 bg-slate-800/60 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-700 transition"
+              >
+                ↗ Open public page
+              </a>
+            )}
+            {canApprove && template && !template.approved && (
+              <button
+                type="button"
+                onClick={() => {
+                  onApprove(template.id, true);
+                  onClose();
+                }}
+                className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/60 bg-emerald-500/10 px-4 py-2 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/20 transition"
+              >
+                ✓ Approve class
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                onDelete();
+                onClose();
+              }}
+              className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-rose-600/60 px-4 py-2 text-xs font-semibold text-rose-300 hover:bg-rose-600/10 transition"
+            >
+              🗑 Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Templates() {
   useDocumentTitle("Class Templates");
   const { locationId } = useLocationContext();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const userIsOwner = isOwner(user);
   const userIsStaff = isStaff(user);
   const userIsInstructor = isInstructorUser(user);
+  const [previewTemplate, setPreviewTemplate] = useState(null);
 
   const { data, loading, error } = useQuery(CLASS_TEMPLATES, {
     variables: { studioLocationId: locationId || null },
@@ -31,9 +363,16 @@ export default function Templates() {
   const { data: instructorsData } = useQuery(INSTRUCTORS, {
     skip: !(userIsOwner || userIsStaff),
   });
-  const [createTemplate] = useMutation(CREATE_CLASS_TEMPLATE);
+  const { data: studioData } = useQuery(MY_STUDIO, {
+    skip: !(userIsOwner || userIsStaff),
+  });
+  const studioCode = studioData?.myStudio?.inviteCode;
+  const [createTemplate] = useMutation(CREATE_CLASS_TEMPLATE, {
+    refetchQueries: [{ query: CLASS_TEMPLATES }],
+  });
   const [updateTemplate] = useMutation(UPDATE_CLASS_TEMPLATE);
   const [deleteTemplate] = useMutation(DELETE_CLASS_TEMPLATE);
+  const [approveTemplate] = useMutation(APPROVE_CLASS_TEMPLATE);
   const { addToast } = useToast();
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -127,20 +466,47 @@ export default function Templates() {
     }
   };
 
+  const handleApprove = async (id, approved) => {
+    try {
+      const res = await approveTemplate({ variables: { id, approved } });
+      const payload = res.data?.approveClassTemplate;
+      const errors = payload?.errors || [];
+      if (errors.length || !payload?.classTemplate) {
+        throw new Error(errors.join(", ") || "Could not update approval");
+      }
+      addToast({
+        message: approved
+          ? "Class approved"
+          : "Class rejected and moved to pending",
+        type: "success",
+      });
+    } catch (e) {
+      addToast({ message: e.message || "Action failed", type: "error" });
+    }
+  };
+
   return (
     <div className="flex w-full flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-50">
-          Classes
+          {userIsInstructor ? "My Classes" : "Classes"}
         </h1>
         <p className="text-sm text-slate-400">
-          Classes you can schedule into sessions.
+          {userIsInstructor
+            ? "Your assigned and requested classes. New submissions require owner approval before going live."
+            : "Classes you can schedule into sessions."}
         </p>
       </header>
 
       {/* section to add new template */}
       <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 text-sm shadow-sm shadow-black/20">
         <h2 className="text-sm font-semibold text-slate-50">Add new class</h2>
+        {userIsInstructor && (
+          <p className="mt-1 text-[11px] text-amber-400/80">
+            ⚠ New class requests require owner approval before they become
+            visible to clients.
+          </p>
+        )}
         <div className="mt-3 grid grid-cols-1 gap-2 text-xs md:grid-cols-2">
           <div className="space-y-1">
             <label className="text-xs font-medium text-slate-300">Title</label>
@@ -272,15 +638,7 @@ export default function Templates() {
                 throw new Error(errors.join(", ") || "Could not create class");
               }
               addToast({ message: "Class created", type: "success" });
-              setNewForm((f) => ({
-                title: "",
-                description: "",
-                capacity: "",
-                durationMinutes: "",
-                priceDollars: "",
-                instructorId: userIsInstructor ? user?.id || "" : "",
-                currency: f.currency || "cad",
-              }));
+              navigate(`/classes/${payload.classTemplate.id}`);
             } catch (e) {
               addToast({
                 message: e.message || "Creation failed",
@@ -441,9 +799,20 @@ export default function Templates() {
             ) : (
               <>
                 <div className="space-y-1.5">
-                  <h3 className="text-sm font-semibold text-slate-50">
-                    {t.title}
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewTemplate(t)}
+                      className="text-left text-sm font-semibold text-slate-50 hover:text-sky-300 transition-colors"
+                    >
+                      {t.title}
+                    </button>
+                    {!t.approved && (
+                      <span className="inline-flex items-center rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-amber-400">
+                        Pending approval
+                      </span>
+                    )}
+                  </div>
                   {t.description && (
                     <p className="text-xs text-slate-400">{t.description}</p>
                   )}
@@ -466,26 +835,49 @@ export default function Templates() {
                   </div>
                 </div>
                 <div className="mt-3 flex items-center justify-between text-xs">
-                  <button
-                    type="button"
-                    onClick={() => startEdit(t)}
-                    className="rounded-full border border-slate-700 px-3 py-1 text-slate-200 hover:bg-slate-800"
-                  >
-                    Edit details
-                  </button>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => handleDelete(t.id)}
-                      className="rounded-full border border-rose-600/60 px-3 py-1 text-rose-200 hover:bg-rose-600/10"
+                      onClick={() => startEdit(t)}
+                      className="rounded-full border border-slate-700 px-3 py-1 text-slate-200 hover:bg-slate-800"
                     >
-                      Delete
+                      Edit
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewTemplate(t)}
+                      className="rounded-full border border-violet-500/60 bg-violet-500/10 px-3 py-1 font-semibold text-violet-300 hover:bg-violet-500/20"
+                    >
+                      Preview
+                    </button>
+                    {/* Approve / reject — owners, moderators, godmode only */}
+                    {(userIsOwner || (!userIsInstructor && !userIsStaff)) &&
+                      !t.approved && (
+                        <button
+                          type="button"
+                          onClick={() => handleApprove(t.id, true)}
+                          className="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1 font-semibold text-emerald-300 hover:bg-emerald-500/20"
+                        >
+                          Approve
+                        </button>
+                      )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {/* Instructors can only delete their own un-approved classes */}
+                    {(!userIsInstructor || !t.approved) && (
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(t.id)}
+                        className="rounded-full border border-rose-600/60 px-3 py-1 text-rose-200 hover:bg-rose-600/10"
+                      >
+                        Delete
+                      </button>
+                    )}
                     <Link
                       to={`/templates/${t.id}/sessions`}
                       className="inline-flex items-center rounded-full border border-sky-500/70 px-3 py-1 font-semibold text-sky-200 hover:bg-sky-500/10"
                     >
-                      View sessions
+                      Sessions
                     </Link>
                   </div>
                 </div>
@@ -494,6 +886,16 @@ export default function Templates() {
           </article>
         ))}
       </div>
+
+      <ClassPreviewModal
+        template={previewTemplate}
+        onClose={() => setPreviewTemplate(null)}
+        onEdit={() => previewTemplate && startEdit(previewTemplate)}
+        onDelete={() => previewTemplate && handleDelete(previewTemplate.id)}
+        onApprove={handleApprove}
+        canApprove={userIsOwner}
+        studioCode={studioCode}
+      />
     </div>
   );
 }

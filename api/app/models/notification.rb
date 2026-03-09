@@ -20,6 +20,9 @@ class Notification < ApplicationRecord
     membership_expiring
     instructor_payout_ready
     studio_milestone
+    class_template_submitted
+    class_template_approved
+    class_template_rejected
   ].freeze
 
   belongs_to :user

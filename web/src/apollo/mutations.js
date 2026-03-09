@@ -634,6 +634,19 @@ export const DELETE_CLASS_TEMPLATE = gql`
   }
 `;
 
+export const APPROVE_CLASS_TEMPLATE = gql`
+  mutation ApproveClassTemplate($id: ID!, $approved: Boolean!) {
+    approveClassTemplate(input: { id: $id, approved: $approved }) {
+      classTemplate {
+        id
+        title
+        approved
+      }
+      errors
+    }
+  }
+`;
+
 export const UPDATE_CLASS_SESSION = gql`
   mutation UpdateClassSession(
     $id: ID!

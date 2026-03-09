@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { useQuery } from "@apollo/client";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import {
   CLASS_SESSIONS,
   CLASS_TEMPLATES,
   MY_BOOKINGS,
+  MY_STUDIO,
 } from "../../apollo/queries";
 import { useStudio } from "../../studio/StudioProvider";
 import { useAuth } from "../../auth/AuthProvider";
@@ -111,6 +113,10 @@ export default function ClassDetail() {
   const { formatPrice } = useCurrency();
   const roleName = (user?.roleName || "").toString().toLowerCase();
   const isClientUser = roleName === "client";
+  const [shareCopied, setShareCopied] = useState(false);
+
+  const { data: studioData } = useQuery(MY_STUDIO, { skip: isClientUser });
+  const studioCode = studioData?.myStudio?.inviteCode;
 
   const { data: templatesData, loading: templatesLoading } = useQuery(
     CLASS_TEMPLATES,
@@ -253,7 +259,7 @@ export default function ClassDetail() {
               </div>
 
               {!loading && availableCount > 0 && (
-                <div className="mt-6">
+                <div className="mt-6 flex flex-wrap items-center gap-3">
                   <a
                     href="#pick-a-time"
                     className="inline-flex items-center gap-2 rounded-full bg-sky-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-sky-500/20 hover:bg-sky-400 transition-all"
@@ -261,8 +267,43 @@ export default function ClassDetail() {
                     Reserve your spot
                     <span className="text-sky-200 text-xs">↓</span>
                   </a>
+                  {!isClientUser && studioCode && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const url = `${window.location.origin}/c/${studioCode}/${templateId}`;
+                        navigator.clipboard.writeText(url).then(() => {
+                          setShareCopied(true);
+                          setTimeout(() => setShareCopied(false), 2000);
+                        });
+                      }}
+                      className="inline-flex items-center gap-2 rounded-full border border-slate-600 bg-slate-800/60 px-5 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-700 transition-all"
+                    >
+                      {shareCopied ? "✓ Link copied!" : "⤴ Share public link"}
+                    </button>
+                  )}
                 </div>
               )}
+              {!loading &&
+                !isClientUser &&
+                studioCode &&
+                availableCount === 0 && (
+                  <div className="mt-6">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const url = `${window.location.origin}/c/${studioCode}/${templateId}`;
+                        navigator.clipboard.writeText(url).then(() => {
+                          setShareCopied(true);
+                          setTimeout(() => setShareCopied(false), 2000);
+                        });
+                      }}
+                      className="inline-flex items-center gap-2 rounded-full border border-slate-600 bg-slate-800/60 px-5 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-700 transition-all"
+                    >
+                      {shareCopied ? "✓ Link copied!" : "⤴ Share public link"}
+                    </button>
+                  </div>
+                )}
             </>
           )}
         </div>

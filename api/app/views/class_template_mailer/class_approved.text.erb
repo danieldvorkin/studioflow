@@ -1,0 +1,14 @@
+Your class has been approved!
+
+Hi <%= @instructor&.name.presence || @instructor&.email %>,
+
+Great news! Your class "<%= @template.title %>" has been approved and is now live on StudioFlow.
+
+<% if @template.duration_minutes.present? %>Duration: <%= @template.duration_minutes %> minutes<% end %>
+<% if @template.capacity.present? %>Capacity: <%= @template.capacity %> spots<% end %>
+
+Add sessions to get started:
+<%= @sessions_url %>
+
+Thanks,
+StudioFlow

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@apollo/client";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../../../auth/AuthProvider";
-import { API_TOKENS } from "../../../apollo/queries";
+import { API_TOKENS, MY_STUDIO } from "../../../apollo/queries";
 import { CREATE_API_TOKEN, REVOKE_API_TOKEN } from "../../../apollo/mutations";
 import { useDocumentTitle } from "../../../hooks/useDocumentTitle";
 
@@ -73,6 +73,8 @@ export default function OwnerApiTokens() {
   const [revokeConfirm, setRevokeConfirm] = useState(null); // token id
 
   const { data, loading, refetch } = useQuery(API_TOKENS, { skip: !canAccess });
+  const { data: studioData } = useQuery(MY_STUDIO, { skip: !canAccess });
+  const studioCode = studioData?.myStudio?.inviteCode;
 
   const [createToken, { loading: creating }] = useMutation(CREATE_API_TOKEN, {
     onCompleted: (res) => {
@@ -128,6 +130,33 @@ export default function OwnerApiTokens() {
             View API documentation →
           </a>
         </p>
+      </div>
+
+      {/* Studio Code */}
+      <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
+        <h2 className="text-base font-semibold text-slate-200 mb-1">
+          Studio Code
+        </h2>
+        <p className="text-sm text-slate-400 mb-4">
+          Your unique studio identifier used in public class links and API
+          integrations. Share it with clients or embed it in your website.
+        </p>
+        {studioCode ? (
+          <div className="rounded-lg bg-slate-950 border border-slate-700 px-4 py-3 flex items-center justify-between gap-3">
+            <code className="text-sm font-mono text-sky-300">{studioCode}</code>
+            <CopyButton text={studioCode} />
+          </div>
+        ) : (
+          <div className="h-10 w-48 rounded-lg bg-slate-800 animate-pulse" />
+        )}
+        {studioCode && (
+          <p className="mt-3 text-xs text-slate-500">
+            Public class URL format:{" "}
+            <code className="text-slate-400">
+              /c/{studioCode}/&#123;templateId&#125;
+            </code>
+          </p>
+        )}
       </div>
 
       {/* Newly created token banner */}

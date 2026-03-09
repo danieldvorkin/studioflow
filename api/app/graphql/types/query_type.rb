@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ostruct"
+
 module Types
   class QueryType < Types::BaseObject
     field :node, Types::NodeType, null: true, description: "Fetches an object given its ID." do
@@ -134,6 +136,11 @@ module Types
       assigned = scope.where(instructor_id: user.id)
       taught = scope.where(id: taught_template_ids)
       scope = assigned.or(taught)
+    end
+
+    # Clients only see approved templates; owners/staff/moderators/godmode see all (including pending)
+    if user.client?
+      scope = scope.where(approved: true)
     end
 
     # Treat templates with NULL location as "global" and include them when filtering by location.

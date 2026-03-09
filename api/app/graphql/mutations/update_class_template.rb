@@ -22,6 +22,12 @@ module Mutations
       ct = ClassTemplate.where(studio_id: user&.studio_id).find(id)
       raise Pundit::NotAuthorizedError unless Pundit.policy!(user, ct).update?
 
+      # Instructors cannot reassign instructor_id or touch approval status
+      if user.instructor?
+        attrs.delete(:instructor_id)
+        attrs.delete(:approved)
+      end
+
       unless user&.godmode? || user&.owner? || user&.moderator?
         attrs.delete(:compensation_type)
         attrs.delete(:instructor_split_percent)

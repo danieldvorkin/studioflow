@@ -4,6 +4,10 @@ class ClassTemplate < ApplicationRecord
   belongs_to :instructor, class_name: "User", optional: true
   has_many :class_sessions, dependent: :destroy
 
+  scope :approved, -> { where(approved: true) }
+  scope :pending_approval, -> { where(approved: false) }
+  scope :for_instructor, ->(user) { where(instructor_id: user.id) }
+
   before_validation :infer_studio
 
   validates :title, presence: true

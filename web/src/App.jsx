@@ -175,6 +175,7 @@ function AppShell() {
   const isOwner =
     roleRaw === "owner" || user?.role === 0 || roleRaw === "OWNER";
   const isStaff = roleRaw === "staff" || user?.role === 1;
+  const isInstructor = roleRaw === "instructor" || user?.role === 2;
   const isModerator = roleRaw === "moderator" || user?.role === 4;
 
   const canManageStudio = isGodmode || isOwner || isStaff || isModerator;
@@ -234,6 +235,11 @@ function AppShell() {
             {canManageStudio && (
               <NavItem to="/templates" end={false}>
                 Classes
+              </NavItem>
+            )}
+            {isInstructor && (
+              <NavItem to="/templates" end={false}>
+                My Classes
               </NavItem>
             )}
             {!isOwner && <NavItem to="/shop">Shop</NavItem>}
@@ -418,6 +424,16 @@ function AppShell() {
                       onNavigate={() => setMobileNavOpen(false)}
                     >
                       Classes
+                    </NavItem>
+                  )}
+                  {isInstructor && (
+                    <NavItem
+                      to="/templates"
+                      end={false}
+                      variant="mobile"
+                      onNavigate={() => setMobileNavOpen(false)}
+                    >
+                      My Classes
                     </NavItem>
                   )}
                 </NavFolder>
@@ -867,7 +883,9 @@ function App() {
           <Route
             path="/templates"
             element={
-              <RoleGate allow={["owner", "staff", "moderator", "godmode"]}>
+              <RoleGate
+                allow={["owner", "staff", "moderator", "godmode", "instructor"]}
+              >
                 <Templates />
               </RoleGate>
             }

@@ -21,6 +21,7 @@ export const CLASS_TEMPLATES = gql`
       compensationType
       instructorSplitPercent
       instructorFlatRateCents
+      approved
       studioLocation {
         id
         name

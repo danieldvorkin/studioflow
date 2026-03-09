@@ -7,6 +7,7 @@ module Types
     field :create_class_template, mutation: Mutations::CreateClassTemplate, null: true
     field :update_class_template, mutation: Mutations::UpdateClassTemplate, null: true
     field :delete_class_template, mutation: Mutations::DeleteClassTemplate, null: true
+    field :approve_class_template, mutation: Mutations::ApproveClassTemplate, null: true
     field :create_class_session, mutation: Mutations::CreateClassSession, null: true
     field :update_class_session, mutation: Mutations::UpdateClassSession, null: true
     field :delete_class_session, mutation: Mutations::DeleteClassSession, null: true

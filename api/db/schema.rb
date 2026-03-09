@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_08_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_09_025644) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -135,6 +135,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_08_120000) do
   end
 
   create_table "class_templates", force: :cascade do |t|
+    t.boolean "approved", default: false, null: false
     t.integer "capacity", default: 12
     t.string "compensation_type"
     t.datetime "created_at", null: false

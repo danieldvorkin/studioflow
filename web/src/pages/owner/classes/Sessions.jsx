@@ -51,6 +51,7 @@ export default function Sessions() {
         ? { studioId: selectedStudioId }
         : undefined,
     skip: isClientUser && !selectedStudioId,
+    fetchPolicy: "cache-and-network",
   });
 
   const { data: favoritesData, refetch: refetchFavorites } = useQuery(
