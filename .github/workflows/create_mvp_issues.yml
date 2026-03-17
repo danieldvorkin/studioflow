@@ -1,0 +1,593 @@
+name: Create JoinStudioFlow MVP Issues
+
+on:
+  workflow_dispatch:
+    inputs:
+      project_name:
+        description: 'GitHub Project name (exact match)'
+        required: true
+        default: 'JoinStudioFlow MVP'
+      project_owner:
+        description: 'Project owner (user or org login)'
+        required: true
+        default: 'danieldvorkin'
+      iteration_field_name:
+        description: 'Name of the iteration field in the project (e.g. Sprint, Iteration)'
+        required: false
+        default: 'Sprint'
+
+# NOTE: To add issues to a user-level GitHub Project (Projects v2), you need a Personal
+# Access Token (PAT) with the "project" scope. Add it as a repository secret named
+# PROJECT_TOKEN. If PROJECT_TOKEN is not set, issues are still created but may not be
+# automatically assigned to the project.
+
+permissions:
+  issues: write
+  contents: read
+  repository-projects: write
+
+jobs:
+  create-issues:
+    runs-on: ubuntu-latest
+    env:
+      # Use PROJECT_TOKEN (PAT with project scope) for project operations if available,
+      # otherwise fall back to GITHUB_TOKEN (issues will still be created).
+      GH_TOKEN: ${{ secrets.PROJECT_TOKEN || secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
+      PROJECT_OWNER: ${{ inputs.project_owner }}
+      PROJECT_NAME: ${{ inputs.project_name }}
+      ITERATION_FIELD: ${{ inputs.iteration_field_name }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ─────────────────────────────────────────
+      # 1. Ensure Labels
+      # ─────────────────────────────────────────
+      - name: Create labels
+        run: |
+          create_label() {
+            local name="$1" color="$2" desc="$3"
+            gh label create "$name" --color "$color" --description "$desc" --repo "$REPO" 2>/dev/null \
+              || gh label edit "$name" --color "$color" --description "$desc" --repo "$REPO" 2>/dev/null \
+              || true
+          }
+          create_label "booking"        "0075ca" "Booking UX, session pages, scheduling flow"
+          create_label "payments"       "e4e669" "Stripe integration, checkout, payouts"
+          create_label "auth/roles"     "d93f0b" "Authentication, role-based permissions, access control"
+          create_label "messaging"      "0e8a16" "Inbox, notifications, client ↔ staff communication"
+          create_label "resources"      "5319e7" "Room booking, equipment rentals, gear add-ons"
+          create_label "shop"           "fbca04" "Studio shop, product listings, retail sales"
+          create_label "analytics"      "1d76db" "Owner dashboard, reporting, revenue metrics"
+          create_label "email-marketing" "b60205" "Automated emails, marketing campaigns, drip flows"
+          create_label "onboarding"     "006b75" "Studio setup wizard, multi-vertical configuration"
+          create_label "pricing"        "bfd4f2" "Tiered platform plans, feature gating"
+          create_label "backend"        "c5def5" "API, GraphQL schema, data model changes"
+          create_label "frontend"       "fef2c0" "UI/UX, component improvements, design polish"
+          create_label "priority:P1"    "b60205" "Priority 1 — Adoption Drivers"
+          create_label "priority:P2"    "e4e669" "Priority 2 — Differentiation"
+          create_label "priority:later" "cccccc" "Later — post-traction"
+
+      # ─────────────────────────────────────────
+      # 2. Find Project Number
+      # ─────────────────────────────────────────
+      - name: Find project number
+        id: project
+        run: |
+          PROJECT_NUMBER=$(gh project list --owner "$PROJECT_OWNER" --format json --jq \
+            ".projects[] | select(.title == \"$PROJECT_NAME\") | .number" 2>/dev/null | head -1)
+          if [ -z "$PROJECT_NUMBER" ]; then
+            echo "::warning::Project '$PROJECT_NAME' not found for owner '$PROJECT_OWNER'. Issues will be created without project assignment."
+            echo "number=" >> "$GITHUB_OUTPUT"
+          else
+            echo "Found project #$PROJECT_NUMBER"
+            echo "number=$PROJECT_NUMBER" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ─────────────────────────────────────────
+      # 3. Find current iteration ID (best effort)
+      # ─────────────────────────────────────────
+      - name: Find current iteration
+        id: iteration
+        if: steps.project.outputs.number != ''
+        run: |
+          PROJECT_NUMBER="${{ steps.project.outputs.number }}"
+          # Query the project fields for an iteration field
+          FIELD_JSON=$(gh project field-list "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json 2>/dev/null || echo '{"fields":[]}')
+          FIELD_ID=$(echo "$FIELD_JSON" | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          fields = data.get('fields', [])
+          for f in fields:
+              if f.get('name','').lower() in ['sprint','iteration','$ITERATION_FIELD'.lower()]:
+                  print(f.get('id',''))
+                  break
+          " 2>/dev/null || true)
+
+          if [ -z "$FIELD_ID" ]; then
+            echo "::notice::No iteration field found. Issues will be added to the project without iteration assignment."
+            echo "field_id=" >> "$GITHUB_OUTPUT"
+            echo "iteration_id=" >> "$GITHUB_OUTPUT"
+          else
+            echo "field_id=$FIELD_ID" >> "$GITHUB_OUTPUT"
+            # Get iterations via GraphQL
+            QUERY='query($owner:String!,$num:Int!){user(login:$owner){projectV2(number:$num){field(name:"'"$ITERATION_FIELD"'"){...on ProjectV2IterationField{configuration{iterations{id title startDate}}}}}}}' 
+            ITER_RESULT=$(gh api graphql -f query="$QUERY" -f owner="$PROJECT_OWNER" -F num="$PROJECT_NUMBER" 2>/dev/null || echo '{}')
+            CURRENT_ITER_ID=$(echo "$ITER_RESULT" | python3 -c "
+          import json, sys
+          from datetime import date
+          data = json.load(sys.stdin)
+          try:
+              iters = data['data']['user']['projectV2']['field']['configuration']['iterations']
+              today = str(date.today())
+              current = None
+              for it in iters:
+                  if it['startDate'] <= today:
+                      current = it['id']
+              print(current or '')
+          except Exception:
+              print('')
+          " 2>/dev/null || true)
+            echo "iteration_id=$CURRENT_ITER_ID" >> "$GITHUB_OUTPUT"
+            echo "Current iteration ID: $CURRENT_ITER_ID"
+          fi
+
+      # ─────────────────────────────────────────
+      # 4. Create issues + add to project
+      # ─────────────────────────────────────────
+      - name: Create MVP issues
+        run: |
+          PROJECT_NUMBER="${{ steps.project.outputs.number }}"
+          ITERATION_FIELD_ID="${{ steps.iteration.outputs.field_id }}"
+          ITERATION_ID="${{ steps.iteration.outputs.iteration_id }}"
+
+          add_to_project() {
+            local issue_url="$1"
+            if [ -z "$PROJECT_NUMBER" ]; then return; fi
+            ITEM_ID=$(gh project item-add "$PROJECT_NUMBER" \
+              --owner "$PROJECT_OWNER" \
+              --url "$issue_url" \
+              --format json --jq '.id' 2>/dev/null || true)
+            echo "  → Added to project, item ID: $ITEM_ID"
+
+            if [ -n "$ITEM_ID" ] && [ -n "$ITERATION_FIELD_ID" ] && [ -n "$ITERATION_ID" ]; then
+              gh project item-edit \
+                --project-id "$(gh project list --owner "$PROJECT_OWNER" --format json --jq ".projects[] | select(.number==$PROJECT_NUMBER) | .id" 2>/dev/null)" \
+                --id "$ITEM_ID" \
+                --field-id "$ITERATION_FIELD_ID" \
+                --iteration-id "$ITERATION_ID" 2>/dev/null || true
+              echo "  → Set to current iteration"
+            fi
+          }
+
+          create_issue() {
+            local title="$1" labels="$2" body="$3"
+            echo "Creating: $title"
+            URL=$(gh issue create \
+              --repo "$REPO" \
+              --title "$title" \
+              --label "$labels" \
+              --body "$body" 2>/dev/null)
+            echo "  Created: $URL"
+            add_to_project "$URL"
+            echo "$URL"
+          }
+
+          # ── TICKET-001 ──────────────────────────────────────────────────
+          create_issue \
+            "TICKET-001: Booking UX Overhaul – Client-Facing Session Pages" \
+            "booking,frontend,priority:P1" \
+            "## Problem
+          The current class detail and booking pages (\`ClassDetail.jsx\`, \`PublicClassDetail.jsx\`, \`BookingShow.jsx\`) lack a premium feel. Clients experience friction when discovering, reviewing, and booking a session.
+
+          ## Goal
+          Deliver a polished, conversion-optimised booking experience for clients — whether they arrive via a direct link, the studio portal, or a public listing.
+
+          ## Acceptance Criteria
+          - [ ] Public class detail page (\`/studios/:slug/classes/:id\`) shows: title, instructor name & avatar, date/time, duration, location/room, capacity remaining, price, and a clear CTA button
+          - [ ] Authenticated booking confirmation screen shows a summary card with all booking details before charging
+          - [ ] A \"spots remaining\" indicator updates in real time (or near real time via polling)
+          - [ ] Session page degrades gracefully when the class is full (show waitlist option or \"Notify me\" state)
+          - [ ] Mobile layout is tested and responsive at 375 px and 768 px breakpoints
+          - [ ] Page titles use the \`useDocumentTitle\` hook consistently
+
+          ## Technical Notes
+          - \`class_sessions\` table has \`capacity\`, \`start_time\`, \`end_time\`, \`room\`, \`instructor_id\`
+          - Booking count can be derived from \`bookings\` where \`status != cancelled\`
+          - \`PublicClassPageType\` GraphQL type already exists — extend it with \`spots_remaining\` computed field
+          - Waitlist status maps to \`Booking.statuses[:waitlisted]\` (already in the enum)"
+
+          # ── TICKET-002 ──────────────────────────────────────────────────
+          create_issue \
+            "TICKET-002: Booking UX Overhaul – Owner/Staff Session Management View" \
+            "booking,frontend,auth/roles,priority:P1" \
+            "## Problem
+          Owners and staff need a clear operational view of upcoming sessions: who is booked, payment status, and quick actions (cancel, mark no-show, send reminder).
+
+          ## Goal
+          A dedicated session detail panel for staff/owners that surfaces operational data at a glance.
+
+          ## Acceptance Criteria
+          - [ ] Session detail view (owner side) shows: roster with client name, booking status, paid/unpaid badge, and booking slug
+          - [ ] Quick-action buttons per booking row: Cancel, Mark No-Show, Send Payment Reminder
+          - [ ] Aggregate stats at the top: confirmed bookings / capacity, total revenue collected, outstanding balance
+          - [ ] Filter roster by status (Booked, Waitlisted, Cancelled, No-Show)
+          - [ ] \"Send Payment Reminder\" triggers the existing \`sendBookingPaymentReminder\` mutation
+
+          ## Technical Notes
+          - Booking statuses already defined: \`booked\`, \`waitlisted\`, \`cancelled\`, \`no_show\` (in \`Booking\` model)
+          - \`sendBookingPaymentReminder\` mutation already exists in \`MutationType\`
+          - Payment status is on \`bookings.paid\` boolean
+          - Pundit policies exist for bookings (\`BookingPolicy\`) — enforce staff/owner gate"
+
+          # ── TICKET-003 ──────────────────────────────────────────────────
+          create_issue \
+            "TICKET-003: Stripe Payment Flow Refinement" \
+            "payments,frontend,backend,priority:P1" \
+            "## Problem
+          The current Stripe integration covers the basics (checkout session, setup intent, payment intent) but lacks error recovery, clear status feedback, and a unified payment state machine.
+
+          ## Goal
+          A resilient, user-friendly payment experience with clear success/failure/pending states and retry capability.
+
+          ## Acceptance Criteria
+          - [ ] Client booking flow shows a clear payment status screen after checkout: Success, Pending, or Failed with actionable message
+          - [ ] Failed payments surface a retry option (re-attempt with same or new card) without losing booking intent
+          - [ ] Payment method saved during checkout is reflected immediately in the client's payment methods list
+          - [ ] Owner can void/refund a payment from the booking detail view (new mutation or extend existing \`archiveBooking\`)
+          - [ ] Stripe webhook handler (\`PlatformWebhooksController\`) processes \`payment_intent.payment_failed\` and updates \`payments.status\` to \`failed\`
+          - [ ] All Stripe errors are caught and returned as structured GraphQL errors (not 500s)
+
+          ## Technical Notes
+          - \`payments\` table has \`status\` (pending/succeeded/failed), \`stripe_payment_intent_id\`, \`error_message\`
+          - Existing mutations: \`createBookingWithPayment\`, \`createBookingCheckoutSession\`, \`confirmBookingCheckoutPayment\`
+          - \`PlatformWebhooksController\` handles Stripe webhooks — extend to handle \`payment_intent.payment_failed\`
+          - \`client_payment_methods\` table stores saved cards; link to \`clients.stripe_default_payment_method_id\`
+          - Web: \`payments/\` directory exists — consolidate payment state components there"
+
+          # ── TICKET-004 ──────────────────────────────────────────────────
+          create_issue \
+            "TICKET-004: Role-Based Access Control (RBAC) Hardening" \
+            "auth/roles,backend,frontend,priority:P1" \
+            "## Problem
+          User roles are defined (\`owner\`, \`staff\`, \`instructor\`, \`client\`, \`moderator\`) in \`User::ROLES\` but permission enforcement is inconsistent across GraphQL mutations and frontend routes. Several mutations lack Pundit policy guards; the frontend renders actions regardless of role.
+
+          ## Goal
+          Consistent, enforced RBAC across the full stack — server-side via Pundit policies and client-side via role-gated UI.
+
+          ## Acceptance Criteria
+          - [ ] Every GraphQL mutation has a corresponding Pundit policy check that rejects unauthorised callers with a clear error
+          - [ ] Frontend route guard prevents navigation to owner/staff pages by lower-privilege users
+          - [ ] Role matrix enforced:
+            | Action | Owner | Staff | Instructor | Client | Moderator |
+            |--------|-------|-------|------------|--------|-----------|
+            | Manage class templates | ✅ | ✅ | ❌ | ❌ | ✅ |
+            | Create/cancel bookings | ✅ | ✅ | ✅ (own) | ✅ (own) | ✅ |
+            | View all clients | ✅ | ✅ | ❌ | ❌ | ✅ |
+            | Manage membership plans | ✅ | ❌ | ❌ | ❌ | ✅ |
+            | Process instructor payouts | ✅ | ❌ | ❌ | ❌ | ✅ |
+            | Update payment settings | ✅ | ❌ | ❌ | ❌ | ✅ |
+            | Invite users | ✅ | ✅ | ❌ | ❌ | ✅ |
+            | Block clients | ✅ | ✅ | ✅ (own) | ❌ | ✅ |
+          - [ ] \`createModerator\` mutation is restricted to godmode/owner only
+          - [ ] Pundit policy spec coverage for new policies
+
+          ## Technical Notes
+          - Existing policies: \`BookingPolicy\`, \`BundleProductPolicy\`, \`BundlePurchasePolicy\`, \`ClassSessionPolicy\`, \`ClassTemplatePolicy\`, \`ClientMembershipPolicy\`, \`InstructorPayoutPolicy\`, \`MembershipPlanPolicy\`
+          - Missing policies: \`ClientPolicy\`, \`UserPolicy\`, \`PaymentSettingPolicy\`, \`StudioLocationPolicy\`
+          - \`ApplicationPolicy::Scope\` already scopes to \`studio_id\` — use as base
+          - Backend: extend \`BaseMutation\` to call \`authorize!\` via Pundit before executing"
+
+          # ── TICKET-005 ──────────────────────────────────────────────────
+          create_issue \
+            "TICKET-005: Basic Inbox Messaging System" \
+            "messaging,backend,frontend,priority:P1" \
+            "## Note
+          A high-level spec for this feature already exists in Issue #8. This ticket expands it with technical acceptance criteria grounded in the existing architecture.
+
+          ## Problem
+          There is no in-app communication channel between studio staff and clients. Studios rely on email or external tools.
+
+          ## Goal
+          A simple, inbox-style messaging system. One-on-one conversations only (group chat is out of scope for MVP).
+
+          ## Acceptance Criteria
+          - [ ] New data models: \`conversations\` (sender, recipient, studio_id) and \`messages\` (conversation_id, sender_id, body, read_at)
+          - [ ] GraphQL mutations: \`createConversation\`, \`sendMessage\`, \`markConversationRead\`
+          - [ ] GraphQL queries: \`myConversations\` (paginated, ordered by latest message), \`conversation(id:)\` with messages
+          - [ ] Inbox UI: list of conversations with unread badge count, last message preview, and timestamp
+          - [ ] Message thread UI: chronological message bubbles, sender name/avatar, send input at bottom
+          - [ ] Unread count displayed in nav/sidebar for quick visibility
+          - [ ] Permission rules (per Issue #8):
+            - Owners can message anyone
+            - Staff can message clients and owners
+            - Instructors can message clients and owners
+            - Clients can message instructors only after instructor has approved
+          - [ ] Notification record created in DB on new message (\`notifications\` table: recipient_id, notifiable_type, notifiable_id, read_at, studio_id)
+          - [ ] New message email notification sent via existing mailer infrastructure (opt-out available)
+
+          ## Technical Notes
+          - \`instructor_client_blocks\` model tracks instructor ↔ client approval state — use as permission gate for client-initiated messages
+          - Existing mailers in \`app/mailers/\` — create \`MessageMailer\`
+          - Use ActionCable for real-time delivery; fallback to polling if deferred
+          - Frontend: create \`src/messaging/\` feature directory following the \`src/payments/\` pattern
+
+          Closes #8"
+
+          # ── TICKET-006 ──────────────────────────────────────────────────
+          create_issue \
+            "TICKET-006: Resource & Gear Rental Module" \
+            "resources,booking,backend,frontend,priority:P2" \
+            "## Problem
+          Studios — especially music, photography, and creative spaces — need to manage physical resources: rooms, instruments, cameras, lighting kits, etc. None of this exists in the current data model.
+
+          ## Goal
+          Allow studio owners to define rentable resources (rooms, equipment) and let clients add them to bookings or create standalone rental bookings.
+
+          ## Acceptance Criteria
+          - [ ] New models:
+            - \`resources\` (studio_id, name, description, resource_type [room|equipment|other], hourly_rate_cents, currency, capacity, active)
+            - \`resource_bookings\` (resource_id, client_id, studio_id, start_time, end_time, status, price_cents, stripe_payment_intent_id)
+          - [ ] Conflict detection: prevent double-booking a resource for overlapping time slots
+          - [ ] Owner/staff can create, edit, deactivate resources
+          - [ ] Clients can browse available resources with a time-slot picker and book directly
+          - [ ] Resources can be attached to a \`class_session\` as included gear
+          - [ ] Billing: resource bookings go through the existing Stripe flow (\`createBookingWithPayment\` pattern)
+          - [ ] Owner dashboard shows resource utilisation rate per resource
+          - [ ] GraphQL mutations: \`createResource\`, \`updateResource\`, \`deleteResource\`, \`createResourceBooking\`, \`cancelResourceBooking\`
+
+          ## Technical Notes
+          - Follow the \`studio_locations\` pattern for owner-managed resource CRUD
+          - \`class_sessions.room\` field currently stores a plain string — migrate to an optional FK to \`resources\`
+          - Pundit policy: only owner/staff can manage resources; clients can only read available slots
+          - Index \`resource_bookings\` on \`(resource_id, start_time, end_time)\` for efficient conflict queries"
+
+          # ── TICKET-007 ──────────────────────────────────────────────────
+          create_issue \
+            "TICKET-007: Studio Shop – Product Listings & Checkout" \
+            "shop,payments,backend,frontend,priority:P2" \
+            "## Problem
+          Studios want to sell physical and digital products alongside bookings (mats, water bottles, merchandise, digital guides). There is no product catalogue or retail checkout flow.
+
+          ## Goal
+          A lightweight studio shop where owners list products and clients purchase them, billed via Stripe.
+
+          ## Acceptance Criteria
+          - [ ] New models:
+            - \`shop_products\` (studio_id, name, description, price_cents, currency, category, stock_count, active, image_url)
+            - \`shop_orders\` (client_id, studio_id, status, total_cents, stripe_payment_intent_id)
+            - \`shop_order_items\` (shop_order_id, shop_product_id, quantity, unit_price_cents)
+          - [ ] Owner/staff product management: create, update, deactivate, set stock levels
+          - [ ] Client-facing shop page with product grid, category filter, and cart
+          - [ ] Checkout via Stripe (create \`createShopCheckoutSession\` mutation)
+          - [ ] Stock decremented on successful payment; out-of-stock products shown as unavailable
+          - [ ] Order history visible to client (My Orders) and owner (all orders with status filter)
+          - [ ] Membership discount: \`membership_plans.includes_retail_discount\` already exists — apply at checkout for members
+          - [ ] Email confirmation sent to client on order (new \`ShopOrderMailer\`)
+
+          ## Technical Notes
+          - \`membership_plans.includes_retail_discount\` is already a boolean on the DB
+          - Follow \`bundle_products\` / \`bundle_purchases\` pattern for the data model
+          - Frontend: create \`src/shop/\` feature directory; add \`/shop\` route accessible from the client nav"
+
+          # ── TICKET-008 ──────────────────────────────────────────────────
+          create_issue \
+            "TICKET-008: Owner Analytics Dashboard" \
+            "analytics,frontend,backend,priority:P2" \
+            "## Problem
+          The existing \`Analytics.jsx\` page performs client-side aggregation over raw booking and session data. This is fragile, slow for large datasets, and lacks key business metrics.
+
+          ## Goal
+          A server-driven analytics dashboard that surfaces the metrics most valuable to studio owners: revenue, booking trends, client retention, and instructor performance.
+
+          ## Acceptance Criteria
+          - [ ] New GraphQL query: \`ownerAnalytics(startDate, endDate, locationId)\` returning:
+            - \`totalRevenueCents\` (period)
+            - \`bookingsCount\` (by status breakdown)
+            - \`newClientsCount\`
+            - \`activeClientsCount\` (booked at least once in period)
+            - \`clientRetentionRate\`
+            - \`sessionFillRate\` (average % capacity filled per session)
+            - \`topInstructors\` (by sessions taught and revenue generated)
+            - \`revenueByWeek\` (array of \`{ weekStart, revenueCents }\`)
+            - \`membershipRevenueCents\` vs \`dropInRevenueCents\` split
+          - [ ] Frontend renders: revenue trend line chart, booking status donut, top instructors table, fill-rate bar chart
+          - [ ] Date range picker (last 7 / 30 / 90 days, custom range)
+          - [ ] Location filter (if studio has multiple \`studio_locations\`)
+          - [ ] Export to CSV for revenue and booking data
+          - [ ] Dashboard is owner/staff only (enforce in policy and route guard)
+
+          ## Technical Notes
+          - Current \`Analytics.jsx\` computes on the client — migrate to a dedicated GraphQL resolver
+          - Consider an \`AnalyticsService\` class under \`app/services/\` for aggregation logic
+          - Use \`ActiveRecord\` scopes with date-range parameters; avoid N+1 with \`.includes\`
+          - \`payment_settings.owner_page_layout\` (JSONB) can store dashboard widget preferences"
+
+          # ── TICKET-009 ──────────────────────────────────────────────────
+          create_issue \
+            "TICKET-009: Email Marketing Automation – Basic Campaigns" \
+            "email-marketing,backend,frontend,priority:P2" \
+            "## Problem
+          Studios have no way to communicate with their client base at scale. There is no bulk email, campaign, or drip automation tooling.
+
+          ## Goal
+          A basic email marketing module: owners can create campaigns (one-time blasts) and configure simple automations.
+
+          ## Acceptance Criteria
+          - [ ] New models:
+            - \`email_campaigns\` (studio_id, name, subject, body_html, status [draft|scheduled|sent], scheduled_at, sent_at, recipient_filter_json)
+            - \`email_campaign_sends\` (email_campaign_id, client_id, sent_at, opened_at, clicked_at)
+            - \`email_automations\` (studio_id, trigger [inactive_7d|inactive_30d|new_member|post_booking], subject, body_html, active)
+          - [ ] Owner UI: Campaign composer with subject line, rich-text body, recipient filter
+          - [ ] Preview and send-test before publishing
+          - [ ] Scheduled send (deliver at a specific date/time via ActiveJob)
+          - [ ] Basic open tracking via a pixel endpoint
+          - [ ] Automation triggers:
+            - **New member welcome**: sent on \`ClientMembership\` creation
+            - **Post-booking thank you**: sent 1 hour after \`Booking\` creation
+            - **Re-engagement**: sent to clients with no booking in 30 days
+            - **Membership renewal reminder**: sent 7 days before \`client_memberships.ends_at\`
+          - [ ] Clients can unsubscribe (add \`unsubscribed_at\` to \`clients\` table)
+          - [ ] Sends are delivered via existing ActionMailer extended with background job queue
+
+          ## Technical Notes
+          - Existing \`app/mailers/\` — add \`CampaignMailer\`
+          - Existing \`jobs/\` — add \`SendEmailCampaignJob\` and \`ProcessEmailAutomationsJob\`
+          - Open tracking pixel: \`GET /t/email/:token/open.png\` → record \`opened_at\`, return 1×1 transparent GIF"
+
+          # ── TICKET-010 ──────────────────────────────────────────────────
+          create_issue \
+            "TICKET-010: Advanced Communications – Group Chat & Broadcast Messaging" \
+            "messaging,backend,frontend,priority:later" \
+            "## Problem
+          Once the basic inbox is established (TICKET-005), studios will need group communication channels: studio-wide announcements, class-specific group chats, and instructor broadcast messages.
+
+          ## Goal
+          Extend the messaging system with group conversations and broadcast (one-to-many) messaging.
+
+          ## Acceptance Criteria
+          - [ ] Group conversations: owner/staff can create a group with a name and add multiple participants
+          - [ ] Broadcast messages: owner sends a message to all clients, all members, or all attendees of a specific class session
+          - [ ] Broadcast is delivered as individual \`messages\` (fan-out) to avoid privacy leakage
+          - [ ] Group conversations are linked to a \`class_session\` (e.g., \"Yoga Tuesday group\")
+          - [ ] Push notification support (web push or in-app badge) for new messages
+          - [ ] Message read receipts for group conversations
+          - [ ] Mute/leave group conversation
+
+          ## Technical Notes
+          - Extend \`conversations\` model with \`conversation_type\` (direct | group | broadcast) and \`class_session_id\` (optional FK)
+          - Fan-out broadcast via \`SendBroadcastMessageJob\` background job
+          - WebRTC is explicitly out of scope for this ticket; tracked separately in TICKET-011
+          - **Depends on:** TICKET-005"
+
+          # ── TICKET-011 ──────────────────────────────────────────────────
+          create_issue \
+            "TICKET-011: WebRTC Live / Video Layer" \
+            "messaging,backend,frontend,priority:later" \
+            "## Problem
+          Studios may want to offer live-streamed or video-conferencing sessions directly within the platform (virtual fitness classes, remote music lessons).
+
+          ## Goal
+          Evaluate and integrate a WebRTC solution for live 1:1 and group video within the platform.
+
+          ## Acceptance Criteria
+          - [ ] Technical spike: evaluate Twilio Video vs. Daily.co vs. Jitsi for cost, scalability, and ease of integration
+          - [ ] Proof of concept: owner/instructor can start a video room linked to a \`class_session\`
+          - [ ] Clients with a confirmed booking can join the video room
+          - [ ] Recording option (stored to S3 or equivalent) for session playback
+          - [ ] Chat sidebar during video session reuses messaging components from TICKET-005
+
+          ## Technical Notes
+          - This ticket begins as a technical spike; do not implement until the spike output defines the integration approach
+          - Requires additional infrastructure: TURN/STUN server or managed WebRTC service
+          - **Depends on:** TICKET-005"
+
+          # ── TICKET-012 ──────────────────────────────────────────────────
+          create_issue \
+            "TICKET-012: Deeper Analytics Engine & Custom Reporting" \
+            "analytics,backend,frontend,priority:later" \
+            "## Problem
+          After the owner analytics dashboard (TICKET-008) is live, power users will need deeper customisation: custom date ranges, per-instructor drill-downs, cohort analysis, and scheduled report delivery.
+
+          ## Goal
+          A configurable reporting engine that lets owners build and save custom report views, and schedule automated report emails.
+
+          ## Acceptance Criteria
+          - [ ] Custom report builder: select metrics, group-by dimensions (instructor, location, class type, membership tier), and date range
+          - [ ] Save custom report as a named \"dashboard view\" (stored in \`payment_settings.owner_page_layout\` JSONB or a new \`saved_reports\` table)
+          - [ ] Scheduled report delivery: owner selects a saved report and a frequency (weekly/monthly); delivered via email
+          - [ ] Client lifetime value (LTV) calculation
+          - [ ] Churn prediction: flag clients at risk based on booking frequency drop
+          - [ ] Revenue forecasting from active memberships
+
+          ## Technical Notes
+          - Consider a read-replica database connection for heavy analytics queries
+          - \`instructor_payouts.calculation_snapshot\` JSONB pattern can be extended for analytics snapshots
+          - May benefit from materialized views for pre-aggregation
+          - **Depends on:** TICKET-008"
+
+          # ── TICKET-013 ──────────────────────────────────────────────────
+          create_issue \
+            "TICKET-013: Niche-Specific Workflow Profiles" \
+            "onboarding,frontend,backend,priority:later" \
+            "## Problem
+          A music studio has very different operational needs than a fitness studio (hourly room rental vs. class-based booking). The current data model and UI are optimised for fitness/pilates.
+
+          ## Goal
+          Studio onboarding selects a \"studio type\" that pre-configures the platform for their vertical.
+
+          ## Acceptance Criteria
+          - [ ] \`studios\` table gains a \`studio_type\` enum: \`fitness | music | photography | creative_workspace | general\`
+          - [ ] Onboarding wizard (extend \`CompleteOnboarding\` mutation) prompts for studio type
+          - [ ] Studio type gates feature visibility:
+            - \`fitness\`: class templates, capacity, membership plans (current defaults)
+            - \`music\`: resource booking (rooms/instruments), hourly pricing, no class capacity
+            - \`photography\`: gear rentals, project-based bookings, add-ons
+            - \`creative_workspace\`: hot-desking, resource time slots, membership day passes
+          - [ ] UI terminology adapts per vertical via a localisation/config layer
+          - [ ] Studio type can be changed by owner with a warning about feature visibility changes
+
+          ## Technical Notes
+          - Add \`studio_type\` column to \`studios\` table (migration required)
+          - Terminology config: a JSON/YAML config map per studio type, loaded client-side
+          - Feature flags per studio type can be stored in \`payment_settings\` JSONB or a new \`studio_feature_flags\` table
+          - **Depends on:** TICKET-006"
+
+          # ── TICKET-014 ──────────────────────────────────────────────────
+          create_issue \
+            "TICKET-014: Tiered Platform Subscription Plans" \
+            "pricing,backend,frontend,payments,priority:P1" \
+            "## Problem
+          The current \`studio_subscriptions\` table has a \`tier\` field (\`basic\`) and Stripe subscription integration, but there is no enforced feature-gating between tiers, and the pricing structure is not yet production-ready.
+
+          ## Goal
+          Define and enforce at least two clear pricing tiers with feature gating, reducing acquisition friction while creating an upsell path.
+
+          ## Acceptance Criteria
+          - [ ] Two initial tiers defined in code and billing:
+            - **Starter** (~\$49 CAD/month): Booking, Stripe payments, unlimited clients, basic reporting, 1 location
+            - **Pro** (~\$99 CAD/month): Everything in Starter + multi-location, resource management, email marketing, advanced analytics, team roles
+          - [ ] \`studio_subscriptions.tier\` enum updated to: \`starter | pro | enterprise\`
+          - [ ] \`FeatureGate\` service/concern in Rails that checks \`studio.subscription.tier\` before allowing gated operations
+          - [ ] Gated mutations return a structured error (\`UPGRADE_REQUIRED\`) when called outside of allowed tier
+          - [ ] Frontend shows upgrade prompt/modal when a user hits a tier gate
+          - [ ] Stripe: separate Price IDs configured per tier in payment settings or environment variables
+          - [ ] \`GodmodeDashboard\` shows tier breakdown across all studios
+
+          ## Technical Notes
+          - \`studio_subscriptions\` table already has \`tier\`, \`stripe_subscription_id\`, \`status\`, \`current_period_end\`
+          - \`UpsertStudioSubscription\` mutation exists — extend to accept \`tier\` and handle plan changes
+          - \`CreatePlatformSubscriptionCheckout\` mutation handles initial checkout — extend to accept tier param
+          - Enterprise tier can be manually provisioned via godmode until volume justifies self-serve"
+
+          # ── TICKET-015 ──────────────────────────────────────────────────
+          create_issue \
+            "TICKET-015: Studio Onboarding & Value-Demonstration Flow" \
+            "onboarding,frontend,backend,priority:P1" \
+            "## Problem
+          New studios complete onboarding (\`CompleteOnboarding\` mutation) but there is no guided experience that demonstrates value quickly. Studios drop off before setting up their first class.
+
+          ## Goal
+          A step-by-step onboarding wizard that guides a new studio owner to their first live booking within 10 minutes.
+
+          ## Acceptance Criteria
+          - [ ] Onboarding wizard steps (can be skipped but progress tracked):
+            1. Studio name & type (links to TICKET-013)
+            2. Add first studio location
+            3. Connect Stripe (link to Stripe Connect onboarding)
+            4. Create first class template
+            5. Schedule first session
+            6. Invite first client
+          - [ ] Progress is persisted server-side (\`studios.onboarding_completed_at\` exists; add \`onboarding_progress\` JSONB column)
+          - [ ] Checklist widget visible on owner dashboard until onboarding is complete
+          - [ ] \"Quick start\" sample data option: pre-populates a class template and session for demonstration
+          - [ ] Completion triggers a congratulatory email via \`ActionMailer\`
+
+          ## Technical Notes
+          - \`studios.onboarding_completed_at\` already exists — add \`onboarding_progress\` JSONB column
+          - \`CompleteOnboarding\` mutation exists — extend or create step-specific mutations
+          - \`OnboardingModal.jsx\` component exists in \`web/src/components/\` — extend this for the wizard UI
+          - The wizard should be resumable: if the owner closes mid-flow, they return to the same step"
+
+          echo "✅ All 15 issues created successfully."
